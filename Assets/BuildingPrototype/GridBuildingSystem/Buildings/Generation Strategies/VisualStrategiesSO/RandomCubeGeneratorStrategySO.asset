@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ed55d28bdf780148a1acbeec78c5c25, type: 3}
+  m_Name: RandomCubeGeneratorStrategySO
+  m_EditorClassIdentifier: 
+  randomMaterials:
+  - {fileID: 2100000, guid: bd9be8aeda59b5243b34870b43c83aeb, type: 2}
+  - {fileID: 2100000, guid: ceed5af8dc55a7e4fa809583db5439d0, type: 2}
+  - {fileID: 2100000, guid: a0819f65483d5dd4cb520ca8145ede15, type: 2}
+  - {fileID: 2100000, guid: bf8c25c404837524998906829fcf89b1, type: 2}
+  - {fileID: 2100000, guid: d6932bf1241996347b8dc111e9f20dee, type: 2}
+  - {fileID: 2100000, guid: 21d0a15aa370a4e45a469abcb20abcfc, type: 2}
+  - {fileID: 2100000, guid: e66cad8da22ea1f4087cdab12bc73617, type: 2}
+  - {fileID: 2100000, guid: 1ea684befc8fea34398abbe1455b5523, type: 2}
+  - {fileID: 2100000, guid: fb5bc8d80d5eb9648bcd0e9eaff8294f, type: 2}
+  - {fileID: 2100000, guid: 46eb137d54bb26947bf05c99c5e3ddd4, type: 2}
+  overallOuterPadding: 0.1
+  cubeSize: 1
+  internalCubeScaleFactor: 1
+  maxRandomHeightUnits: 3
+  smallHeightProbability: 0.8
+  detailCubeSpawnChance: 0.3
+  maxDetailCubesPerCell: 1
+  detailCubeSizeMultiplier: 0.5
+  minDetailCubeHeight: 0.2
+  maxDetailCubeHeight: 1
+  detailCubeOffsetAboveBase: 0.05
+  detailCubeRandomPositionFactor: 0
+  detailsOnOccupiedCellsOnly: 0

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67f8ce8b2be636e408a414d461c4c6b1, type: 3}
+  m_Name: E_Happy
+  m_EditorClassIdentifier: 
+  emotionName: "\u0420\u0430\u0434\u0438\u0439"
+  expressions:
+  - featureSet: {fileID: 11400000, guid: 5436a4730836c674a92d31023eaa6c8f, type: 2}
+    textureIndex: 1
+  - featureSet: {fileID: 11400000, guid: e638a9fd59e3e8e419950b0ccbcc6278, type: 2}
+    textureIndex: 1

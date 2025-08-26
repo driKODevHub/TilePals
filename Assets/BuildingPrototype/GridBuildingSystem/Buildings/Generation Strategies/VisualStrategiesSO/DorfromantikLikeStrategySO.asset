@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25a922ed44c1dab46a217a5c05fdb2d2, type: 3}
+  m_Name: DorfromantikLikeStrategySO
+  m_EditorClassIdentifier: 
+  cellSize: 1
+  grassMaterial: {fileID: 2100000, guid: a808df023860eef48b9d64d65b6170fb, type: 2}
+  dirtMaterial: {fileID: 2100000, guid: aea43866e8966e54d927f1446f38ae9b, type: 2}
+  stoneMaterial: {fileID: 2100000, guid: d83e9508dea2096418fc506cd802ccf7, type: 2}
+  sandMaterial: {fileID: 2100000, guid: ff5bb7864b954654f80d7f0c56fbb410, type: 2}
+  waterMaterial: {fileID: 2100000, guid: dc3eb589fc741be4dbd887892c27a598, type: 2}
+  trunkMaterial: {fileID: 2100000, guid: 05289ca0e15c4a544937b6924b008a62, type: 2}
+  leafMaterial: {fileID: 2100000, guid: a85066a0d3b1d704184dc87379602b03, type: 2}
+  coniferousLeafMaterial: {fileID: 2100000, guid: b7b2aedba737ca846abedd3a3b80612f, type: 2}
+  buildingWallMaterial: {fileID: 2100000, guid: 95305551d66fc6147b3a6155d4a97ee7, type: 2}
+  buildingRoofMaterial: {fileID: 2100000, guid: 61edb57803119624fb0efa4bf6ab8c8c, type: 2}
+  roadMaterial: {fileID: 2100000, guid: 1c87850f452cded44aaddf6244e2827c, type: 2}
+  defaultMaterial: {fileID: 2100000, guid: 4baafd9a9c1446842a4fceb0c79ecac8, type: 2}
+  randomizeGroundHeight: 0
+  minGroundHeight: 0.3
+  maxRandomGroundHeight: 0.3
+  clusterGrowChance: 0.7
+  forestSynergyWeight: 3
+  fieldSynergyWeight: 2
+  waterSynergyWeight: 1
+  settlementSynergyWeight: 2
+  roadSynergyWeight: 1
+  treeSpawnChancePerCell: 0.8
+  minTreesPerCell: 3
+  maxTreesPerCell: 6
+  individualTreeBaseScale: 0.15
+  minTrunkHeight: 1
+  maxTrunkHeight: 3
+  coniferousTreeChance: 0.4
+  deciduousLeavesBaseScale: 1.2
+  coniferousLeavesLayers: 3
+  coniferousLeavesLayerScale: 1
+  coniferousLeavesScaleDecreaseFactor: 0.2
+  buildingSpawnChancePerCell: 0.7
+  minBuildingsPerCell: 1
+  maxBuildingsPerCell: 5
+  individualBuildingBaseScale: 0.2
+  individualBuildingMinHeight: 0.015
+  individualBuildingMaxHeight: 0.15
+  individualRoofHeight: 0.203
+  individualRoofOverhang: 0.01
+  roadWidth: 0.6
+  roadHeight: 0.05
+  roadOffsetAboveGround: 0.01
+  waterLevelOffset: -0.5
+  waterDepth: 0.5
