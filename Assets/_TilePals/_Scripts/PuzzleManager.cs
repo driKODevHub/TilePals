@@ -7,12 +7,14 @@ public class PuzzleManager : MonoBehaviour
 {
     public static PuzzleManager Instance { get; private set; }
 
-    // --- ОНОВЛЕНО: Більш детальний enum для визначення зон розміщення ---
     private enum PlacementValidity { OnBuildableGrid, OffGrid, OnNonBuildableAndOffGrid, Invalid }
 
     [Header("Налаштування руху фігур")]
     [SerializeField] private float pieceFollowSpeed = 20f;
     [SerializeField] private float pieceHeightWhenHeld = 0.5f;
+    // НОВЕ ПОЛЕ: Поріг швидкості для реакції на "мотиляння".
+    [SerializeField] private float shakenVelocityThreshold = 15f;
+
 
     [Header("Налаштування візуалу")]
     [SerializeField] private Material invalidPlacementMaterial;
@@ -25,6 +27,9 @@ public class PuzzleManager : MonoBehaviour
     private Vector3 initialPiecePosition;
     private Quaternion initialPieceRotation;
     private bool _isLevelComplete = false;
+
+    private Vector3 _lastHeldPiecePosition;
+    private float _heldPieceVelocity;
 
     public event Action<PuzzlePiece> OnPiecePickedUp;
     public event Action<PuzzlePiece> OnPieceDropped;
@@ -93,7 +98,6 @@ public class PuzzleManager : MonoBehaviour
             grid.GetXZ(hit.point, out int x, out int z);
             Vector2Int origin = new Vector2Int(x, z);
 
-            // --- ОНОВЛЕНО: Використовуємо нову, більш детальну перевірку ---
             PlacementValidity validity = GetPlacementValidity(origin);
 
             switch (validity)
@@ -101,7 +105,6 @@ public class PuzzleManager : MonoBehaviour
                 case PlacementValidity.OnBuildableGrid:
                     TryPlaceOnGrid(origin);
                     break;
-                // Нова валідна зона обробляється так само, як і розміщення поза полем
                 case PlacementValidity.OffGrid:
                 case PlacementValidity.OnNonBuildableAndOffGrid:
                     TryPlaceOffGrid(origin);
@@ -132,7 +135,15 @@ public class PuzzleManager : MonoBehaviour
             Vector3 targetPosition = new Vector3(snappedPosition.x, pieceHeightWhenHeld, snappedPosition.z) + offset;
             heldPiece.transform.position = Vector3.Lerp(heldPiece.transform.position, targetPosition, Time.deltaTime * pieceFollowSpeed);
 
-            // --- ОНОВЛЕНО: Логіка перевірки для візуалізації ---
+            _heldPieceVelocity = (heldPiece.transform.position - _lastHeldPiecePosition).magnitude / Time.deltaTime;
+            _lastHeldPiecePosition = heldPiece.transform.position;
+
+            // ОНОВЛЕНО: Перевіряємо швидкість і викликаємо подію, якщо потрібно
+            if (_heldPieceVelocity > shakenVelocityThreshold)
+            {
+                PersonalityEventManager.RaisePieceShaken(heldPiece, _heldPieceVelocity);
+            }
+
             PlacementValidity validity = GetPlacementValidity(origin);
             bool canPlace = false;
 
@@ -157,9 +168,6 @@ public class PuzzleManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Повністю перероблений метод для перевірки валідності розміщення згідно з новими правилами.
-    /// </summary>
     private PlacementValidity GetPlacementValidity(Vector2Int origin)
     {
         List<Vector2Int> pieceCells = heldPiece.PieceTypeSO.GetGridPositionsList(origin, heldPiece.CurrentDirection);
@@ -170,51 +178,20 @@ public class PuzzleManager : MonoBehaviour
         int nonBuildableOnGridCount = 0;
         int offGridCount = 0;
 
-        // 1. Рахуємо, скільки клітинок фігури потрапляє в кожну з трьох зон
         foreach (var cell in pieceCells)
         {
             GridObject gridObject = grid.GetGridObject(cell.x, cell.y);
-
-            if (gridObject == null) // Клітинка за межами сітки
-            {
-                offGridCount++;
-            }
-            else if (gridObject.IsBuildable()) // Клітинка на активній частині сітки
-            {
-                buildableOnGridCount++;
-            }
-            else // Клітинка на неактивній частині сітки
-            {
-                nonBuildableOnGridCount++;
-            }
+            if (gridObject == null) { offGridCount++; }
+            else if (gridObject.IsBuildable()) { buildableOnGridCount++; }
+            else { nonBuildableOnGridCount++; }
         }
 
         int totalCells = pieceCells.Count;
-
-        // 2. Застосовуємо правила для визначення статусу
-
-        // Правило A: Повністю на активній сітці
-        if (buildableOnGridCount == totalCells)
-        {
-            return PlacementValidity.OnBuildableGrid;
-        }
-
-        // Правило B: Повністю поза полем
-        if (offGridCount == totalCells)
-        {
-            return PlacementValidity.OffGrid;
-        }
-
-        // Правило C: Частково на неактивній сітці, частково поза полем (і ЖОДНОЇ клітинки на активній)
-        if (buildableOnGridCount == 0 && nonBuildableOnGridCount > 0 && offGridCount > 0)
-        {
-            return PlacementValidity.OnNonBuildableAndOffGrid;
-        }
-
-        // Всі інші комбінації - невалідні
+        if (buildableOnGridCount == totalCells) return PlacementValidity.OnBuildableGrid;
+        if (offGridCount == totalCells) return PlacementValidity.OffGrid;
+        if (buildableOnGridCount == 0 && nonBuildableOnGridCount > 0 && offGridCount > 0) return PlacementValidity.OnNonBuildableAndOffGrid;
         return PlacementValidity.Invalid;
     }
-
 
     public void PickUpPiece(PuzzlePiece piece)
     {
@@ -223,6 +200,9 @@ public class PuzzleManager : MonoBehaviour
         heldPiece = piece;
         initialPiecePosition = piece.transform.position;
         initialPieceRotation = piece.transform.rotation;
+
+        _lastHeldPiecePosition = piece.transform.position;
+        _heldPieceVelocity = 0f;
 
         if (piece.IsPlaced)
         {
@@ -236,6 +216,7 @@ public class PuzzleManager : MonoBehaviour
         }
 
         OnPiecePickedUp?.Invoke(piece);
+        PersonalityEventManager.RaisePiecePickedUp(piece);
     }
 
     private void TryPlaceOnGrid(Vector2Int origin)
@@ -244,9 +225,12 @@ public class PuzzleManager : MonoBehaviour
 
         if (placeCommand.Execute())
         {
+            PuzzlePiece placedPiece = heldPiece;
             heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
             CommandHistory.AddCommand(placeCommand);
-            OnPieceDropped?.Invoke(heldPiece);
+            OnPieceDropped?.Invoke(placedPiece);
+            // ОНОВЛЕНО: Викликаємо просту подію без швидкості
+            PersonalityEventManager.RaisePieceDropped(placedPiece);
             heldPiece = null;
             CheckForWin();
             GameManager.Instance.SaveCurrentProgress();
@@ -265,6 +249,7 @@ public class PuzzleManager : MonoBehaviour
             return;
         }
 
+        PuzzlePiece placedPiece = heldPiece;
         heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
 
         float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
@@ -273,11 +258,12 @@ public class PuzzleManager : MonoBehaviour
         Vector3 finalPos = new Vector3(offGridOrigin.x * cellSize, 0, offGridOrigin.y * cellSize) + offset;
 
         heldPiece.transform.position = finalPos;
-
         heldPiece.SetOffGrid(true, offGridOrigin);
         OffGridManager.PlacePiece(heldPiece, offGridOrigin);
 
-        OnPieceDropped?.Invoke(heldPiece);
+        OnPieceDropped?.Invoke(placedPiece);
+        // ОНОВЛЕНО: Викликаємо просту подію без швидкості
+        PersonalityEventManager.RaisePieceDropped(placedPiece);
         heldPiece = null;
         GameManager.Instance.SaveCurrentProgress();
     }
@@ -285,7 +271,6 @@ public class PuzzleManager : MonoBehaviour
     private void CheckForWin()
     {
         if (_isLevelComplete) return;
-
         float fillPercentage = GridBuildingSystem.Instance.CalculateGridFillPercentage();
         Debug.Log($"Поле заповнено на: {fillPercentage:F2}%");
 

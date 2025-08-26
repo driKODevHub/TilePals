@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f105c217937b43e4c844205a09ba696f, type: 3}
+  m_Name: EyeState_Happy
+  m_EditorClassIdentifier: 
+  eyeShapeTexture: {fileID: 2800000, guid: 7ce32ffef7465d04abeabbcbeba28d88, type: 3}
+  pupilTexture: {fileID: 2800000, guid: e63e5c0479e18114094563df8d6400f3, type: 3}

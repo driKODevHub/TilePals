@@ -1,99 +1,168 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
-/// Керує візуальним відображенням емоцій на обличчі фігури.
-/// Цей компонент має бути розміщений на GameObject'і, що є батьківським для всіх частин обличчя.
+/// Керує візуальним відображенням емоцій, включаючи моргання та рух зіниць.
 /// </summary>
 public class FacialExpressionController : MonoBehaviour
 {
-    /// <summary>
-    /// Зв'язує тип риси обличчя (напр., Очі) з конкретним MeshRenderer'ом на префабі.
-    /// </summary>
     [System.Serializable]
-    public struct FacialFeatureRenderer
+    public struct FeatureRenderer
     {
-        [Tooltip("Тип риси, за яку відповідає цей рендерер.")]
         public FacialFeatureSetSO.FeatureType featureType;
-
-        [Tooltip("MeshRenderer (наприклад, з Quad'а), на якому буде відображатися текстура.")]
         public MeshRenderer featureRenderer;
     }
 
-    [Header("Налаштування Рис Обличчя")]
-    [Tooltip("Список усіх рендерерів, що складають обличчя цієї фігури.")]
-    [SerializeField] private List<FacialFeatureRenderer> featureRenderers;
+    // --- НОВА СТРУКТУРА ДЛЯ ОЧЕЙ ---
+    [System.Serializable]
+    public struct EyeRenderers
+    {
+        [Tooltip("MeshRenderer для форми лівого ока (білок).")]
+        public MeshRenderer leftEyeShape;
+        [Tooltip("Transform зіниці лівого ока для руху.")]
+        public Transform leftPupil;
+        [Space]
+        [Tooltip("MeshRenderer для форми правого ока (білок).")]
+        public MeshRenderer rightEyeShape;
+        [Tooltip("Transform зіниці правого ока для руху.")]
+        public Transform rightPupil;
+    }
 
-    // Словник для швидкого доступу до рендерерів за їхнім типом.
+    [Header("Налаштування Рис Обличчя")]
+    [SerializeField] private EyeRenderers eyes;
+    [SerializeField] private List<FeatureRenderer> otherFeatures; // Рот, брови і т.д.
+
+    [Header("Налаштування Поведінки Очей")]
+    [SerializeField] private float blinkIntervalMin = 3f;
+    [SerializeField] private float blinkIntervalMax = 7f;
+    [SerializeField] private float blinkDuration = 0.1f;
+    [SerializeField] private float pupilMovementRadius = 0.15f;
+
     private Dictionary<FacialFeatureSetSO.FeatureType, MeshRenderer> _rendererMap;
+    private Vector3 _leftPupilOrigin;
+    private Vector3 _rightPupilOrigin;
 
     private void Awake()
     {
-        // Ініціалізуємо словник для швидкого пошуку.
-        // Це робиться один раз при старті для оптимізації.
         _rendererMap = new Dictionary<FacialFeatureSetSO.FeatureType, MeshRenderer>();
-        foreach (var feature in featureRenderers)
+        foreach (var feature in otherFeatures)
         {
             if (feature.featureRenderer != null)
-            {
                 _rendererMap[feature.featureType] = feature.featureRenderer;
-            }
         }
+
+        if (eyes.leftPupil) _leftPupilOrigin = eyes.leftPupil.localPosition;
+        if (eyes.rightPupil) _rightPupilOrigin = eyes.rightPupil.localPosition;
+    }
+
+    private void Start()
+    {
+        StartCoroutine(BlinkRoutine());
     }
 
     /// <summary>
-    /// Основний метод, що застосовує емоцію до обличчя.
-    /// Він отримує профіль емоції та оновлює текстури на відповідних MeshRenderer'ах.
+    /// Застосовує повний профіль емоції до обличчя.
     /// </summary>
-    /// <param name="emotionProfile">ScriptableObject з даними про емоцію, яку потрібно відобразити.</param>
     public void ApplyEmotion(EmotionProfileSO emotionProfile)
     {
         if (emotionProfile == null)
         {
-            // Debug.LogWarning("Спроба застосувати порожній EmotionProfile. Обличчя буде приховано.", this);
-            // Приховуємо всі риси, якщо профіль порожній
-            foreach (var rendererPair in _rendererMap)
-            {
-                rendererPair.Value.enabled = false;
-            }
+            SetAllFeaturesActive(false);
             return;
         }
 
-        // Спочатку вимикаємо всі рендерери, щоб приховати риси, не задіяні в новій емоції.
-        foreach (var rendererPair in _rendererMap)
-        {
-            rendererPair.Value.enabled = false;
-        }
+        SetAllFeaturesActive(true);
 
-        // Проходимо по кожному виразу в профілі емоції.
-        foreach (var expression in emotionProfile.expressions)
+        // Застосовуємо вираз очей
+        ApplyEyeState(emotionProfile.eyeState);
+
+        // Застосовуємо інші риси (рот, брови)
+        foreach (var expression in emotionProfile.otherExpressions)
         {
             if (expression.featureSet == null) continue;
-
-            // Знаходимо потрібний рендерер у нашому словнику.
             if (_rendererMap.TryGetValue(expression.featureSet.feature, out MeshRenderer renderer))
             {
-                // Перевіряємо, чи валідний індекс текстури.
-                if (expression.textureIndex >= 0 && expression.textureIndex < expression.featureSet.textures.Count)
-                {
-                    Texture2D texture = expression.featureSet.textures[expression.textureIndex];
-                    if (texture != null)
-                    {
-                        // Вмикаємо рендерер і встановлюємо нову текстуру.
-                        renderer.enabled = true;
-                        renderer.material.mainTexture = texture;
-                    }
-                    else
-                    {
-                        // Якщо текстура не призначена, вимикаємо рендерер.
-                        renderer.enabled = false;
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning($"Індекс текстури {expression.textureIndex} виходить за межі для {expression.featureSet.name}", this);
-                }
+                ApplyTexture(renderer, expression.featureSet, expression.textureIndex);
             }
+        }
+    }
+
+    /// <summary>
+    /// Змушує зіниці дивитися на певну точку у світових координатах.
+    /// </summary>
+    public void LookAt(Vector3 worldPosition)
+    {
+        if (eyes.leftPupil)
+        {
+            Vector3 localTarget = eyes.leftPupil.parent.InverseTransformPoint(worldPosition);
+            Vector3 direction = (localTarget - _leftPupilOrigin).normalized;
+            eyes.leftPupil.localPosition = _leftPupilOrigin + direction * pupilMovementRadius;
+        }
+        if (eyes.rightPupil)
+        {
+            Vector3 localTarget = eyes.rightPupil.parent.InverseTransformPoint(worldPosition);
+            Vector3 direction = (localTarget - _rightPupilOrigin).normalized;
+            eyes.rightPupil.localPosition = _rightPupilOrigin + direction * pupilMovementRadius;
+        }
+    }
+
+    // --- ПРИВАТНІ МЕТОДИ ---
+
+    private void ApplyEyeState(EyeStateSO eyeState)
+    {
+        if (eyeState == null)
+        {
+            SetEyesActive(false);
+            return;
+        }
+
+        SetEyesActive(true);
+        if (eyes.leftEyeShape) eyes.leftEyeShape.material.mainTexture = eyeState.eyeShapeTexture;
+        if (eyes.rightEyeShape) eyes.rightEyeShape.material.mainTexture = eyeState.eyeShapeTexture;
+
+        if (eyes.leftPupil) eyes.leftPupil.GetComponent<MeshRenderer>().material.mainTexture = eyeState.pupilTexture;
+        if (eyes.rightPupil) eyes.rightPupil.GetComponent<MeshRenderer>().material.mainTexture = eyeState.pupilTexture;
+    }
+
+    private void ApplyTexture(MeshRenderer renderer, FacialFeatureSetSO featureSet, int index)
+    {
+        if (index >= 0 && index < featureSet.textures.Count)
+        {
+            renderer.material.mainTexture = featureSet.textures[index];
+            renderer.enabled = true;
+        }
+        else
+        {
+            renderer.enabled = false;
+        }
+    }
+
+    private IEnumerator BlinkRoutine()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(Random.Range(blinkIntervalMin, blinkIntervalMax));
+            SetEyesActive(false);
+            yield return new WaitForSeconds(blinkDuration);
+            SetEyesActive(true);
+        }
+    }
+
+    private void SetEyesActive(bool isActive)
+    {
+        if (eyes.leftEyeShape) eyes.leftEyeShape.enabled = isActive;
+        if (eyes.rightEyeShape) eyes.rightEyeShape.enabled = isActive;
+        if (eyes.leftPupil) eyes.leftPupil.GetComponent<MeshRenderer>().enabled = isActive;
+        if (eyes.rightPupil) eyes.rightPupil.GetComponent<MeshRenderer>().enabled = isActive;
+    }
+
+    private void SetAllFeaturesActive(bool isActive)
+    {
+        SetEyesActive(isActive);
+        foreach (var rendererPair in _rendererMap)
+        {
+            rendererPair.Value.enabled = isActive;
         }
     }
 }
