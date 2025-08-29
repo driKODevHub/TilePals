@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: POT_TilePall_4x2 L
   m_EditorClassIdentifier: 
   objectName: Shape_4x2
-  prefab: {fileID: 2065049021235378066, guid: 72db62e3bec53c24299da28177263fe0, type: 3}
-  visual: {fileID: 2065049021235378066, guid: 72db62e3bec53c24299da28177263fe0, type: 3}
+  prefab: {fileID: 2065049021235378066, guid: eb47d43227a338447880415213b95c2f, type: 3}
+  visual: {fileID: 2065049021235378066, guid: eb47d43227a338447880415213b95c2f, type: 3}
   relativeOccupiedCells:
   - {x: 0, y: 0}
   - {x: 0, y: 1}

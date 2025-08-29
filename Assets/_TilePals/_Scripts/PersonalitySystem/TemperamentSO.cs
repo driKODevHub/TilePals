@@ -1,41 +1,43 @@
 using UnityEngine;
+using System.Collections.Generic;
+using System;
 
-/// <summary>
-/// ScriptableObject, що описує базовий характер (темперамент) фігури.
-/// Визначає початкові параметри та реакції на події.
-/// Створіть асети через меню: Create -> Puzzle/Personality/Temperament
-/// </summary>
 [CreateAssetMenu(fileName = "T_", menuName = "Puzzle/Personality/Temperament")]
 public class TemperamentSO : ScriptableObject
 {
-    [Header("Основна інформація")]
-    [Tooltip("Назва темпераменту, що відображається в редакторі.")]
-    public string temperamentName = "Новий темперамент";
+    [Serializable]
+    public struct SynergyRule
+    {
+        [Tooltip("Темперамент сусіда, на який буде реакція.")]
+        public TemperamentSO neighborTemperament;
+        [Tooltip("Емоція, яку покажу Я при зустрічі з цим сусідом.")]
+        public EmotionProfileSO myReaction;
+        [Tooltip("Емоція, яку я попрошу показати сусіда у відповідь.")]
+        public EmotionProfileSO neighborReaction;
+        [Tooltip("Час (в секундах), протягом якого тримається ця реакція.")]
+        public float reactionDuration;
+    }
 
-    [TextArea]
-    [Tooltip("Короткий опис характеру для зручності дизайнера.")]
-    public string description;
+    [Header("Основна інформація")]
+    public string temperamentName = "Новий темперамент";
+    [TextArea] public string description;
+
+    [Header("Візуальне відображення")]
+    // --- ЗМІНЕНО: з Color на Material ---
+    [Tooltip("Матеріал, який буде призначено фігурі з цим темпераментом.")]
+    public Material temperamentMaterial;
 
     [Header("Початкові Внутрішні Параметри (від 0 до 1)")]
-    [Range(0f, 1f)]
-    [Tooltip("Наскільки фігура втомлена на старті.")]
-    public float initialFatigue = 0.1f;
-
-    [Range(0f, 1f)]
-    [Tooltip("Наскільки фігура роздратована на старті.")]
-    public float initialIrritation = 0.1f;
-
-    [Range(0f, 1f)]
-    [Tooltip("Наскільки фігура довіряє гравцю на старті.")]
-    public float initialTrust = 0.5f;
+    [Range(0f, 1f)] public float initialFatigue = 0.1f;
+    [Range(0f, 1f)] public float initialIrritation = 0.1f;
+    [Range(0f, 1f)] public float initialTrust = 0.5f;
 
     [Header("Модифікатори Реакцій")]
-    [Tooltip("Множник зміни роздратування. >1 - дратується швидше, <1 - повільніше.")]
     public float irritationModifier = 1.0f;
-
-    [Tooltip("Множник зміни втоми. >1 - втомлюється швидше.")]
     public float fatigueModifier = 1.0f;
-
-    [Tooltip("Множник зміни довіри. >1 - довіра зростає/падає швидше.")]
     public float trustModifier = 1.0f;
+
+    [Header("Правила Взаємодії з Сусідами")]
+    [Tooltip("Список правил, як цей темперамент реагує на сусідство з іншими.")]
+    public List<SynergyRule> synergyRules;
 }

@@ -1,21 +1,28 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// Статичний клас для керування глобальними подіями, пов'язаними з особистістю фігур.
-/// </summary>
 public static class PersonalityEventManager
 {
-    // Подія, що викликається, коли гравець піднімає фігуру.
+    // --- ІСНУЮЧІ ПОДІЇ ---
     public static event Action<PuzzlePiece> OnPiecePickedUp;
     public static void RaisePiecePickedUp(PuzzlePiece piece) => OnPiecePickedUp?.Invoke(piece);
 
-    // Подія, коли гравець опускає/ставить фігуру (повернуто до простої версії).
     public static event Action<PuzzlePiece> OnPieceDropped;
     public static void RaisePieceDropped(PuzzlePiece piece) => OnPieceDropped?.Invoke(piece);
 
-    // НОВА ПОДІЯ: Викликається, коли фігуру різко рухають.
-    // float - інтенсивність руху (швидкість).
     public static event Action<PuzzlePiece, float> OnPieceShaken;
     public static void RaisePieceShaken(PuzzlePiece piece, float velocity) => OnPieceShaken?.Invoke(piece, velocity);
+
+    public static event Action<PuzzlePiece> OnPiecePlaced;
+    public static void RaisePiecePlaced(PuzzlePiece piece) => OnPiecePlaced?.Invoke(piece);
+
+    // --- ДОДАНІ ПОДІЇ ДЛЯ "ГЛАДЖЕННЯ" ---
+    public static event Action<PuzzlePiece> OnPettingStart;
+    public static void RaisePettingStart(PuzzlePiece piece) => OnPettingStart?.Invoke(piece);
+
+    public static event Action<PuzzlePiece, float> OnPettingUpdate;
+    public static void RaisePettingUpdate(PuzzlePiece piece, float mouseSpeed) => OnPettingUpdate?.Invoke(piece, mouseSpeed);
+
+    public static event Action<PuzzlePiece> OnPettingEnd;
+    public static void RaisePettingEnd(PuzzlePiece piece) => OnPettingEnd?.Invoke(piece);
 }

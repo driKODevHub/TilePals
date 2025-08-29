@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: E_Dizzy
   m_EditorClassIdentifier: 
   emotionName: "\u0422\u043E\u0448\u043D\u043E"
-  eyeState: {fileID: 11400000, guid: e162e6b32c9eba24fabd1e434b6e20ec, type: 2}
-  otherExpressions:
-  - featureSet: {fileID: 11400000, guid: e638a9fd59e3e8e419950b0ccbcc6278, type: 2}
-    textureIndex: 0
+  eyeState: {fileID: 11400000, guid: d545791e56a6095439caac75f1b2b2b8, type: 2}
+  featureStates:
+  - {fileID: 11400000, guid: e53eb48136b111344825dbf99a31dfea, type: 2}

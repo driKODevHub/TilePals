@@ -1,20 +1,19 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
-using System.Collections;
+using System.Linq;
 
+/// <summary>
+/// Об'єднаний клас, що керує всією ігровою логікою та взаємодією.
+/// </summary>
 public class PuzzleManager : MonoBehaviour
 {
     public static PuzzleManager Instance { get; private set; }
 
-    private enum PlacementValidity { OnBuildableGrid, OffGrid, OnNonBuildableAndOffGrid, Invalid }
-
     [Header("Налаштування руху фігур")]
     [SerializeField] private float pieceFollowSpeed = 20f;
     [SerializeField] private float pieceHeightWhenHeld = 0.5f;
-    // НОВЕ ПОЛЕ: Поріг швидкості для реакції на "мотиляння".
     [SerializeField] private float shakenVelocityThreshold = 15f;
-
 
     [Header("Налаштування візуалу")]
     [SerializeField] private Material invalidPlacementMaterial;
@@ -23,14 +22,23 @@ public class PuzzleManager : MonoBehaviour
     [SerializeField] private LayerMask pieceLayer;
     [SerializeField] private LayerMask offGridPlaneLayer;
 
-    private PuzzlePiece heldPiece = null;
-    private Vector3 initialPiecePosition;
-    private Quaternion initialPieceRotation;
-    private bool _isLevelComplete = false;
+    // Ігрові стани
+    private PuzzlePiece _heldPiece;
+    private PuzzlePiece _pieceUnderMouse;
+    private PuzzlePiece _pieceBeingPetted;
 
+    // Змінні для логіки
+    private Vector3 _initialPiecePosition;
+    private Quaternion _initialPieceRotation;
+    private Vector3 _lastMousePosition;
+    private float _mouseSpeed;
     private Vector3 _lastHeldPiecePosition;
     private float _heldPieceVelocity;
+    private bool _isLevelComplete = false;
+    private bool _justPlacedPiece = false;
 
+
+    // Події для старої логіки (GridVisualManager)
     public event Action<PuzzlePiece> OnPiecePickedUp;
     public event Action<PuzzlePiece> OnPieceDropped;
 
@@ -42,165 +50,107 @@ public class PuzzleManager : MonoBehaviour
 
     public void ResetState()
     {
+        _heldPiece = null;
+        _pieceUnderMouse = null;
+        _pieceBeingPetted = null;
         _isLevelComplete = false;
-        heldPiece = null;
+    }
+
+    private void LateUpdate()
+    {
+        _justPlacedPiece = false;
     }
 
     private void Update()
     {
-        if (_isLevelComplete) return;
+        UpdateMouseState();
 
-        HandlePieceMovement();
-        HandleInput();
-    }
-
-    public PuzzlePiece GetHeldPiece() => heldPiece;
-
-    private void HandleInput()
-    {
-        if (heldPiece == null)
+        if (_heldPiece != null)
         {
-            if (Input.GetMouseButtonDown(0)) TryToPickUpPiece();
+            HandleHeldPieceInput();
         }
         else
         {
-            if (Input.GetMouseButtonDown(0) && !heldPiece.IsRotating)
-            {
-                TryToPlaceOrDropPiece();
-            }
-
-            if (heldPiece != null && !heldPiece.IsRotating && Input.GetKeyDown(KeyCode.Space))
-            {
-                heldPiece.StartSmoothRotation();
-            }
+            HandleIdleInput();
         }
-
-        if (Input.GetKeyDown(KeyCode.Z)) CommandHistory.Undo();
-        if (Input.GetKeyDown(KeyCode.C)) CommandHistory.Redo();
     }
 
-    private void TryToPickUpPiece()
+    private void UpdateMouseState()
     {
+        _mouseSpeed = (Input.mousePosition - _lastMousePosition).magnitude / Time.deltaTime;
+        _lastMousePosition = Input.mousePosition;
+
+        _pieceUnderMouse = null;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
         {
             PuzzlePiece piece = hit.collider.GetComponentInParent<PuzzlePiece>();
-            if (piece != null) PickUpPiece(piece);
+            if (piece != null) // Дозволяємо взаємодіяти з усіма фігурами
+            {
+                _pieceUnderMouse = piece;
+            }
         }
     }
 
-    private void TryToPlaceOrDropPiece()
+    private void HandleIdleInput()
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
+        if (Input.GetMouseButtonDown(0))
         {
-            var grid = GridBuildingSystem.Instance.GetGrid();
-            grid.GetXZ(hit.point, out int x, out int z);
-            Vector2Int origin = new Vector2Int(x, z);
-
-            PlacementValidity validity = GetPlacementValidity(origin);
-
-            switch (validity)
+            if (_pieceUnderMouse != null && !_justPlacedPiece)
             {
-                case PlacementValidity.OnBuildableGrid:
-                    TryPlaceOnGrid(origin);
-                    break;
-                case PlacementValidity.OffGrid:
-                case PlacementValidity.OnNonBuildableAndOffGrid:
-                    TryPlaceOffGrid(origin);
-                    break;
-                case PlacementValidity.Invalid:
-                    Debug.Log("Неможливо розмістити: фігура перетинає недозволені зони.");
-                    break;
+                // Починаємо гладити або готуємось підняти
+                _pieceBeingPetted = _pieceUnderMouse;
+                if (!_pieceUnderMouse.IsPlaced)
+                {
+                    PersonalityEventManager.RaisePettingStart(_pieceBeingPetted);
+                }
             }
         }
-    }
 
-    private void HandlePieceMovement()
-    {
-        if (heldPiece == null || heldPiece.IsRotating) return;
-
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
+        if (Input.GetMouseButton(0))
         {
-            var grid = GridBuildingSystem.Instance.GetGrid();
-            float cellSize = grid.GetCellSize();
-
-            grid.GetXZ(hit.point, out int x, out int z);
-            Vector2Int origin = new Vector2Int(x, z);
-
-            Vector2Int rotationOffset = heldPiece.PieceTypeSO.GetRotationOffset(heldPiece.CurrentDirection);
-            Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
-            Vector3 snappedPosition = new Vector3(origin.x * cellSize, 0, origin.y * cellSize);
-            Vector3 targetPosition = new Vector3(snappedPosition.x, pieceHeightWhenHeld, snappedPosition.z) + offset;
-            heldPiece.transform.position = Vector3.Lerp(heldPiece.transform.position, targetPosition, Time.deltaTime * pieceFollowSpeed);
-
-            _heldPieceVelocity = (heldPiece.transform.position - _lastHeldPiecePosition).magnitude / Time.deltaTime;
-            _lastHeldPiecePosition = heldPiece.transform.position;
-
-            // ОНОВЛЕНО: Перевіряємо швидкість і викликаємо подію, якщо потрібно
-            if (_heldPieceVelocity > shakenVelocityThreshold)
+            if (_pieceBeingPetted != null && !_pieceBeingPetted.IsPlaced)
             {
-                PersonalityEventManager.RaisePieceShaken(heldPiece, _heldPieceVelocity);
-            }
-
-            PlacementValidity validity = GetPlacementValidity(origin);
-            bool canPlace = false;
-
-            switch (validity)
-            {
-                case PlacementValidity.OnBuildableGrid:
-                    canPlace = GridBuildingSystem.Instance.CanPlacePiece(heldPiece, origin, heldPiece.CurrentDirection);
-                    break;
-                case PlacementValidity.OffGrid:
-                case PlacementValidity.OnNonBuildableAndOffGrid:
-                    canPlace = OffGridManager.CanPlacePiece(heldPiece, origin);
-                    break;
-                case PlacementValidity.Invalid:
-                    canPlace = false;
-                    break;
-            }
-
-            if (invalidPlacementMaterial != null)
-            {
-                heldPiece.UpdatePlacementVisual(canPlace, invalidPlacementMaterial);
+                if (_pieceUnderMouse == _pieceBeingPetted)
+                {
+                    PersonalityEventManager.RaisePettingUpdate(_pieceBeingPetted, _mouseSpeed);
+                }
+                else
+                {
+                    PersonalityEventManager.RaisePettingEnd(_pieceBeingPetted);
+                    _pieceBeingPetted = null;
+                }
             }
         }
-    }
 
-    private PlacementValidity GetPlacementValidity(Vector2Int origin)
-    {
-        List<Vector2Int> pieceCells = heldPiece.PieceTypeSO.GetGridPositionsList(origin, heldPiece.CurrentDirection);
-        if (pieceCells.Count == 0) return PlacementValidity.Invalid;
-
-        var grid = GridBuildingSystem.Instance.GetGrid();
-        int buildableOnGridCount = 0;
-        int nonBuildableOnGridCount = 0;
-        int offGridCount = 0;
-
-        foreach (var cell in pieceCells)
+        if (Input.GetMouseButtonUp(0))
         {
-            GridObject gridObject = grid.GetGridObject(cell.x, cell.y);
-            if (gridObject == null) { offGridCount++; }
-            else if (gridObject.IsBuildable()) { buildableOnGridCount++; }
-            else { nonBuildableOnGridCount++; }
+            if (_pieceBeingPetted != null)
+            {
+                if (_pieceUnderMouse == _pieceBeingPetted)
+                {
+                    if (!_pieceBeingPetted.IsPlaced)
+                    {
+                        PersonalityEventManager.RaisePettingEnd(_pieceBeingPetted);
+                    }
+                    PickUpPiece(_pieceBeingPetted);
+                }
+                else if (!_pieceBeingPetted.IsPlaced)
+                {
+                    PersonalityEventManager.RaisePettingEnd(_pieceBeingPetted);
+                }
+            }
+            _pieceBeingPetted = null;
         }
-
-        int totalCells = pieceCells.Count;
-        if (buildableOnGridCount == totalCells) return PlacementValidity.OnBuildableGrid;
-        if (offGridCount == totalCells) return PlacementValidity.OffGrid;
-        if (buildableOnGridCount == 0 && nonBuildableOnGridCount > 0 && offGridCount > 0) return PlacementValidity.OnNonBuildableAndOffGrid;
-        return PlacementValidity.Invalid;
     }
 
-    public void PickUpPiece(PuzzlePiece piece)
+    private void PickUpPiece(PuzzlePiece piece)
     {
-        if (heldPiece != null) return;
+        if (_heldPiece != null) return;
 
-        heldPiece = piece;
-        initialPiecePosition = piece.transform.position;
-        initialPieceRotation = piece.transform.rotation;
-
+        _heldPiece = piece;
+        _initialPiecePosition = piece.transform.position;
+        _initialPieceRotation = piece.transform.rotation;
         _lastHeldPiecePosition = piece.transform.position;
         _heldPieceVelocity = 0f;
 
@@ -219,66 +169,176 @@ public class PuzzleManager : MonoBehaviour
         PersonalityEventManager.RaisePiecePickedUp(piece);
     }
 
-    private void TryPlaceOnGrid(Vector2Int origin)
+    private void HandleHeldPieceInput()
     {
-        ICommand placeCommand = new PlaceCommand(heldPiece, origin, heldPiece.CurrentDirection, initialPiecePosition, initialPieceRotation);
+        HandlePieceMovement();
 
-        if (placeCommand.Execute())
+        if (Input.GetMouseButtonDown(0) && !_heldPiece.IsRotating)
         {
-            PuzzlePiece placedPiece = heldPiece;
-            heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
-            CommandHistory.AddCommand(placeCommand);
-            OnPieceDropped?.Invoke(placedPiece);
-            // ОНОВЛЕНО: Викликаємо просту подію без швидкості
-            PersonalityEventManager.RaisePieceDropped(placedPiece);
-            heldPiece = null;
-            CheckForWin();
-            GameManager.Instance.SaveCurrentProgress();
+            TryToPlaceOrDropPiece();
+        }
+        if (Input.GetKeyDown(KeyCode.Space) && !_heldPiece.IsRotating)
+        {
+            _heldPiece.StartSmoothRotation();
+        }
+    }
+
+    private void HandlePieceMovement()
+    {
+        if (_heldPiece == null || _heldPiece.IsRotating) return;
+
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
+        {
+            var grid = GridBuildingSystem.Instance.GetGrid();
+            float cellSize = grid.GetCellSize();
+            grid.GetXZ(hit.point, out int x, out int z);
+            Vector2Int origin = new Vector2Int(x, z);
+
+            Vector2Int rotationOffset = _heldPiece.PieceTypeSO.GetRotationOffset(_heldPiece.CurrentDirection);
+            Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
+            Vector3 snappedPosition = new Vector3(origin.x * cellSize, 0, origin.y * cellSize);
+            Vector3 targetPosition = new Vector3(snappedPosition.x, pieceHeightWhenHeld, snappedPosition.z) + offset;
+            _heldPiece.transform.position = Vector3.Lerp(_heldPiece.transform.position, targetPosition, Time.deltaTime * pieceFollowSpeed);
+
+            _heldPieceVelocity = (_heldPiece.transform.position - _lastHeldPiecePosition).magnitude / Time.deltaTime;
+            _lastHeldPiecePosition = _heldPiece.transform.position;
+
+            if (_heldPieceVelocity > shakenVelocityThreshold)
+            {
+                PersonalityEventManager.RaisePieceShaken(_heldPiece, _heldPieceVelocity);
+            }
+
+            bool canPlaceOnGrid, canPlaceOffGrid;
+            CanPlaceHeldPiece(origin, out canPlaceOnGrid, out canPlaceOffGrid);
+            _heldPiece.UpdatePlacementVisual(canPlaceOnGrid || canPlaceOffGrid, invalidPlacementMaterial);
+        }
+    }
+
+    // --- ЦЕЙ МЕТОД ОНОВЛЕНО ---
+    private void TryToPlaceOrDropPiece()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (!Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer)) return;
+
+        var grid = GridBuildingSystem.Instance.GetGrid();
+        grid.GetXZ(hit.point, out int x, out int z);
+        Vector2Int origin = new Vector2Int(x, z);
+
+        bool canPlaceOnGrid, canPlaceOffGrid;
+        CanPlaceHeldPiece(origin, out canPlaceOnGrid, out canPlaceOffGrid);
+
+        if (canPlaceOnGrid)
+        {
+            TryPlaceOnGrid(origin);
+        }
+        else if (canPlaceOffGrid)
+        {
+            TryPlaceOffGrid(origin);
         }
         else
         {
-            Debug.Log("Неможливо розмістити фігуру на ігровій сітці!");
+            // Якщо розмістити неможливо, виводимо повідомлення і нічого не робимо.
+            // Фігура залишається в руках.
+            UnityEngine.Debug.Log("<color=red>Неможливо розмістити фігуру тут!</color>");
+        }
+    }
+
+
+    private void TryPlaceOnGrid(Vector2Int origin)
+    {
+        ICommand placeCommand = new PlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
+        if (placeCommand.Execute())
+        {
+            PuzzlePiece placedPiece = _heldPiece;
+            _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
+            CommandHistory.AddCommand(placeCommand);
+
+            OnPieceDropped?.Invoke(placedPiece);
+
+            _heldPiece = null;
+            _justPlacedPiece = true;
+            CheckForWin();
+            GameManager.Instance.SaveCurrentProgress();
         }
     }
 
     private void TryPlaceOffGrid(Vector2Int offGridOrigin)
     {
-        if (!OffGridManager.CanPlacePiece(heldPiece, offGridOrigin))
-        {
-            Debug.Log("Неможливо розмістити фігуру тут, місце зайняте!");
-            return;
-        }
-
-        PuzzlePiece placedPiece = heldPiece;
-        heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
+        PuzzlePiece placedPiece = _heldPiece;
+        _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
 
         float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
-        Vector2Int rotationOffset = heldPiece.PieceTypeSO.GetRotationOffset(heldPiece.CurrentDirection);
+        Vector2Int rotationOffset = _heldPiece.PieceTypeSO.GetRotationOffset(_heldPiece.CurrentDirection);
         Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
         Vector3 finalPos = new Vector3(offGridOrigin.x * cellSize, 0, offGridOrigin.y * cellSize) + offset;
 
-        heldPiece.transform.position = finalPos;
-        heldPiece.SetOffGrid(true, offGridOrigin);
-        OffGridManager.PlacePiece(heldPiece, offGridOrigin);
+        _heldPiece.transform.position = finalPos;
+        _heldPiece.SetOffGrid(true, offGridOrigin);
+        OffGridManager.PlacePiece(_heldPiece, offGridOrigin);
 
         OnPieceDropped?.Invoke(placedPiece);
-        // ОНОВЛЕНО: Викликаємо просту подію без швидкості
         PersonalityEventManager.RaisePieceDropped(placedPiece);
-        heldPiece = null;
+
+        _heldPiece = null;
+        _justPlacedPiece = true;
         GameManager.Instance.SaveCurrentProgress();
     }
+
+    // --- ЦЕЙ МЕТОД ОНОВЛЕНО ---
+    private void CanPlaceHeldPiece(Vector2Int origin, out bool canPlaceOnGrid, out bool canPlaceOffGrid)
+    {
+        canPlaceOnGrid = false;
+        canPlaceOffGrid = false;
+
+        if (_heldPiece == null) return;
+
+        var grid = GridBuildingSystem.Instance.GetGrid();
+        List<Vector2Int> pieceCells = _heldPiece.PieceTypeSO.GetGridPositionsList(origin, _heldPiece.CurrentDirection);
+
+        bool allOnGrid = pieceCells.All(cell => grid.GetGridObject(cell.x, cell.y) != null);
+        bool allOffGrid = pieceCells.All(cell => grid.GetGridObject(cell.x, cell.y) == null);
+
+        if (allOnGrid)
+        {
+            // Якщо всі клітинки на сітці, перевіряємо, чи можна тут будувати
+            canPlaceOnGrid = GridBuildingSystem.Instance.CanPlacePiece(_heldPiece, origin, _heldPiece.CurrentDirection);
+        }
+        else if (allOffGrid)
+        {
+            // Якщо всі клітинки за межами сітки, перевіряємо зіткнення з іншими фігурами
+            canPlaceOffGrid = OffGridManager.CanPlacePiece(_heldPiece, origin);
+        }
+        else // Фігура частково на сітці, частково за її межами
+        {
+            bool occupiesAnyBuildableCell = pieceCells.Any(cell => {
+                GridObject gridObj = grid.GetGridObject(cell.x, cell.y);
+                return gridObj != null && gridObj.IsBuildable();
+            });
+
+            if (occupiesAnyBuildableCell)
+            {
+                // Якщо хоча б одна клітинка потрапляє на ДОЗВОЛЕНУ для будівництва - забороняємо
+                canPlaceOnGrid = false;
+                canPlaceOffGrid = false;
+            }
+            else
+            {
+                // Якщо всі клітинки, що на сітці, є НЕактивними, то це дозволене розміщення "за межами"
+                canPlaceOffGrid = OffGridManager.CanPlacePiece(_heldPiece, origin);
+            }
+        }
+    }
+
 
     private void CheckForWin()
     {
         if (_isLevelComplete) return;
         float fillPercentage = GridBuildingSystem.Instance.CalculateGridFillPercentage();
-        Debug.Log($"Поле заповнено на: {fillPercentage:F2}%");
-
         if (Mathf.Approximately(fillPercentage, 100f))
         {
             _isLevelComplete = true;
             GameManager.Instance.OnLevelComplete();
-            Debug.LogWarning("ПЕРЕМОГА! Рівень пройдено!");
         }
     }
 }

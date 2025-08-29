@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9ec8c52cf9f1ab439ea883ecc3c2392, type: 3}
+  m_Name: Level_GridDataSO_01_Personality
+  m_EditorClassIdentifier: 
+  personalityMappings:
+  - pieceType: {fileID: 11400000, guid: a118f7d569340d64991dbb2e1f6d931c, type: 2}
+    temperament: {fileID: 11400000, guid: a5a66253112afc7469e2433954d3fa89, type: 2}
+  - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
+    temperament: {fileID: 11400000, guid: 295b7e8eaa1467d4a80977612c2508c0, type: 2}
+  - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+    temperament: {fileID: 11400000, guid: a5a66253112afc7469e2433954d3fa89, type: 2}
+  - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+    temperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
+  - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+    temperament: {fileID: 11400000, guid: a4f1df805ce5afb41adfeda26888f169, type: 2}

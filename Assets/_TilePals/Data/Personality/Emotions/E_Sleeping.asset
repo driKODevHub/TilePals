@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67f8ce8b2be636e408a414d461c4c6b1, type: 3}
+  m_Name: E_Sleeping
+  m_EditorClassIdentifier: 
+  emotionName: "\u041D\u0435\u0439\u0442\u0440\u0430\u043B\u044C\u043D\u0430"
+  eyeState: {fileID: 11400000, guid: f57c899eb507a104d9d87e8da92b1498, type: 2}
+  featureStates:
+  - {fileID: 11400000, guid: c48e0f34c8a349e43958feb59038290c, type: 2}

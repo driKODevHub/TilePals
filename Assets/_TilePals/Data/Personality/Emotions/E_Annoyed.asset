@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: E_Annoyed
   m_EditorClassIdentifier: 
   emotionName: "\u0417\u0430\u0434\u043E\u0432\u0431\u0430\u043D\u0438\u0439"
-  eyeState: {fileID: 11400000, guid: e162e6b32c9eba24fabd1e434b6e20ec, type: 2}
-  otherExpressions:
-  - featureSet: {fileID: 11400000, guid: e638a9fd59e3e8e419950b0ccbcc6278, type: 2}
-    textureIndex: 0
+  eyeState: {fileID: 11400000, guid: 9a1686f8e35840c4baec72052a0ce2a3, type: 2}
+  featureStates:
+  - {fileID: 11400000, guid: ff9f8312d47309942817bdc4274ea61c, type: 2}

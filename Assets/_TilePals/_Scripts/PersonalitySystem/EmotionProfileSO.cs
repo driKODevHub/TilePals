@@ -2,28 +2,17 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// ScriptableObject, що описує повну емоцію.
-/// Тепер використовує прямі посилання на стани рис обличчя.
+/// ScriptableObject, що описує повну емоцію, комбінуючи стани різних рис обличчя.
 /// </summary>
 [CreateAssetMenu(fileName = "E_", menuName = "Puzzle/Personality/Emotion Profile")]
 public class EmotionProfileSO : ScriptableObject
 {
-    [System.Serializable]
-    public struct FeatureExpression
-    {
-        [Tooltip("Набір текстур, з якого обирається вираз (напр., 'FFS_Mouth_Default').")]
-        public FacialFeatureSetSO featureSet;
-
-        [Tooltip("Індекс текстури в списку 'textures' відповідного FacialFeatureSetSO.")]
-        public int textureIndex;
-    }
-
     [Header("Налаштування Емоції")]
     public string emotionName = "Нова емоція";
 
-    [Tooltip("Стан очей для цієї емоції.")]
+    [Tooltip("Стан очей для цієї емоції (асет EyeStateSO).")]
     public EyeStateSO eyeState;
 
-    [Tooltip("Інші риси обличчя (рот, брови) для цієї емоції.")]
-    public List<FeatureExpression> otherExpressions;
+    [Tooltip("Список станів інших рис обличчя (рот, брови і т.д.). Перетягніть сюди асети FeatureStateSO.")]
+    public List<FeatureStateSO> featureStates;
 }

@@ -5,16 +5,17 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Налаштування рівнів")]
-    [Tooltip("Колекція всіх рівнів гри у правильному порядку")]
     [SerializeField] private LevelCollectionSO levelCollection;
-
-    [Header("Посилання на компоненти сцени")]
     [SerializeField] private LevelLoader levelLoader;
 
-    public int CurrentLevelIndex { get; private set; }
-    private GameState _gameState;
+    // --- НОВЕ ПОЛЕ ДЛЯ UI ---
+    [Header("UI Елементи")]
+    [Tooltip("Об'єкт, який буде показано при завершенні рівня (напр. панель з текстом).")]
+    [SerializeField] private GameObject levelCompleteScreen;
 
+    public int CurrentLevelIndex { get; private set; }
     private enum GameState { Playing, LevelComplete }
+    private GameState _gameState;
 
     private void Awake()
     {
@@ -24,62 +25,67 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        // Ховаємо екран завершення на старті
+        if (levelCompleteScreen != null)
+        {
+            levelCompleteScreen.SetActive(false);
+        }
+
         CurrentLevelIndex = SaveSystem.LoadCurrentLevelIndex();
         LoadLevel(CurrentLevelIndex, true);
     }
 
     private void Update()
     {
+        // --- НОВА ЛОГІКА ДЛЯ ПЕРЕХОДУ НА НАСТУПНИЙ РІВЕНЬ ---
+        if (_gameState == GameState.LevelComplete)
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                SwitchToNextLevel(true); // Завантажуємо наступний рівень, очищуючи його прогрес
+            }
+            return; // Блокуємо інший інпут, коли рівень пройдено
+        }
+
+        // --- Стара логіка для дебагу ---
         if (Input.GetKeyDown(KeyCode.F1))
         {
             SaveSystem.ClearLastCompletedLevel();
-            Debug.Log("Прогрес проходження рівнів скинуто. Перезапустіть гру, щоб почати з рівня 0.");
         }
         if (Input.GetKeyDown(KeyCode.F2))
         {
             SaveSystem.ClearLevelProgress(CurrentLevelIndex);
-            Debug.Log($"Прогрес поточного рівня ({CurrentLevelIndex}) скинуто. Натисніть R, щоб перезапустити рівень і побачити зміни.");
         }
-
         if (Input.GetKeyDown(KeyCode.R))
         {
             RestartCurrentLevel();
         }
 
-        if (_gameState == GameState.LevelComplete)
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                LoadNextLevel();
-            }
-        }
-
-        // --- ОНОВЛЕНИЙ КОД ---
         bool isShiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
-        if (Input.GetKeyDown(KeyCode.Mouse4)) // Кнопка "Вперед"
+        if (Input.GetKeyDown(KeyCode.Mouse4)) // Next Level
         {
-            // Якщо Shift затиснутий, ми НЕ очищуємо прогрес.
             SwitchToNextLevel(!isShiftHeld);
         }
-        if (Input.GetKeyDown(KeyCode.Mouse3)) // Кнопка "Назад"
+        if (Input.GetKeyDown(KeyCode.Mouse3)) // Prev Level
         {
-            // Якщо Shift затиснутий, ми НЕ очищуємо прогрес.
             SwitchToPreviousLevel(!isShiftHeld);
         }
     }
 
     public void LoadLevel(int index, bool loadFromSave)
     {
-        if (levelCollection == null || levelCollection.levels.Count == 0)
+        if (levelCollection == null || levelCollection.levels.Count == 0) return;
+
+        // Ховаємо екран завершення при завантаженні нового рівня
+        if (levelCompleteScreen != null)
         {
-            Debug.LogError("Колекція рівнів (LevelCollection) не налаштована!");
-            return;
+            levelCompleteScreen.SetActive(false);
         }
 
         if (index >= levelCollection.levels.Count)
         {
-            Debug.Log("<color=green><b>Всі рівні пройдено! Вітаємо!</b></color>");
+            Debug.Log("Всі рівні пройдено!");
+            // Тут можна показати екран фінальних титрів або щось подібне
             return;
         }
 
@@ -91,40 +97,26 @@ public class GameManager : MonoBehaviour
         CurrentLevelIndex = index;
         levelLoader.LoadLevel(levelCollection.levels[CurrentLevelIndex], loadFromSave);
         _gameState = GameState.Playing;
-        Debug.Log($"Завантаження рівня {CurrentLevelIndex}");
     }
 
     public void RestartCurrentLevel()
     {
-        Debug.Log("Перезапуск рівня...");
         SaveSystem.ClearLevelProgress(CurrentLevelIndex);
         LoadLevel(CurrentLevelIndex, false);
     }
 
-    private void LoadNextLevel()
-    {
-        LoadLevel(CurrentLevelIndex + 1, false);
-    }
-
-    // --- ОНОВЛЕНІ МЕТОДИ ---
     private void SwitchToNextLevel(bool clearProgress)
     {
         int nextIndex = CurrentLevelIndex + 1;
         if (nextIndex < levelCollection.levels.Count)
         {
-            string message = clearProgress ? " (прогрес буде скинуто)" : " (прогрес буде завантажено)";
-            Debug.Log($"<color=orange>Перемикання на наступний рівень ({nextIndex}){message}...</color>");
-
-            if (clearProgress)
-            {
-                SaveSystem.ClearLevelProgress(nextIndex);
-            }
-            // Якщо прогрес не очищуємо, то завантажуємо зі збереження (loadFromSave = true)
+            if (clearProgress) SaveSystem.ClearLevelProgress(nextIndex);
             LoadLevel(nextIndex, !clearProgress);
         }
         else
         {
-            Debug.Log("<color=orange>Це останній рівень.</color>");
+            Debug.Log("Це був останній рівень!");
+            // Можна додати логіку для екрану "Дякуємо за гру"
         }
     }
 
@@ -133,18 +125,8 @@ public class GameManager : MonoBehaviour
         int prevIndex = CurrentLevelIndex - 1;
         if (prevIndex >= 0)
         {
-            string message = clearProgress ? " (прогрес буде скинуто)" : " (прогрес буде завантажено)";
-            Debug.Log($"<color=orange>Перемикання на попередній рівень ({prevIndex}){message}...</color>");
-
-            if (clearProgress)
-            {
-                SaveSystem.ClearLevelProgress(prevIndex);
-            }
+            if (clearProgress) SaveSystem.ClearLevelProgress(prevIndex);
             LoadLevel(prevIndex, !clearProgress);
-        }
-        else
-        {
-            Debug.Log("<color=orange>Це перший рівень.</color>");
         }
     }
 
@@ -153,10 +135,15 @@ public class GameManager : MonoBehaviour
         if (_gameState == GameState.Playing)
         {
             _gameState = GameState.LevelComplete;
-            Debug.Log("<color=green><b>РІВЕНЬ ПРОЙДЕНО!</b></color> <color=yellow>Натисніть ПРОБІЛ, щоб перейти до наступного рівня.</color>");
-
             SaveSystem.SaveCurrentLevelIndex(CurrentLevelIndex + 1);
             SaveSystem.ClearLevelProgress(CurrentLevelIndex);
+            Debug.Log("Рівень пройдено! Натисніть ПРОБІЛ, щоб продовжити.");
+
+            // Показуємо екран завершення
+            if (levelCompleteScreen != null)
+            {
+                levelCompleteScreen.SetActive(true);
+            }
         }
     }
 

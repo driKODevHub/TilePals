@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System;
+using System.Linq;
 
 public class GridVisualManager : MonoBehaviour
 {
@@ -25,15 +25,9 @@ public class GridVisualManager : MonoBehaviour
         Instance = this;
     }
 
-    // --- ЛОГІКА ПОВНІСТЮ ПЕРЕРОБЛЕНА ---
-    // Тепер ініціалізація викликається ззовні (з LevelLoader)
     public void ReinitializeVisuals()
     {
-        // Спочатку очищуємо старі візуальні елементи, якщо вони є
-        if (isInitialized)
-        {
-            ClearVisuals();
-        }
+        if (isInitialized) ClearVisuals();
         Initialize();
     }
 
@@ -49,18 +43,20 @@ public class GridVisualManager : MonoBehaviour
         enabled = true;
         InitializeCellVisuals();
 
-        // Підписуємось на події лише один раз за всю гру
         if (!isInitialized)
         {
-            PuzzleManager.Instance.OnPiecePickedUp += PuzzleManager_OnPiecePickedUp;
-            PuzzleManager.Instance.OnPieceDropped += PuzzleManager_OnPieceDropped;
+            // Підписуємось на старі події PuzzleManager для сумісності
+            if (PuzzleManager.Instance != null)
+            {
+                PuzzleManager.Instance.OnPiecePickedUp += HandlePiecePickedUp;
+                PuzzleManager.Instance.OnPieceDropped += HandlePieceDropped;
+            }
         }
 
         RefreshAllCellVisuals();
         isInitialized = true;
     }
 
-    // Новий метод для очищення старих візуальних елементів
     private void ClearVisuals()
     {
         if (cellVisuals != null)
@@ -69,41 +65,26 @@ public class GridVisualManager : MonoBehaviour
             {
                 for (int z = 0; z < cellVisuals.GetLength(1); z++)
                 {
-                    if (cellVisuals[x, z] != null)
-                    {
-                        Destroy(cellVisuals[x, z]);
-                    }
+                    if (cellVisuals[x, z] != null) Destroy(cellVisuals[x, z]);
                 }
             }
         }
         cellVisuals = null;
-
-        // Відписуємось від подій старої сітки, щоб уникнути помилок
-        if (grid != null)
-        {
-            grid.OnGridObjectChanged -= Grid_OnGridObjectChanged;
-        }
+        if (grid != null) grid.OnGridObjectChanged -= Grid_OnGridObjectChanged;
     }
 
     private void OnDestroy()
     {
-        if (PuzzleManager.Instance != null)
+        if (isInitialized && PuzzleManager.Instance != null)
         {
-            PuzzleManager.Instance.OnPiecePickedUp -= PuzzleManager_OnPiecePickedUp;
-            PuzzleManager.Instance.OnPieceDropped -= PuzzleManager_OnPieceDropped;
+            PuzzleManager.Instance.OnPiecePickedUp -= HandlePiecePickedUp;
+            PuzzleManager.Instance.OnPieceDropped -= HandlePieceDropped;
         }
-        if (grid != null)
-        {
-            grid.OnGridObjectChanged -= Grid_OnGridObjectChanged;
-        }
+        if (grid != null) grid.OnGridObjectChanged -= Grid_OnGridObjectChanged;
     }
 
-    private void PuzzleManager_OnPiecePickedUp(PuzzlePiece piece)
-    {
-        currentlyHeldPiece = piece;
-    }
-
-    private void PuzzleManager_OnPieceDropped(PuzzlePiece piece)
+    private void HandlePiecePickedUp(PuzzlePiece piece) => currentlyHeldPiece = piece;
+    private void HandlePieceDropped(PuzzlePiece piece)
     {
         currentlyHeldPiece = null;
         RefreshAllCellVisuals();
@@ -132,7 +113,6 @@ public class GridVisualManager : MonoBehaviour
                 }
             }
         }
-        // Підписуємось на події нової сітки
         grid.OnGridObjectChanged += Grid_OnGridObjectChanged;
     }
 
@@ -160,7 +140,7 @@ public class GridVisualManager : MonoBehaviour
 
     private void UpdateCellVisual(int x, int z)
     {
-        if (x < 0 || x >= grid.GetWidth() || z < 0 || z >= grid.GetHeight() || cellVisuals == null) return;
+        if (x < 0 || x >= grid.GetWidth() || z < 0 || z >= grid.GetHeight() || cellVisuals == null || cellVisuals[x, z] == null) return;
         GridObject gridObject = grid.GetGridObject(x, z);
         GridCellState currentState = GetCellState(gridObject);
         SetCellMaterial(x, z, currentState);
@@ -171,21 +151,21 @@ public class GridVisualManager : MonoBehaviour
         RefreshAllCellVisuals();
         if (currentlyHeldPiece == null) return;
 
-        PlacedObjectTypeSO placedObjectTypeSO = currentlyHeldPiece.PieceTypeSO;
-        PlacedObjectTypeSO.Dir currentDir = currentlyHeldPiece.CurrentDirection;
-
-        Vector3 rawMouseWorldPosition = GridBuildingSystem.Instance.GetMouseWorldPosition();
-        grid.GetXZ(rawMouseWorldPosition, out int originX, out int originZ);
-        Vector2Int origin = new Vector2Int(originX, originZ);
-
-        List<Vector2Int> occupiedPositionsOfGhost = placedObjectTypeSO.GetGridPositionsList(origin, currentDir);
-        bool canBuildEntireObject = GridBuildingSystem.Instance.CanPlacePiece(currentlyHeldPiece, origin, currentDir);
-
-        foreach (var gridPos in occupiedPositionsOfGhost)
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f, LayerMask.GetMask("OffGridPlane")))
         {
-            if (GridBuildingSystem.Instance.IsValidGridPosition(gridPos.x, gridPos.y))
+            grid.GetXZ(hit.point, out int originX, out int originZ);
+            Vector2Int origin = new Vector2Int(originX, originZ);
+
+            List<Vector2Int> occupiedPositionsOfGhost = currentlyHeldPiece.PieceTypeSO.GetGridPositionsList(origin, currentlyHeldPiece.CurrentDirection);
+            bool canBuildEntireObject = GridBuildingSystem.Instance.CanPlacePiece(currentlyHeldPiece, origin, currentlyHeldPiece.CurrentDirection);
+
+            foreach (var gridPos in occupiedPositionsOfGhost)
             {
-                SetCellMaterial(gridPos.x, gridPos.y, canBuildEntireObject ? GridCellState.Hovered : GridCellState.InvalidPlacement);
+                if (GridBuildingSystem.Instance.IsValidGridPosition(gridPos.x, gridPos.y))
+                {
+                    SetCellMaterial(gridPos.x, gridPos.y, canBuildEntireObject ? GridCellState.Hovered : GridCellState.InvalidPlacement);
+                }
             }
         }
     }

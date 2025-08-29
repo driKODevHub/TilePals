@@ -12,62 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 187a4d228514abd47aeb8772198b1abe, type: 3}
   m_Name: Level_GridDataSO_02
   m_EditorClassIdentifier: 
-  width: 8
-  height: 8
+  width: 4
+  height: 4
   cellSize: 1
   buildableCells:
-  - {x: 0, y: 0}
   - {x: 0, y: 1}
-  - {x: 0, y: 6}
-  - {x: 0, y: 7}
+  - {x: 0, y: 2}
   - {x: 1, y: 0}
   - {x: 1, y: 1}
   - {x: 1, y: 2}
   - {x: 1, y: 3}
-  - {x: 1, y: 4}
-  - {x: 1, y: 5}
-  - {x: 1, y: 6}
-  - {x: 1, y: 7}
+  - {x: 2, y: 0}
   - {x: 2, y: 1}
   - {x: 2, y: 2}
   - {x: 2, y: 3}
-  - {x: 2, y: 4}
-  - {x: 2, y: 5}
-  - {x: 2, y: 6}
   - {x: 3, y: 1}
   - {x: 3, y: 2}
-  - {x: 3, y: 3}
-  - {x: 3, y: 4}
-  - {x: 3, y: 5}
-  - {x: 3, y: 6}
-  - {x: 4, y: 1}
-  - {x: 4, y: 2}
-  - {x: 4, y: 3}
-  - {x: 4, y: 4}
-  - {x: 4, y: 5}
-  - {x: 4, y: 6}
-  - {x: 5, y: 1}
-  - {x: 5, y: 2}
-  - {x: 5, y: 3}
-  - {x: 5, y: 4}
-  - {x: 5, y: 5}
-  - {x: 5, y: 6}
-  - {x: 6, y: 0}
-  - {x: 6, y: 1}
-  - {x: 6, y: 2}
-  - {x: 6, y: 3}
-  - {x: 6, y: 4}
-  - {x: 6, y: 5}
-  - {x: 6, y: 6}
-  - {x: 6, y: 7}
-  - {x: 7, y: 0}
-  - {x: 7, y: 1}
-  - {x: 7, y: 6}
-  - {x: 7, y: 7}
   boardToSpawnPadding: 1
   pieceToPiecePadding: 1
   maxSpawnRadius: 2
   placementAttempts: 100
+  personalityData: {fileID: 11400000, guid: a78fbdf1ab584734ba3d2b774c291b29, type: 2}
   availablePieceTypesForGeneration:
   - {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
   - {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
@@ -92,130 +57,133 @@ MonoBehaviour:
     isRequired: 0
     requiredCount: 1
     color: {r: 0.9271002, g: 0.013230776, b: 0.45701098, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
-    isRequired: 1
+    isRequired: 0
     requiredCount: 3
     color: {r: 0.94258034, g: 0.07458948, b: 0.044066653, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.04902142, g: 0.30266106, b: 0.9869698, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.9137829, g: 0.060454316, b: 0.3366027, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 277036584edd59e41ba4f82b07346b00, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.18850552, g: 0.20613913, b: 0.96445864, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.62956625, g: 0.98270726, b: 0.030529663, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.9737016, g: 0.9521117, b: 0.047564335, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 650e992d58e274e44b0bb69da2961424, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.15914695, g: 0.5644191, b: 0.9817752, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.9913796, g: 0.12775768, b: 0.6184336, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.025039636, g: 0.80287445, b: 0.9662385, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 07d2348d4a95d2b4fa04f6b97d10d8f3, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.7130614, g: 0.9467304, b: 0.17620091, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: fba45b4fbe2537c48bddeacfb692bbc6, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.99895513, g: 0.75315505, b: 0.1941258, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 8810e947ff0981f4aa5b8480f69fb6c9, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.9050808, g: 0.8733267, b: 0.006428219, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 3b23a39513d08924aba3498b1373b9f0, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.023905909, g: 0.71491426, b: 0.97333556, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: e194c500a14d21e4caffb7a2cd8fbcbb, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.036663502, g: 0.38973692, b: 0.9592995, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 743f8deda0044ce4086cbfa4292b9d73, type: 2}
-    isRequired: 1
+    isRequired: 0
     requiredCount: 1
     color: {r: 0.14153136, g: 0.2784469, b: 0.9258842, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 1e3401ccdcfd38b43bd2248a2ba75ed4, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.40813476, g: 0.91951054, b: 0.16972482, a: 1}
+    maxCount: 1
   - pieceType: {fileID: 11400000, guid: 6e8248db431e4574bb561af796676cca, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.9478544, g: 0.55185235, b: 0.14218204, a: 1}
-  puzzlePieces: []
-  generatedPieceSummary: []
-  puzzleSolution: []
-  isComplete: 0
+    maxCount: 1
+  puzzlePieces:
+  - {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+  - {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+  - {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+  - {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+  generatedPieceSummary:
+  - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+    count: 1
+  - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+    count: 1
+  - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+    count: 1
+  - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+    count: 1
+  puzzleSolution:
+  - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+    position: {x: 1, y: 0}
+    direction: 0
+  - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+    position: {x: 2, y: 0}
+    direction: 3
+  - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+    position: {x: 0, y: 1}
+    direction: 0
+  - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+    position: {x: 2, y: 1}
+    direction: 2
+  isComplete: 1
   solutionVariantsCount: 1
   allFoundSolutions:
   - solution:
-    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
-      position: {x: 0, y: 0}
-      direction: 0
-    - pieceType: {fileID: 11400000, guid: 743f8deda0044ce4086cbfa4292b9d73, type: 2}
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
       position: {x: 1, y: 0}
       direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 2, y: 0}
+      direction: 3
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
-      position: {x: 6, y: 0}
-      direction: 1
-    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 2, y: 1}
-      direction: 3
-    - pieceType: {fileID: 11400000, guid: e194c500a14d21e4caffb7a2cd8fbcbb, type: 2}
-      position: {x: 4, y: 1}
-      direction: 0
-    - pieceType: {fileID: 11400000, guid: fba45b4fbe2537c48bddeacfb692bbc6, type: 2}
-      position: {x: 5, y: 1}
-      direction: 0
-    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
-      position: {x: 6, y: 1}
-      direction: 3
-    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
-      position: {x: 7, y: 1}
-      direction: 0
-    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
-      position: {x: 3, y: 2}
-      direction: 1
-    - pieceType: {fileID: 11400000, guid: fba45b4fbe2537c48bddeacfb692bbc6, type: 2}
-      position: {x: 1, y: 3}
       direction: 2
-    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
-      position: {x: 3, y: 3}
-      direction: 2
-    - pieceType: {fileID: 11400000, guid: 6e8248db431e4574bb561af796676cca, type: 2}
-      position: {x: 3, y: 4}
-      direction: 1
-    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
-      position: {x: 5, y: 4}
-      direction: 2
-    - pieceType: {fileID: 11400000, guid: 6e8248db431e4574bb561af796676cca, type: 2}
-      position: {x: 6, y: 5}
-      direction: 1
-    - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
-      position: {x: 0, y: 6}
-      direction: 1
-    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
-      position: {x: 5, y: 6}
-      direction: 1
-    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
-      position: {x: 7, y: 6}
-      direction: 0
   currentSolutionIndex: 0

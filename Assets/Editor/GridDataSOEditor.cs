@@ -37,6 +37,8 @@ public class GridDataSOEditor : Editor
 
     private bool _calculationStopped;
 
+    private int _globalMaxCount = 1;
+
 
     private void OnEnable()
     {
@@ -60,7 +62,9 @@ public class GridDataSOEditor : Editor
 
         int oldWidth = gridDataSO.width;
         int oldHeight = gridDataSO.height;
-        DrawPropertiesExcluding(serializedObject, "puzzlePieces", "generatedPieceSummary", "puzzleSolution", "availablePieceTypesForGeneration", "generatorPieceConfig", "solutionVariantsCount", "allFoundSolutions", "currentSolutionIndex", "isComplete");
+
+        DrawPropertiesExcluding(serializedObject, "m_Script", "puzzlePieces", "generatedPieceSummary", "puzzleSolution", "availablePieceTypesForGeneration", "generatorPieceConfig", "solutionVariantsCount", "allFoundSolutions", "currentSolutionIndex", "isComplete", "personalityData");
+
         if (gridDataSO.width != oldWidth || gridDataSO.height != oldHeight)
         {
             InitializeEditorGrid();
@@ -71,15 +75,23 @@ public class GridDataSOEditor : Editor
         DrawBuildableCellsEditor();
 
         EditorGUILayout.Space(20);
+        EditorGUILayout.LabelField("Personality Settings", EditorStyles.boldLabel);
+        DrawPersonalityEditor();
+
+        EditorGUILayout.Space(20);
         EditorGUILayout.LabelField("Puzzle Generator", EditorStyles.boldLabel);
 
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("availablePieceTypesForGeneration"), new GUIContent("Available Piece Types", "Перетягніть сюди всі типи фігур, які МОЖУТЬ бути використані для генерації цього пазла."));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("availablePieceTypesForGeneration"), true);
         if (GUILayout.Button(new GUIContent("Update & Manage Generator Pieces", "Синхронізує список фігур нижче з тими, що вказані у 'Available Piece Types'. Додає нові та зберігає налаштування для існуючих."))) UpdateGeneratorPieceConfig();
+
+        DrawMaxCountControls();
+
         EditorGUILayout.Space();
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button(new GUIContent("Deselect All Required", "Знімає позначку 'Is Required' з усіх фігур у списку."))) DeselectAllRequired();
         if (GUILayout.Button(new GUIContent("Reset All Counts", "Встановлює значення 'Count' на 1 для всіх обов'язкових фігур."))) ResetAllCounts();
         EditorGUILayout.EndHorizontal();
+
         showRequiredPieces = EditorGUILayout.Foldout(showRequiredPieces, "Required Pieces", true);
         if (showRequiredPieces) DrawGeneratorPieceConfigList(true);
         showAllPieces = EditorGUILayout.Foldout(showAllPieces, "All Available Pieces", true);
@@ -161,6 +173,253 @@ public class GridDataSOEditor : Editor
 
         serializedObject.ApplyModifiedProperties();
     }
+
+    private void DrawMaxCountControls()
+    {
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Керування кількістю фігур", EditorStyles.boldLabel);
+
+        _globalMaxCount = EditorGUILayout.IntField(
+            new GUIContent("Глобальний ліміт", "Значення, яке буде застосовано до всіх фігур за допомогою кнопок нижче."),
+            _globalMaxCount);
+        if (_globalMaxCount < 1) _globalMaxCount = 1;
+
+        EditorGUILayout.BeginHorizontal();
+
+        if (GUILayout.Button(new GUIContent("Встановити для всіх", $"Встановлює 'Max Count' для всіх фігур у списку 'Generator Piece Config' на {_globalMaxCount}.")))
+        {
+            if (gridDataSO.generatorPieceConfig != null)
+            {
+                for (int i = 0; i < gridDataSO.generatorPieceConfig.Count; i++)
+                {
+                    var config = gridDataSO.generatorPieceConfig[i];
+                    config.maxCount = _globalMaxCount;
+                    gridDataSO.generatorPieceConfig[i] = config;
+                }
+                EditorUtility.SetDirty(gridDataSO);
+                UnityEngine.Debug.Log($"Встановлено ліміт {_globalMaxCount} для всіх фігур.");
+            }
+        }
+
+        if (GUILayout.Button(new GUIContent("Скинути (всі по 1)", "Встановлює 'Max Count' для всіх фігур на стандартне значення 1.")))
+        {
+            if (gridDataSO.generatorPieceConfig != null)
+            {
+                for (int i = 0; i < gridDataSO.generatorPieceConfig.Count; i++)
+                {
+                    var config = gridDataSO.generatorPieceConfig[i];
+                    config.maxCount = 1;
+                    gridDataSO.generatorPieceConfig[i] = config;
+                }
+                EditorUtility.SetDirty(gridDataSO);
+                UnityEngine.Debug.Log("Скинуто ліміти для всіх фігур. Тепер кожна фігура унікальна.");
+            }
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+
+
+    #region Personality Editor
+    private void DrawPersonalityEditor()
+    {
+        SerializedProperty personalityProp = serializedObject.FindProperty("personalityData");
+        EditorGUILayout.PropertyField(personalityProp);
+
+        if (personalityProp.objectReferenceValue == null)
+        {
+            if (GUILayout.Button("Create and Assign Personality Data"))
+            {
+                CreatePersonalityData();
+            }
+            EditorGUILayout.HelpBox("Налаштування характерів для рівня не створено. Натисніть кнопку, щоб створити.", MessageType.Warning);
+            return;
+        }
+
+        EditorGUILayout.BeginVertical("box");
+
+        LevelPersonalitySO personalityData = (LevelPersonalitySO)personalityProp.objectReferenceValue;
+        SerializedObject personalitySerializedObject = new SerializedObject(personalityData);
+        SerializedProperty mappingsProp = personalitySerializedObject.FindProperty("personalityMappings");
+
+        var requiredPieceTypes = gridDataSO.generatedPieceSummary.Select(s => s.pieceType).Where(p => p != null).Distinct().ToList();
+        var mappedPieceTypes = personalityData.personalityMappings.Where(m => m.pieceType != null).Select(m => m.pieceType).ToList();
+
+        bool isSynced = requiredPieceTypes.Count == mappedPieceTypes.Count && requiredPieceTypes.All(mappedPieceTypes.Contains);
+
+        if (!isSynced)
+        {
+            EditorGUILayout.HelpBox("Склад фігур у рівні не співпадає з налаштуваннями характерів!", MessageType.Error);
+            // --- ОНОВЛЕНА КНОПКА ---
+            if (GUILayout.Button("Примусово синхронізувати характери"))
+            {
+                SyncPersonalityMappings(personalityData, requiredPieceTypes);
+            }
+        }
+        else
+        {
+            EditorGUILayout.HelpBox("Характери синхронізовано.", MessageType.Info);
+        }
+
+        for (int i = 0; i < mappingsProp.arraySize; i++)
+        {
+            SerializedProperty mappingElement = mappingsProp.GetArrayElementAtIndex(i);
+            SerializedProperty pieceTypeProp = mappingElement.FindPropertyRelative("pieceType");
+            SerializedProperty temperamentProp = mappingElement.FindPropertyRelative("temperament");
+
+            EditorGUILayout.BeginHorizontal();
+            GUI.enabled = false;
+            EditorGUILayout.ObjectField(pieceTypeProp.objectReferenceValue, typeof(PlacedObjectTypeSO), false, GUILayout.Width(150));
+            GUI.enabled = true;
+            EditorGUILayout.PropertyField(temperamentProp, GUIContent.none);
+            EditorGUILayout.EndHorizontal();
+        }
+
+        EditorGUILayout.Space();
+        if (GUILayout.Button("Рандомізувати непризначені"))
+        {
+            RandomizeUnassignedTemperaments(personalityData);
+        }
+
+        personalitySerializedObject.ApplyModifiedProperties();
+        EditorGUILayout.EndVertical();
+    }
+
+    private void CreatePersonalityData()
+    {
+        LevelPersonalitySO newPersonalityData = CreateInstance<LevelPersonalitySO>();
+
+        string path = AssetDatabase.GetAssetPath(gridDataSO);
+        if (string.IsNullOrEmpty(path))
+        {
+            path = "Assets/";
+        }
+        string dirPath = System.IO.Path.GetDirectoryName(path);
+        string personalityPath = AssetDatabase.GenerateUniqueAssetPath(System.IO.Path.Combine(dirPath, $"{gridDataSO.name}_Personality.asset"));
+
+        AssetDatabase.CreateAsset(newPersonalityData, personalityPath);
+        AssetDatabase.SaveAssets();
+
+        gridDataSO.personalityData = newPersonalityData;
+        EditorUtility.SetDirty(gridDataSO);
+    }
+
+    private void SyncPersonalityMappings(LevelPersonalitySO pData, List<PlacedObjectTypeSO> requiredPieces)
+    {
+        var currentMappings = pData.personalityMappings.ToDictionary(m => m.pieceType, m => m.temperament);
+        pData.personalityMappings.Clear();
+
+        foreach (var pieceType in requiredPieces)
+        {
+            currentMappings.TryGetValue(pieceType, out TemperamentSO temperament);
+            pData.personalityMappings.Add(new LevelPersonalitySO.PersonalityMapping
+            {
+                pieceType = pieceType,
+                temperament = temperament
+            });
+        }
+        EditorUtility.SetDirty(pData);
+    }
+
+    private void RandomizeUnassignedTemperaments(LevelPersonalitySO pData)
+    {
+        string[] guids = AssetDatabase.FindAssets("t:TemperamentSO");
+        if (guids.Length == 0)
+        {
+            UnityEngine.Debug.LogWarning("Не знайдено жодного асету TemperamentSO для рандомізації.");
+            return;
+        }
+
+        List<TemperamentSO> allTemperaments = guids
+            .Select(guid => AssetDatabase.LoadAssetAtPath<TemperamentSO>(AssetDatabase.GUIDToAssetPath(guid)))
+            .ToList();
+
+        for (int i = 0; i < pData.personalityMappings.Count; i++)
+        {
+            var mapping = pData.personalityMappings[i];
+            if (mapping.temperament == null)
+            {
+                mapping.temperament = allTemperaments[Random.Range(0, allTemperaments.Count)];
+                pData.personalityMappings[i] = mapping;
+            }
+        }
+        EditorUtility.SetDirty(pData);
+    }
+    #endregion
+
+    #region Buildable Cells Editor
+    private void InitializeEditorGrid()
+    {
+        editorGridCells = new bool[gridDataSO.width, gridDataSO.height];
+        if (gridDataSO.buildableCells != null)
+        {
+            foreach (Vector2Int cell in gridDataSO.buildableCells)
+            {
+                if (cell.x >= 0 && cell.x < gridDataSO.width && cell.y >= 0 && cell.y < gridDataSO.height)
+                {
+                    editorGridCells[cell.x, cell.y] = true;
+                }
+            }
+        }
+    }
+
+    private void DrawBuildableCellsEditor()
+    {
+        EditorGUILayout.HelpBox("Click cells to toggle their buildable status. Green means buildable, Red means not buildable.", MessageType.Info);
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Select All Buildable")) SelectAllBuildableCells(true);
+        if (GUILayout.Button("Deselect All Buildable")) SelectAllBuildableCells(false);
+        GUILayout.EndHorizontal();
+        EditorGUILayout.Space(5);
+        GUILayout.BeginVertical("box");
+        for (int z = gridDataSO.height - 1; z >= 0; z--)
+        {
+            GUILayout.BeginHorizontal();
+            for (int x = 0; x < gridDataSO.width; x++)
+            {
+                GUI.backgroundColor = editorGridCells[x, z] ? Color.green : Color.red;
+                if (GUILayout.Button("", GUILayout.Width(25), GUILayout.Height(25)))
+                {
+                    editorGridCells[x, z] = !editorGridCells[x, z];
+                    UpdateBuildableCellsList();
+                }
+            }
+            GUILayout.EndHorizontal();
+        }
+        GUILayout.EndVertical();
+        GUI.backgroundColor = Color.white;
+    }
+
+    private void UpdateBuildableCellsList()
+    {
+        var buildableCellsProp = serializedObject.FindProperty("buildableCells");
+        buildableCellsProp.ClearArray();
+        int index = 0;
+        for (int x = 0; x < gridDataSO.width; x++)
+        {
+            for (int z = 0; z < gridDataSO.height; z++)
+            {
+                if (editorGridCells[x, z])
+                {
+                    buildableCellsProp.InsertArrayElementAtIndex(index);
+                    buildableCellsProp.GetArrayElementAtIndex(index).vector2IntValue = new Vector2Int(x, z);
+                    index++;
+                }
+            }
+        }
+    }
+
+    private void SelectAllBuildableCells(bool select)
+    {
+        for (int x = 0; x < gridDataSO.width; x++)
+        {
+            for (int z = 0; z < gridDataSO.height; z++)
+            {
+                editorGridCells[x, z] = select;
+            }
+        }
+        UpdateBuildableCellsList();
+    }
+    #endregion
 
     #region Solution Counting & Navigation Logic
 
@@ -366,17 +625,18 @@ public class GridDataSOEditor : Editor
         stopwatch = Stopwatch.StartNew();
 
         var requiredPiecesConfig = gridDataSO.generatorPieceConfig?.Where(c => c.isRequired && c.pieceType != null).ToList();
-        var allAvailableFillers = gridDataSO.generatorPieceConfig?.Where(c => !c.isRequired && c.pieceType != null).Select(c => c.pieceType).ToList();
+        var allAvailableFillersConfig = gridDataSO.generatorPieceConfig?.Where(c => !c.isRequired && c.pieceType != null).ToList();
 
-        if ((requiredPiecesConfig == null || requiredPiecesConfig.Count == 0) && (allAvailableFillers == null || allAvailableFillers.Count == 0))
+        if ((requiredPiecesConfig == null || requiredPiecesConfig.Count == 0) && (allAvailableFillersConfig == null || allAvailableFillersConfig.Count == 0))
         {
             UnityEngine.Debug.LogError("No pieces specified for generation! Update the piece list.");
             return;
         }
 
         List<PlacedObjectTypeSO> curatedFillerPieces = new List<PlacedObjectTypeSO>();
-        if (allAvailableFillers != null)
+        if (allAvailableFillersConfig != null)
         {
+            var allAvailableFillers = allAvailableFillersConfig.Select(c => c.pieceType).ToList();
             var smallFillers = allAvailableFillers.Where(p => p.relativeOccupiedCells.Count <= smallPieceMaxCells).ToList();
             var mediumFillers = allAvailableFillers.Where(p => p.relativeOccupiedCells.Count > smallPieceMaxCells && p.relativeOccupiedCells.Count <= mediumPieceMaxCells).ToList();
             var largeFillers = allAvailableFillers.Where(p => p.relativeOccupiedCells.Count > mediumPieceMaxCells).ToList();
@@ -403,8 +663,15 @@ public class GridDataSOEditor : Editor
             }
         }
 
+        var pieceCountsInSolution = new Dictionary<PlacedObjectTypeSO, int>();
+        foreach (var piece in requiredPiecesToPlace)
+        {
+            pieceCountsInSolution[piece] = pieceCountsInSolution.GetValueOrDefault(piece, 0) + 1;
+        }
+
+
         var orderedFillerPieces = curatedFillerPieces.OrderByDescending(p => p.relativeOccupiedCells.Count).ToList();
-        bool success = SolvePuzzleRecursiveGeneration(tempGrid, solution, requiredPiecesToPlace, orderedFillerPieces);
+        bool success = SolvePuzzleRecursiveGeneration(tempGrid, solution, requiredPiecesToPlace, orderedFillerPieces, pieceCountsInSolution);
         stopwatch.Stop();
 
         if (success)
@@ -451,7 +718,7 @@ public class GridDataSOEditor : Editor
         serializedObject.ApplyModifiedProperties();
     }
 
-    private bool SolvePuzzleRecursiveGeneration(bool[,] currentGrid, List<GridDataSO.GeneratedPieceData> solution, List<PlacedObjectTypeSO> required, List<PlacedObjectTypeSO> fillers)
+    private bool SolvePuzzleRecursiveGeneration(bool[,] currentGrid, List<GridDataSO.GeneratedPieceData> solution, List<PlacedObjectTypeSO> required, List<PlacedObjectTypeSO> fillers, Dictionary<PlacedObjectTypeSO, int> pieceCounts)
     {
         if (stopwatch.Elapsed.TotalSeconds > generationTimeout) return false;
         Vector2Int? emptyCell = FindFirstEmptyCell(currentGrid);
@@ -459,12 +726,29 @@ public class GridDataSOEditor : Editor
 
         var piecesToTry = new List<PlacedObjectTypeSO>();
         bool tryingRequired = required.Count > 0;
-        if (tryingRequired) piecesToTry.AddRange(required.Distinct().OrderByDescending(p => p.relativeOccupiedCells.Count));
-        else piecesToTry.AddRange(fillers);
+        if (tryingRequired)
+        {
+            piecesToTry.AddRange(required.Distinct().OrderByDescending(p => p.relativeOccupiedCells.Count));
+        }
+        else
+        {
+            piecesToTry.AddRange(fillers);
+        }
 
         foreach (var pieceType in piecesToTry)
         {
             if (pieceType.relativeOccupiedCells == null || pieceType.relativeOccupiedCells.Count == 0) continue;
+
+            if (!tryingRequired)
+            {
+                var config = gridDataSO.generatorPieceConfig.FirstOrDefault(c => c.pieceType == pieceType);
+                int maxCount = config.pieceType != null ? config.maxCount : int.MaxValue;
+                if (pieceCounts.GetValueOrDefault(pieceType, 0) >= maxCount)
+                {
+                    continue;
+                }
+            }
+
             var shuffledDirs = System.Enum.GetValues(typeof(PlacedObjectTypeSO.Dir)).Cast<PlacedObjectTypeSO.Dir>().OrderBy(d => Random.value);
             foreach (PlacedObjectTypeSO.Dir dir in shuffledDirs)
             {
@@ -481,11 +765,13 @@ public class GridDataSOEditor : Editor
 
                             Place(currentGrid, piecePositions, false);
                             solution.Add(new GridDataSO.GeneratedPieceData { pieceType = pieceType, position = startPosition, direction = dir });
+                            pieceCounts[pieceType] = pieceCounts.GetValueOrDefault(pieceType, 0) + 1;
 
-                            if (SolvePuzzleRecursiveGeneration(currentGrid, solution, nextRequired, fillers)) return true;
+                            if (SolvePuzzleRecursiveGeneration(currentGrid, solution, nextRequired, fillers, pieceCounts)) return true;
 
                             Place(currentGrid, piecePositions, true);
                             solution.RemoveAt(solution.Count - 1);
+                            pieceCounts[pieceType]--;
                         }
                     }
                 }
@@ -575,12 +861,14 @@ public class GridDataSOEditor : Editor
         for (int i = 0; i < puzzleSolutionProp.arraySize; i++)
         {
             var pieceDataProp = puzzleSolutionProp.GetArrayElementAtIndex(i);
-            currentSolution.Add(new GridDataSO.GeneratedPieceData
+            var pieceData = new GridDataSO.GeneratedPieceData
             {
                 pieceType = (PlacedObjectTypeSO)pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue,
                 position = pieceDataProp.FindPropertyRelative("position").vector2IntValue,
                 direction = (PlacedObjectTypeSO.Dir)pieceDataProp.FindPropertyRelative("direction").enumValueIndex
-            });
+            };
+            if (pieceData.pieceType != null)
+                currentSolution.Add(pieceData);
         }
 
         var pieceTypes = currentSolution.Select(s => s.pieceType).ToList();
@@ -613,6 +901,8 @@ public class GridDataSOEditor : Editor
             occupiedCellCount += piece.pieceType.relativeOccupiedCells.Count;
         }
 
+        // --- ОНОВЛЕНА ЛОГІКА ---
+        // Завжди оновлюємо прапорець isComplete на основі поточного стану
         serializedObject.FindProperty("isComplete").boolValue = (buildableCellCount == occupiedCellCount);
     }
 
@@ -658,79 +948,6 @@ public class GridDataSOEditor : Editor
 
             EditorGUILayout.EndHorizontal();
         }
-    }
-
-    private void InitializeEditorGrid()
-    {
-        editorGridCells = new bool[gridDataSO.width, gridDataSO.height];
-        if (gridDataSO.buildableCells != null)
-        {
-            foreach (Vector2Int cell in gridDataSO.buildableCells)
-            {
-                if (cell.x >= 0 && cell.x < gridDataSO.width && cell.y >= 0 && cell.y < gridDataSO.height)
-                {
-                    editorGridCells[cell.x, cell.y] = true;
-                }
-            }
-        }
-    }
-
-    private void DrawBuildableCellsEditor()
-    {
-        EditorGUILayout.HelpBox("Click cells to toggle their buildable status. Green means buildable, Red means not buildable.", MessageType.Info);
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Select All Buildable")) SelectAllBuildableCells(true);
-        if (GUILayout.Button("Deselect All Buildable")) SelectAllBuildableCells(false);
-        GUILayout.EndHorizontal();
-        EditorGUILayout.Space(5);
-        GUILayout.BeginVertical("box");
-        for (int z = gridDataSO.height - 1; z >= 0; z--)
-        {
-            GUILayout.BeginHorizontal();
-            for (int x = 0; x < gridDataSO.width; x++)
-            {
-                GUI.backgroundColor = editorGridCells[x, z] ? Color.green : Color.red;
-                if (GUILayout.Button("", GUILayout.Width(25), GUILayout.Height(25)))
-                {
-                    editorGridCells[x, z] = !editorGridCells[x, z];
-                    UpdateBuildableCellsList();
-                }
-            }
-            GUILayout.EndHorizontal();
-        }
-        GUILayout.EndVertical();
-        GUI.backgroundColor = Color.white;
-    }
-
-    private void UpdateBuildableCellsList()
-    {
-        var buildableCellsProp = serializedObject.FindProperty("buildableCells");
-        buildableCellsProp.ClearArray();
-        int index = 0;
-        for (int x = 0; x < gridDataSO.width; x++)
-        {
-            for (int z = 0; z < gridDataSO.height; z++)
-            {
-                if (editorGridCells[x, z])
-                {
-                    buildableCellsProp.InsertArrayElementAtIndex(index);
-                    buildableCellsProp.GetArrayElementAtIndex(index).vector2IntValue = new Vector2Int(x, z);
-                    index++;
-                }
-            }
-        }
-    }
-
-    private void SelectAllBuildableCells(bool select)
-    {
-        for (int x = 0; x < gridDataSO.width; x++)
-        {
-            for (int z = 0; z < gridDataSO.height; z++)
-            {
-                editorGridCells[x, z] = select;
-            }
-        }
-        UpdateBuildableCellsList();
     }
 
     private bool CanPlace(bool[,] grid, List<Vector2Int> positions)
@@ -782,8 +999,14 @@ public class GridDataSOEditor : Editor
         foreach (var pieceType in availableTypes)
         {
             var existingConfig = currentConfigs.FirstOrDefault(c => c.pieceType == pieceType);
-            if (existingConfig.pieceType != null) newConfigs.Add(existingConfig);
-            else newConfigs.Add(new GridDataSO.GeneratorPieceConfig { pieceType = pieceType, isRequired = false, requiredCount = 1, color = Random.ColorHSV(0f, 1f, 0.8f, 1f, 0.9f, 1f) });
+            if (existingConfig.pieceType != null)
+            {
+                newConfigs.Add(existingConfig);
+            }
+            else
+            {
+                newConfigs.Add(new GridDataSO.GeneratorPieceConfig { pieceType = pieceType, isRequired = false, requiredCount = 1, maxCount = 1, color = Random.ColorHSV(0f, 1f, 0.8f, 1f, 0.9f, 1f) });
+            }
         }
 
         var prop = serializedObject.FindProperty("generatorPieceConfig");
@@ -795,6 +1018,7 @@ public class GridDataSOEditor : Editor
             element.FindPropertyRelative("pieceType").objectReferenceValue = newConfigs[i].pieceType;
             element.FindPropertyRelative("isRequired").boolValue = newConfigs[i].isRequired;
             element.FindPropertyRelative("requiredCount").intValue = newConfigs[i].requiredCount;
+            element.FindPropertyRelative("maxCount").intValue = newConfigs[i].maxCount;
             element.FindPropertyRelative("color").colorValue = newConfigs[i].color;
         }
     }
@@ -825,6 +1049,10 @@ public class GridDataSOEditor : Editor
                     EditorGUILayout.PropertyField(countProp, new GUIContent("Count"));
                     if (countProp.intValue < 1) countProp.intValue = 1;
                 }
+                SerializedProperty maxCountProp = elementProp.FindPropertyRelative("maxCount");
+                EditorGUILayout.PropertyField(maxCountProp, new GUIContent("Max Count"));
+                if (maxCountProp.intValue < 1) maxCountProp.intValue = 1;
+
                 EditorGUILayout.EndVertical();
                 EditorGUILayout.EndHorizontal();
             }
@@ -924,11 +1152,14 @@ public class GridDataSOEditor : Editor
         {
             currentGrid[cell.x, cell.y] = true;
         }
+
+        var pieceCountsInSolution = new Dictionary<PlacedObjectTypeSO, int>();
         foreach (var pieceData in gridDataSO.puzzleSolution)
         {
+            pieceCountsInSolution[pieceData.pieceType] = pieceCountsInSolution.GetValueOrDefault(pieceData.pieceType, 0) + 1;
             foreach (var pos in pieceData.pieceType.GetGridPositionsList(pieceData.position, pieceData.direction))
             {
-                if (CanPlace(currentGrid, new List<Vector2Int> { pos }))
+                if (pos.x >= 0 && pos.x < gridDataSO.width && pos.y >= 0 && pos.y < gridDataSO.height)
                 {
                     currentGrid[pos.x, pos.y] = false;
                 }
@@ -945,7 +1176,7 @@ public class GridDataSOEditor : Editor
 
         stopwatch = Stopwatch.StartNew();
         List<GridDataSO.GeneratedPieceData> filledPieces = new List<GridDataSO.GeneratedPieceData>();
-        bool success = SolvePuzzleRecursiveGeneration(currentGrid, filledPieces, new List<PlacedObjectTypeSO>(), combinedFillers);
+        bool success = SolvePuzzleRecursiveGeneration(currentGrid, filledPieces, new List<PlacedObjectTypeSO>(), combinedFillers, pieceCountsInSolution);
 
         if (success)
         {
@@ -971,3 +1202,4 @@ public class GridDataSOEditor : Editor
 
     #endregion
 }
+

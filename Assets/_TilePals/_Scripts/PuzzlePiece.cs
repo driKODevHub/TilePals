@@ -13,26 +13,32 @@ public class PuzzlePiece : MonoBehaviour
     [Header("Налаштування обертання")]
     [SerializeField] private float rotationSpeed = 270f;
 
+    [Header("Посилання на компоненти особистості")]
+    [SerializeField] private FacialExpressionController facialController;
+
     public PlacedObjectTypeSO PieceTypeSO => pieceTypeSO;
+    public FacialExpressionController FacialController => facialController;
     public PlacedObjectTypeSO.Dir CurrentDirection { get; private set; } = PlacedObjectTypeSO.Dir.Down;
     public bool IsPlaced { get; private set; } = false;
     public bool IsRotating { get; private set; } = false;
-
     public bool IsOffGrid { get; private set; } = false;
-
     public Vector2Int OffGridOrigin { get; private set; }
-
     public PlacedObject PlacedObjectComponent { get; private set; }
-    private Coroutine _rotationCoroutine;
 
+    private Coroutine _rotationCoroutine;
     private Dictionary<MeshRenderer, Material[]> _originalMaterials;
     private bool _isInvalidMaterialApplied = false;
 
     private void Awake()
     {
         CacheOriginalMaterials();
+        if (facialController == null)
+        {
+            facialController = GetComponentInChildren<FacialExpressionController>();
+        }
     }
 
+    // --- ПРИВАТНИЙ МЕТОД, винесений для перевикористання ---
     private void CacheOriginalMaterials()
     {
         _originalMaterials = new Dictionary<MeshRenderer, Material[]>();
@@ -46,6 +52,32 @@ public class PuzzlePiece : MonoBehaviour
             }
         }
     }
+
+    // --- НОВИЙ ПУБЛІЧНИЙ МЕТОД ---
+    /// <summary>
+    /// Встановлює новий основний матеріал для фігури та оновлює кеш оригінальних матеріалів.
+    /// </summary>
+    public void SetTemperamentMaterial(Material temperamentMaterial)
+    {
+        if (temperamentMaterial == null || meshesToColor == null) return;
+
+        foreach (var meshRenderer in meshesToColor)
+        {
+            if (meshRenderer != null)
+            {
+                var newMaterials = new Material[meshRenderer.materials.Length];
+                for (int i = 0; i < newMaterials.Length; i++)
+                {
+                    newMaterials[i] = temperamentMaterial;
+                }
+                meshRenderer.materials = newMaterials;
+            }
+        }
+        // Після встановлення нового матеріалу, повторно кешуємо його.
+        // Це потрібно, щоб логіка підсвічування знала, на який матеріал повертатися.
+        CacheOriginalMaterials();
+    }
+
 
     public void UpdatePlacementVisual(bool canPlace, Material invalidMaterial)
     {
@@ -160,9 +192,6 @@ public class PuzzlePiece : MonoBehaviour
         else if (Mathf.Approximately(yAngle, 270)) CurrentDirection = PlacedObjectTypeSO.Dir.Right;
     }
 
-    /// <summary>
-    /// НОВИЙ МЕТОД: Встановлює початковий поворот фігури при її створенні.
-    /// </summary>
     public void SetInitialRotation(PlacedObjectTypeSO.Dir direction)
     {
         CurrentDirection = direction;

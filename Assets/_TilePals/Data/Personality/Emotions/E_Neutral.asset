@@ -14,6 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   emotionName: "\u041D\u0435\u0439\u0442\u0440\u0430\u043B\u044C\u043D\u0430"
   eyeState: {fileID: 11400000, guid: 9b33b3ef6e3a8d54a9a4275c33c9bb99, type: 2}
-  otherExpressions:
-  - featureSet: {fileID: 11400000, guid: e638a9fd59e3e8e419950b0ccbcc6278, type: 2}
-    textureIndex: 1
+  featureStates:
+  - {fileID: 11400000, guid: 7904803cfa3490a4ab46edc827181605, type: 2}

@@ -14,9 +14,35 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   temperamentName: "\u041D\u043E\u0432\u0438\u0439 \u0442\u0435\u043C\u043F\u0435\u0440\u0430\u043C\u0435\u043D\u0442"
   description: 
+  temperamentMaterial: {fileID: 2100000, guid: 5a0b12e425fa58f41aab08dceb6cd665, type: 2}
   initialFatigue: 0.1
   initialIrritation: 0.1
   initialTrust: 0.5
   irritationModifier: 1
   fatigueModifier: 1
   trustModifier: 1
+  synergyRules:
+  - neighborTemperament: {fileID: 11400000, guid: 87d93a92828096b458e2a3b471058c38, type: 2}
+    myReaction: {fileID: 11400000, guid: bf4c2b01c4f9c5b4fad1ce32570500f8, type: 2}
+    neighborReaction: {fileID: 11400000, guid: bf4c2b01c4f9c5b4fad1ce32570500f8, type: 2}
+    reactionDuration: 2
+  - neighborTemperament: {fileID: 11400000, guid: 843a6bf9c8657d14caeb68bb48c33ce1, type: 2}
+    myReaction: {fileID: 11400000, guid: 2912e4acf3f0a434781bce12b9ec625c, type: 2}
+    neighborReaction: {fileID: 11400000, guid: 86e8b4b56a620034080bdb0b8cd84384, type: 2}
+    reactionDuration: 2
+  - neighborTemperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
+    myReaction: {fileID: 11400000, guid: 2912e4acf3f0a434781bce12b9ec625c, type: 2}
+    neighborReaction: {fileID: 11400000, guid: a62e4a4c5246934479f6d9fab611b709, type: 2}
+    reactionDuration: 2
+  - neighborTemperament: {fileID: 11400000, guid: 295b7e8eaa1467d4a80977612c2508c0, type: 2}
+    myReaction: {fileID: 11400000, guid: 2912e4acf3f0a434781bce12b9ec625c, type: 2}
+    neighborReaction: {fileID: 11400000, guid: d01bfbdbebae9744a8de50451b319b23, type: 2}
+    reactionDuration: 2
+  - neighborTemperament: {fileID: 11400000}
+    myReaction: {fileID: 11400000, guid: 2912e4acf3f0a434781bce12b9ec625c, type: 2}
+    neighborReaction: {fileID: 11400000, guid: 2912e4acf3f0a434781bce12b9ec625c, type: 2}
+    reactionDuration: 2
+  - neighborTemperament: {fileID: 11400000, guid: a4f1df805ce5afb41adfeda26888f169, type: 2}
+    myReaction: {fileID: 11400000, guid: 2912e4acf3f0a434781bce12b9ec625c, type: 2}
+    neighborReaction: {fileID: 11400000, guid: 2912e4acf3f0a434781bce12b9ec625c, type: 2}
+    reactionDuration: 2

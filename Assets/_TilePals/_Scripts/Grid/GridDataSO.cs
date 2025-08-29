@@ -28,6 +28,10 @@ public class GridDataSO : ScriptableObject
         public bool isRequired;
         [Min(1)] public int requiredCount;
         public Color color;
+
+        // --- НОВЕ ПОЛЕ ---
+        [Tooltip("Максимальна кількість таких фігур у згенерованому пазлі. 1 = унікальна.")]
+        [Min(1)] public int maxCount;
     }
 
     [Serializable]
@@ -49,7 +53,6 @@ public class GridDataSO : ScriptableObject
     [Range(1, 10)]
     public int boardToSpawnPadding = 2;
 
-    // --- НОВЕ ПОЛЕ ---
     [Tooltip("Мінімальний гарантований проміжок між фігурами (в клітинках).")]
     [Range(1, 5)]
     public int pieceToPiecePadding = 1;
@@ -60,6 +63,10 @@ public class GridDataSO : ScriptableObject
 
     [Tooltip("Кількість спроб знайти випадкове місце для кожної фігури.")]
     public int placementAttempts = 100;
+
+    [Header("Personality Settings")]
+    [Tooltip("Асет, що зберігає налаштування характерів для цього рівня.")]
+    public LevelPersonalitySO personalityData;
 
 
     [Header("Puzzle Generator Setup")]
