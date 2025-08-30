@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 [RequireComponent(typeof(PuzzlePiece))]
 public class PiecePersonality : MonoBehaviour
@@ -16,26 +17,44 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private EmotionProfileSO pettingGentleEmotion;
     [SerializeField] private EmotionProfileSO pettingTickleEmotion;
     [SerializeField] private EmotionProfileSO pettingAnnoyedEmotion;
+    [SerializeField] private EmotionProfileSO curiousEmotion;
 
     [Header("Налаштування Поведінки")]
-    [SerializeField] private float timeToSleep = 10f;
+    [Tooltip("Мінімальний та максимальний час в секундах до засинання.")]
+    [SerializeField] private float timeToSleepMin = 15f;
+    [SerializeField] private float timeToSleepMax = 30f;
+    [Tooltip("Мінімальний та максимальний час в секундах до самостійного пробудження.")]
+    [SerializeField] private float timeToWakeMin = 10f;
+    [SerializeField] private float timeToWakeMax = 20f;
     [SerializeField] private float shakenEmotionDuration = 1.0f;
     [Tooltip("Швидкість миші, до якої рух вважається 'ніжним гладженням'.")]
     [SerializeField] private float gentlePettingSpeedThreshold = 200f;
     [Tooltip("Швидкість миші, вище якої рух вважається 'лоскотом'.")]
     [SerializeField] private float tickleSpeedThreshold = 800f;
 
+    [Header("Налаштування погляду")]
+    [SerializeField] private float idleLookIntervalMin = 1.5f;
+    [SerializeField] private float idleLookIntervalMax = 4f;
+    [SerializeField] private float idleLookDurationMin = 1f;
+    [SerializeField] private float idleLookDurationMax = 2.5f;
+    [SerializeField] private float idleLookRadius = 3f;
+    [Tooltip("Радіус в 'юнітах', в якому фігура реагує на іншу фігуру, що пролітає над нею.")]
+    [SerializeField] private float flyOverReactionRadius = 2.5f;
+
+
     [Header("Посилання на Компоненти")]
     [SerializeField] private FacialExpressionController facialController;
 
-    // --- ВИДАЛЕНО: поле для індикатора більше не потрібне ---
-    // [SerializeField] private MeshRenderer temperamentIndicator;
-
     private float _currentFatigue, _currentIrritation, _currentTrust;
     private bool _isHeld, _isSleeping, _isBeingPetted;
-    private Coroutine _sleepCoroutine, _shakenCoroutine, _reactionCoroutine;
+    private Coroutine _sleepCoroutine, _shakenCoroutine, _reactionCoroutine, _idleLookCoroutine, _wakeUpCoroutine;
     private PuzzlePiece _puzzlePiece;
     private EmotionProfileSO _lastPettingEmotion;
+    private bool _isLookingRandomly = false;
+
+    private enum IdleGazeState { LookAtRandom, LookAtNeighbor, LookAtPlayer, Wait }
+
+    public float GetFlyOverRadius() => flyOverReactionRadius;
 
     private void Awake()
     {
@@ -53,6 +72,7 @@ public class PiecePersonality : MonoBehaviour
         PersonalityEventManager.OnPettingStart += HandlePettingStart;
         PersonalityEventManager.OnPettingUpdate += HandlePettingUpdate;
         PersonalityEventManager.OnPettingEnd += HandlePettingEnd;
+        PersonalityEventManager.OnPieceFlyOver += HandlePieceFlyOver;
     }
 
     private void OnDisable()
@@ -64,6 +84,7 @@ public class PiecePersonality : MonoBehaviour
         PersonalityEventManager.OnPettingStart -= HandlePettingStart;
         PersonalityEventManager.OnPettingUpdate -= HandlePettingUpdate;
         PersonalityEventManager.OnPettingEnd -= HandlePettingEnd;
+        PersonalityEventManager.OnPieceFlyOver -= HandlePieceFlyOver;
     }
 
     public void Setup(TemperamentSO newTemperament)
@@ -76,8 +97,6 @@ public class PiecePersonality : MonoBehaviour
             return;
         }
 
-        // --- ОНОВЛЕНИЙ КОД ---
-        // Передаємо матеріал до компонента PuzzlePiece для коректного застосування
         if (_puzzlePiece != null)
         {
             _puzzlePiece.SetTemperamentMaterial(_temperament.temperamentMaterial);
@@ -90,15 +109,23 @@ public class PiecePersonality : MonoBehaviour
         ReturnToNeutralState();
     }
 
-    // ... (решта коду залишається без змін)
+    private void StopAllBehaviorCoroutines()
+    {
+        if (_sleepCoroutine != null) StopCoroutine(_sleepCoroutine);
+        if (_idleLookCoroutine != null) StopCoroutine(_idleLookCoroutine);
+        if (_wakeUpCoroutine != null) StopCoroutine(_wakeUpCoroutine);
+        if (_shakenCoroutine != null) StopCoroutine(_shakenCoroutine);
+        if (_reactionCoroutine != null) StopCoroutine(_reactionCoroutine);
+    }
 
     private void HandlePettingStart(PuzzlePiece piece)
     {
         if (piece != _puzzlePiece || _isHeld) return;
 
+        StopAllBehaviorCoroutines();
         _isBeingPetted = true;
         _isSleeping = false;
-        if (_sleepCoroutine != null) StopCoroutine(_sleepCoroutine);
+        _isLookingRandomly = false;
 
         SetEmotion(neutralEmotion);
     }
@@ -144,7 +171,7 @@ public class PiecePersonality : MonoBehaviour
 
     private void Update()
     {
-        if (!_isHeld && !_isSleeping && !_isBeingPetted && facialController != null)
+        if (!_isHeld && !_isSleeping && !_isBeingPetted && !_isLookingRandomly && facialController != null)
         {
             LookAtCursor();
         }
@@ -162,13 +189,18 @@ public class PiecePersonality : MonoBehaviour
     {
         if (piece != _puzzlePiece) return;
 
+        StopAllBehaviorCoroutines();
         _isHeld = true;
         _isSleeping = false;
         _isBeingPetted = false;
-        if (_sleepCoroutine != null) StopCoroutine(_sleepCoroutine);
+        _isLookingRandomly = false;
 
         SetEmotion(pickedUpEmotion);
-        facialController.UpdateSortingOrder(true);
+        if (facialController != null)
+        {
+            facialController.UpdateSortingOrder(true);
+            facialController.ResetPupilPosition();
+        }
     }
 
     private void HandlePieceDropped(PuzzlePiece piece)
@@ -177,7 +209,8 @@ public class PiecePersonality : MonoBehaviour
 
         _isHeld = false;
         SetEmotion(droppedEmotion);
-        facialController.UpdateSortingOrder(false);
+        if (facialController != null) facialController.UpdateSortingOrder(false);
+
         StartCoroutine(ReturnToNeutralAfterDelay(0.5f));
     }
 
@@ -187,10 +220,30 @@ public class PiecePersonality : MonoBehaviour
 
         float irritationGain = 0.05f * _temperament.irritationModifier;
         _currentIrritation = Mathf.Clamp01(_currentIrritation + irritationGain);
-        Debug.Log($"{_temperament.name} роздратований від тряски! Нове роздратування: {_currentIrritation:F2}");
 
         if (_shakenCoroutine != null) StopCoroutine(_shakenCoroutine);
         _shakenCoroutine = StartCoroutine(ShowShakenEmotion());
+    }
+
+    private void HandlePieceFlyOver(PuzzlePiece stationaryPiece)
+    {
+        if (stationaryPiece != _puzzlePiece || _isHeld) return;
+
+        bool wasSleeping = _isSleeping;
+        if (_isSleeping)
+        {
+            StopAllBehaviorCoroutines();
+            _isSleeping = false;
+        }
+
+        if (wasSleeping)
+        {
+            StartCoroutine(ShowReactionEmotion(curiousEmotion, 2.0f));
+        }
+        else if (!_isLookingRandomly)
+        {
+            StartCoroutine(ShowReactionEmotion(curiousEmotion, 2.0f));
+        }
     }
 
     private void HandlePiecePlaced(PuzzlePiece placedPiece)
@@ -208,19 +261,12 @@ public class PiecePersonality : MonoBehaviour
     private void CheckForNeighborReaction(PuzzlePiece newNeighbor)
     {
         List<PuzzlePiece> neighborsToCheck = new List<PuzzlePiece>();
-        if (newNeighbor != null)
-        {
-            neighborsToCheck.Add(newNeighbor);
-        }
-        else
-        {
-            neighborsToCheck.AddRange(FindAllNeighbors());
-        }
+        if (newNeighbor != null) neighborsToCheck.Add(newNeighbor);
+        else neighborsToCheck.AddRange(FindAllNeighbors());
 
         foreach (var neighbor in neighborsToCheck)
         {
             if (neighbor == null) continue;
-
             var neighborPersonality = neighbor.GetComponent<PiecePersonality>();
             if (neighborPersonality == null || neighborPersonality._temperament == null) continue;
 
@@ -230,8 +276,6 @@ public class PiecePersonality : MonoBehaviour
                 {
                     this.TriggerExternalReaction(rule.myReaction, rule.reactionDuration);
                     neighborPersonality.TriggerExternalReaction(rule.neighborReaction, rule.reactionDuration);
-
-                    Debug.Log($"{_temperament.name} реагує на {neighborPersonality._temperament.name}!");
                     break;
                 }
             }
@@ -241,7 +285,7 @@ public class PiecePersonality : MonoBehaviour
     private List<PuzzlePiece> FindAllNeighbors()
     {
         List<PuzzlePiece> neighbors = new List<PuzzlePiece>();
-        if (!_puzzlePiece.IsPlaced) return neighbors;
+        if (!_puzzlePiece.IsPlaced || _puzzlePiece.PlacedObjectComponent == null) return neighbors;
 
         var grid = GridBuildingSystem.Instance.GetGrid();
         List<Vector2Int> myCells = _puzzlePiece.PlacedObjectComponent.GetGridPositionList();
@@ -253,13 +297,12 @@ public class PiecePersonality : MonoBehaviour
                 new Vector2Int(cell.x + 1, cell.y), new Vector2Int(cell.x - 1, cell.y),
                 new Vector2Int(cell.x, cell.y + 1), new Vector2Int(cell.x, cell.y - 1)
             };
-
             foreach (var coord in neighborCoords)
             {
                 GridObject gridObject = grid.GetGridObject(coord.x, coord.y);
                 if (gridObject != null && gridObject.IsOccupied())
                 {
-                    PuzzlePiece neighborPiece = gridObject.GetPlacedObject().GetComponent<PuzzlePiece>();
+                    PuzzlePiece neighborPiece = gridObject.GetPlacedObject().GetComponentInParent<PuzzlePiece>();
                     if (neighborPiece != null && neighborPiece != _puzzlePiece)
                     {
                         foundNeighbors.Add(neighborPiece);
@@ -272,23 +315,26 @@ public class PiecePersonality : MonoBehaviour
 
     private IEnumerator ShowReactionEmotion(EmotionProfileSO reactionEmotion, float duration)
     {
-        if (_isSleeping || _isBeingPetted) yield break;
-        if (_sleepCoroutine != null) StopCoroutine(_sleepCoroutine);
+        if (_isHeld || _isBeingPetted) yield break;
+
+        StopAllBehaviorCoroutines();
+        _isLookingRandomly = true;
 
         SetEmotion(reactionEmotion);
         yield return new WaitForSeconds(duration);
 
-        if (_isHeld) SetEmotion(pickedUpEmotion);
-        else if (_isSleeping) SetEmotion(sleepingEmotion);
-        else ReturnToNeutralState();
+        if (!_isHeld) ReturnToNeutralState();
     }
 
     private void ReturnToNeutralState()
     {
+        StopAllBehaviorCoroutines();
         _isSleeping = false;
+        _isLookingRandomly = false;
+
         SetEmotion(neutralEmotion);
-        if (_sleepCoroutine != null) StopCoroutine(_sleepCoroutine);
         _sleepCoroutine = StartCoroutine(SleepTimer());
+        _idleLookCoroutine = StartCoroutine(IdleLookRoutine());
     }
 
     private IEnumerator ReturnToNeutralAfterDelay(float delay)
@@ -302,15 +348,28 @@ public class PiecePersonality : MonoBehaviour
 
     private IEnumerator SleepTimer()
     {
-        yield return new WaitForSeconds(timeToSleep);
+        yield return new WaitForSeconds(Random.Range(timeToSleepMin, timeToSleepMax));
         if (_isBeingPetted || _isHeld) yield break;
+
+        StopAllBehaviorCoroutines();
+        _isLookingRandomly = false;
         _isSleeping = true;
         SetEmotion(sleepingEmotion);
+        _wakeUpCoroutine = StartCoroutine(WakeUpTimer());
+    }
+
+    private IEnumerator WakeUpTimer()
+    {
+        yield return new WaitForSeconds(Random.Range(timeToWakeMin, timeToWakeMax));
+        if (_isHeld) yield break;
+
+        ReturnToNeutralState();
     }
 
     private IEnumerator ShowShakenEmotion()
     {
-        if (_sleepCoroutine != null) StopCoroutine(_sleepCoroutine);
+        StopAllBehaviorCoroutines();
+        _isLookingRandomly = false;
 
         SetEmotion(shakenEmotion);
         yield return new WaitForSeconds(shakenEmotionDuration);
@@ -328,7 +387,59 @@ public class PiecePersonality : MonoBehaviour
         if (plane.Raycast(ray, out float distance))
         {
             Vector3 targetPoint = ray.GetPoint(distance);
-            facialController.LookAt(targetPoint);
+            if (facialController != null) facialController.LookAt(targetPoint);
+        }
+    }
+
+    private IEnumerator IdleLookRoutine()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(Random.Range(idleLookIntervalMin, idleLookIntervalMax));
+            if (_isHeld || _isSleeping || _isBeingPetted) continue;
+
+            _isLookingRandomly = true;
+
+            // --- ОНОВЛЕНО: Використання сучасного методу FindObjectsByType ---
+            var allPieces = FindObjectsByType<PiecePersonality>(FindObjectsSortMode.None).Where(p => p != this && p.gameObject.activeInHierarchy).ToList();
+            bool hasNeighbors = allPieces.Any();
+
+            IdleGazeState nextAction = hasNeighbors
+                ? (IdleGazeState)Random.Range(0, 4)
+                : (IdleGazeState)Random.Range(0, 3) == 0 ? IdleGazeState.LookAtPlayer : IdleGazeState.LookAtRandom;
+
+            if (facialController != null)
+            {
+                switch (nextAction)
+                {
+                    case IdleGazeState.LookAtRandom:
+                        Vector3 randomDirection = Random.insideUnitSphere * idleLookRadius;
+                        randomDirection.y = 0;
+                        Vector3 lookTarget = transform.position + randomDirection;
+                        facialController.LookAt(lookTarget);
+                        break;
+
+                    case IdleGazeState.LookAtNeighbor:
+                        if (hasNeighbors)
+                        {
+                            PiecePersonality targetPiece = allPieces[Random.Range(0, allPieces.Count)];
+                            facialController.LookAt(targetPiece.transform.position);
+                        }
+                        break;
+
+                    case IdleGazeState.LookAtPlayer:
+                        facialController.ResetPupilPosition();
+                        break;
+
+                    case IdleGazeState.Wait:
+                        break;
+                }
+            }
+
+            yield return new WaitForSeconds(Random.Range(idleLookDurationMin, idleLookDurationMax));
+
+            _isLookingRandomly = false;
         }
     }
 }
+

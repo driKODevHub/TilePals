@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   personalityMappings:
   - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
-    temperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
+    temperament: {fileID: 11400000, guid: 843a6bf9c8657d14caeb68bb48c33ce1, type: 2}
   - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
-    temperament: {fileID: 11400000, guid: a5a66253112afc7469e2433954d3fa89, type: 2}
+    temperament: {fileID: 11400000, guid: 295b7e8eaa1467d4a80977612c2508c0, type: 2}
   - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
     temperament: {fileID: 11400000, guid: 843a6bf9c8657d14caeb68bb48c33ce1, type: 2}
   - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}

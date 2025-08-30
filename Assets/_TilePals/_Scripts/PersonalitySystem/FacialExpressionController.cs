@@ -36,6 +36,9 @@ public class FacialExpressionController : MonoBehaviour
     [SerializeField] private float blinkIntervalMax = 7f;
     [SerializeField] private float blinkDuration = 0.1f;
     [SerializeField] private float pupilMovementRadius = 0.15f;
+    [Tooltip("Ўвидк≥сть, з €кою з≥ниц≥ плавно рухаютьс€ до ц≥л≥.")]
+    [SerializeField] private float pupilLookSpeed = 8f;
+
 
     [Header("Ќалаштуванн€ —ортуванн€")]
     [SerializeField] private int sortingOrderIdle = 5;
@@ -43,6 +46,12 @@ public class FacialExpressionController : MonoBehaviour
 
     private Dictionary<FeatureStateSO.FeatureType, SpriteRenderer> _rendererMap;
     private Vector3 _leftPupilOrigin, _rightPupilOrigin;
+
+    private Vector3 _leftPupilTargetLocalPos;
+    private Vector3 _rightPupilTargetLocalPos;
+    private Coroutine _blinkingCoroutine;
+    private bool _areEyesVisible = true;
+
 
     private void Awake()
     {
@@ -53,15 +62,36 @@ public class FacialExpressionController : MonoBehaviour
                 _rendererMap[feature.featureType] = feature.featureRenderer;
         }
 
-        if (eyes.leftPupil) _leftPupilOrigin = eyes.leftPupil.transform.localPosition;
-        if (eyes.rightPupil) _rightPupilOrigin = eyes.rightPupil.transform.localPosition;
+        if (eyes.leftPupil)
+        {
+            _leftPupilOrigin = eyes.leftPupil.transform.localPosition;
+            _leftPupilTargetLocalPos = _leftPupilOrigin;
+        }
+        if (eyes.rightPupil)
+        {
+            _rightPupilOrigin = eyes.rightPupil.transform.localPosition;
+            _rightPupilTargetLocalPos = _rightPupilOrigin;
+        }
 
         UpdateSortingOrder(false);
     }
 
     private void Start()
     {
-        StartCoroutine(BlinkRoutine());
+        if (_blinkingCoroutine != null) StopCoroutine(_blinkingCoroutine);
+        _blinkingCoroutine = StartCoroutine(BlinkRoutine());
+    }
+
+    private void Update()
+    {
+        if (eyes.leftPupil)
+        {
+            eyes.leftPupil.transform.localPosition = Vector3.Lerp(eyes.leftPupil.transform.localPosition, _leftPupilTargetLocalPos, Time.deltaTime * pupilLookSpeed);
+        }
+        if (eyes.rightPupil)
+        {
+            eyes.rightPupil.transform.localPosition = Vector3.Lerp(eyes.rightPupil.transform.localPosition, _rightPupilTargetLocalPos, Time.deltaTime * pupilLookSpeed);
+        }
     }
 
     public void UpdateSortingOrder(bool isHeld)
@@ -88,12 +118,13 @@ public class FacialExpressionController : MonoBehaviour
             return;
         }
 
+        // --- ¬»ѕ–ј¬Ћ≈ЌЌя: —початку вмикаЇмо оч≥, €кщо вони мають бути в емоц≥њ ---
+        ApplyEyeState(emotionProfile.eyeState);
+
         foreach (var rendererPair in _rendererMap)
         {
             rendererPair.Value.enabled = false;
         }
-
-        ApplyEyeState(emotionProfile.eyeState);
 
         foreach (var featureState in emotionProfile.featureStates)
         {
@@ -113,23 +144,24 @@ public class FacialExpressionController : MonoBehaviour
         {
             Vector3 localTarget = eyes.leftPupil.transform.parent.InverseTransformPoint(worldPosition);
             Vector3 direction = localTarget - _leftPupilOrigin;
-
-            // ¬»ѕ–ј¬Ћ≈Ќќ: ≤гноруЇмо рух по ос≥ Z, щоб уникнути Z-fighting
             direction.z = 0;
-
-            eyes.leftPupil.transform.localPosition = _leftPupilOrigin + direction.normalized * pupilMovementRadius;
+            _leftPupilTargetLocalPos = _leftPupilOrigin + Vector3.ClampMagnitude(direction, pupilMovementRadius);
         }
         if (eyes.rightPupil)
         {
             Vector3 localTarget = eyes.rightPupil.transform.parent.InverseTransformPoint(worldPosition);
             Vector3 direction = localTarget - _rightPupilOrigin;
-
-            // ¬»ѕ–ј¬Ћ≈Ќќ: ≤гноруЇмо рух по ос≥ Z, щоб уникнути Z-fighting
             direction.z = 0;
-
-            eyes.rightPupil.transform.localPosition = _rightPupilOrigin + direction.normalized * pupilMovementRadius;
+            _rightPupilTargetLocalPos = _rightPupilOrigin + Vector3.ClampMagnitude(direction, pupilMovementRadius);
         }
     }
+
+    public void ResetPupilPosition()
+    {
+        _leftPupilTargetLocalPos = _leftPupilOrigin;
+        _rightPupilTargetLocalPos = _rightPupilOrigin;
+    }
+
 
     private void ApplyEyeState(EyeStateSO eyeState)
     {
@@ -154,13 +186,26 @@ public class FacialExpressionController : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(Random.Range(blinkIntervalMin, blinkIntervalMax));
-            SetEyesActive(false);
-            yield return new WaitForSeconds(blinkDuration);
-            SetEyesActive(true);
+
+            // --- ¬»ѕ–ј¬Ћ≈ЌЌя:  л≥паЇмо, т≥льки €кщо оч≥ зараз видим≥ ---
+            if (_areEyesVisible)
+            {
+                SetEyesRenderersActive(false);
+                yield return new WaitForSeconds(blinkDuration);
+                SetEyesRenderersActive(true);
+            }
         }
     }
 
     private void SetEyesActive(bool isActive)
+    {
+        _areEyesVisible = isActive;
+        SetEyesRenderersActive(isActive);
+    }
+
+    // --- Ќќ¬»… ƒќѕќћ≤∆Ќ»… ћ≈“ќƒ ---
+    // ÷ей метод просто вмикаЇ/вимикаЇ рендери, не зм≥нюючи стан _areEyesVisible
+    private void SetEyesRenderersActive(bool isActive)
     {
         if (eyes.leftEyeShape) eyes.leftEyeShape.enabled = isActive;
         if (eyes.rightEyeShape) eyes.rightEyeShape.enabled = isActive;
@@ -179,3 +224,4 @@ public class FacialExpressionController : MonoBehaviour
         }
     }
 }
+

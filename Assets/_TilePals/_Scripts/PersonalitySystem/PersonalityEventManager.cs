@@ -25,4 +25,8 @@ public static class PersonalityEventManager
 
     public static event Action<PuzzlePiece> OnPettingEnd;
     public static void RaisePettingEnd(PuzzlePiece piece) => OnPettingEnd?.Invoke(piece);
+
+    // --- ÍÎÂÀ ÏÎÄ²ß ÄËß ĞÅÀÊÖ²¯ ÍÀ ÏĞÎË²ÒÀŞ×Ó Ô²ÃÓĞÓ ---
+    public static event Action<PuzzlePiece> OnPieceFlyOver;
+    public static void RaisePieceFlyOver(PuzzlePiece stationaryPiece) => OnPieceFlyOver?.Invoke(stationaryPiece);
 }

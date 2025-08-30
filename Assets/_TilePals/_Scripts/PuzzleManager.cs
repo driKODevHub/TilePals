@@ -37,6 +37,9 @@ public class PuzzleManager : MonoBehaviour
     private bool _isLevelComplete = false;
     private bool _justPlacedPiece = false;
 
+    private List<PuzzlePiece> _piecesBeingFlownOver = new List<PuzzlePiece>();
+    private List<PiecePersonality> _allPersonalities = new List<PiecePersonality>();
+
 
     // Події для старої логіки (GridVisualManager)
     public event Action<PuzzlePiece> OnPiecePickedUp;
@@ -54,6 +57,10 @@ public class PuzzleManager : MonoBehaviour
         _pieceUnderMouse = null;
         _pieceBeingPetted = null;
         _isLevelComplete = false;
+        _piecesBeingFlownOver.Clear();
+
+        // --- ОНОВЛЕНО: Використання сучасного методу FindObjectsByType ---
+        _allPersonalities = FindObjectsByType<PiecePersonality>(FindObjectsSortMode.None).ToList();
     }
 
     private void LateUpdate()
@@ -72,6 +79,7 @@ public class PuzzleManager : MonoBehaviour
         else
         {
             HandleIdleInput();
+            if (_piecesBeingFlownOver.Count > 0) _piecesBeingFlownOver.Clear();
         }
     }
 
@@ -85,7 +93,7 @@ public class PuzzleManager : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
         {
             PuzzlePiece piece = hit.collider.GetComponentInParent<PuzzlePiece>();
-            if (piece != null) // Дозволяємо взаємодіяти з усіма фігурами
+            if (piece != null)
             {
                 _pieceUnderMouse = piece;
             }
@@ -98,7 +106,6 @@ public class PuzzleManager : MonoBehaviour
         {
             if (_pieceUnderMouse != null && !_justPlacedPiece)
             {
-                // Починаємо гладити або готуємось підняти
                 _pieceBeingPetted = _pieceUnderMouse;
                 if (!_pieceUnderMouse.IsPlaced)
                 {
@@ -209,13 +216,42 @@ public class PuzzleManager : MonoBehaviour
                 PersonalityEventManager.RaisePieceShaken(_heldPiece, _heldPieceVelocity);
             }
 
+            CheckForFlyOver();
+
             bool canPlaceOnGrid, canPlaceOffGrid;
             CanPlaceHeldPiece(origin, out canPlaceOnGrid, out canPlaceOffGrid);
             _heldPiece.UpdatePlacementVisual(canPlaceOnGrid || canPlaceOffGrid, invalidPlacementMaterial);
         }
     }
 
-    // --- ЦЕЙ МЕТОД ОНОВЛЕНО ---
+    private void CheckForFlyOver()
+    {
+        var currentlyOver = new List<PuzzlePiece>();
+
+        foreach (var personality in _allPersonalities)
+        {
+            if (personality == null || personality.GetComponent<PuzzlePiece>() == _heldPiece) continue;
+
+            float flyOverRadius = personality.GetFlyOverRadius();
+            Vector3 heldPiecePosition = _heldPiece.transform.position;
+            Vector3 stationaryPiecePosition = personality.transform.position;
+
+            heldPiecePosition.y = 0;
+            stationaryPiecePosition.y = 0;
+
+            if (Vector3.Distance(heldPiecePosition, stationaryPiecePosition) < flyOverRadius)
+            {
+                PuzzlePiece stationaryPiece = personality.GetComponent<PuzzlePiece>();
+                currentlyOver.Add(stationaryPiece);
+                if (!_piecesBeingFlownOver.Contains(stationaryPiece))
+                {
+                    PersonalityEventManager.RaisePieceFlyOver(stationaryPiece);
+                }
+            }
+        }
+        _piecesBeingFlownOver = currentlyOver;
+    }
+
     private void TryToPlaceOrDropPiece()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -238,12 +274,9 @@ public class PuzzleManager : MonoBehaviour
         }
         else
         {
-            // Якщо розмістити неможливо, виводимо повідомлення і нічого не робимо.
-            // Фігура залишається в руках.
             UnityEngine.Debug.Log("<color=red>Неможливо розмістити фігуру тут!</color>");
         }
     }
-
 
     private void TryPlaceOnGrid(Vector2Int origin)
     {
@@ -285,7 +318,6 @@ public class PuzzleManager : MonoBehaviour
         GameManager.Instance.SaveCurrentProgress();
     }
 
-    // --- ЦЕЙ МЕТОД ОНОВЛЕНО ---
     private void CanPlaceHeldPiece(Vector2Int origin, out bool canPlaceOnGrid, out bool canPlaceOffGrid)
     {
         canPlaceOnGrid = false;
@@ -301,15 +333,13 @@ public class PuzzleManager : MonoBehaviour
 
         if (allOnGrid)
         {
-            // Якщо всі клітинки на сітці, перевіряємо, чи можна тут будувати
             canPlaceOnGrid = GridBuildingSystem.Instance.CanPlacePiece(_heldPiece, origin, _heldPiece.CurrentDirection);
         }
         else if (allOffGrid)
         {
-            // Якщо всі клітинки за межами сітки, перевіряємо зіткнення з іншими фігурами
             canPlaceOffGrid = OffGridManager.CanPlacePiece(_heldPiece, origin);
         }
-        else // Фігура частково на сітці, частково за її межами
+        else
         {
             bool occupiesAnyBuildableCell = pieceCells.Any(cell => {
                 GridObject gridObj = grid.GetGridObject(cell.x, cell.y);
@@ -318,18 +348,15 @@ public class PuzzleManager : MonoBehaviour
 
             if (occupiesAnyBuildableCell)
             {
-                // Якщо хоча б одна клітинка потрапляє на ДОЗВОЛЕНУ для будівництва - забороняємо
                 canPlaceOnGrid = false;
                 canPlaceOffGrid = false;
             }
             else
             {
-                // Якщо всі клітинки, що на сітці, є НЕактивними, то це дозволене розміщення "за межами"
                 canPlaceOffGrid = OffGridManager.CanPlacePiece(_heldPiece, origin);
             }
         }
     }
-
 
     private void CheckForWin()
     {
@@ -342,3 +369,4 @@ public class PuzzleManager : MonoBehaviour
         }
     }
 }
+
