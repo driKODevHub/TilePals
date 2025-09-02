@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9ec8c52cf9f1ab439ea883ecc3c2392, type: 3}
+  m_Name: Level_GridDataSO_04_Personality
+  m_EditorClassIdentifier: 
+  personalityMappings:
+  - pieceType: {fileID: 11400000, guid: 743f8deda0044ce4086cbfa4292b9d73, type: 2}
+    temperament: {fileID: 11400000, guid: a4f1df805ce5afb41adfeda26888f169, type: 2}
+  - pieceType: {fileID: 11400000, guid: b69a537316040fc4b914d216f5e0e94d, type: 2}
+    temperament: {fileID: 11400000, guid: 295b7e8eaa1467d4a80977612c2508c0, type: 2}
+  - pieceType: {fileID: 11400000, guid: 96b0eda1fd2594d46afb95d171e21321, type: 2}
+    temperament: {fileID: 11400000, guid: a4f1df805ce5afb41adfeda26888f169, type: 2}
+  - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
+    temperament: {fileID: 11400000, guid: 295b7e8eaa1467d4a80977612c2508c0, type: 2}
+  - pieceType: {fileID: 11400000, guid: fba45b4fbe2537c48bddeacfb692bbc6, type: 2}
+    temperament: {fileID: 11400000, guid: 843a6bf9c8657d14caeb68bb48c33ce1, type: 2}
+  - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
+    temperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
+  - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
+    temperament: {fileID: 11400000, guid: 295b7e8eaa1467d4a80977612c2508c0, type: 2}
+  - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
+    temperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
+  - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+    temperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
+  - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+    temperament: {fileID: 11400000, guid: 295b7e8eaa1467d4a80977612c2508c0, type: 2}

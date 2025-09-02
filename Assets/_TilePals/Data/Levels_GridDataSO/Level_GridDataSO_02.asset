@@ -160,19 +160,97 @@ MonoBehaviour:
   puzzleSolution:
   - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
     position: {x: 1, y: 0}
-    direction: 0
-  - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
-    position: {x: 2, y: 0}
-    direction: 3
-  - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+    direction: 2
+  - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
     position: {x: 0, y: 1}
     direction: 0
-  - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
-    position: {x: 2, y: 1}
+  - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+    position: {x: 3, y: 1}
     direction: 2
+  - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+    position: {x: 1, y: 3}
+    direction: 3
   isComplete: 1
-  solutionVariantsCount: 1
+  solutionVariantsCount: 32
   allFoundSolutions:
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 2, y: 0}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 2, y: 1}
+      direction: 2
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 2, y: 0}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 0, y: 1}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 2, y: 1}
+      direction: 2
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 2, y: 0}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 2, y: 1}
+      direction: 2
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 2, y: 0}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 0, y: 1}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 2, y: 1}
+      direction: 2
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 2, y: 0}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 2, y: 1}
+      direction: 2
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 2, y: 0}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 0, y: 1}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 2, y: 1}
+      direction: 2
   - solution:
     - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
       position: {x: 1, y: 0}
@@ -186,4 +264,329 @@ MonoBehaviour:
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 2, y: 1}
       direction: 2
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 2, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 0, y: 1}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 2, y: 1}
+      direction: 2
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 3, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 1, y: 3}
+      direction: 0
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 3, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 1, y: 3}
+      direction: 1
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 3, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 1, y: 3}
+      direction: 2
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 3, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 1, y: 3}
+      direction: 3
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 3, y: 1}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 1, y: 3}
+      direction: 0
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 3, y: 1}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 1, y: 3}
+      direction: 1
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 3, y: 1}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 1, y: 3}
+      direction: 2
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 1, y: 0}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 3, y: 1}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 1, y: 3}
+      direction: 3
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 3}
+      direction: 1
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 0, y: 1}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 3}
+      direction: 3
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 0, y: 1}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 3}
+      direction: 1
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 0, y: 1}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 3}
+      direction: 3
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 0, y: 1}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 3}
+      direction: 1
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 0, y: 1}
+      direction: 2
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 3}
+      direction: 3
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 0, y: 1}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 3}
+      direction: 1
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 0, y: 1}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 3}
+      direction: 3
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 0}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 2}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 3, y: 2}
+      direction: 0
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 0}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 2}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 3, y: 2}
+      direction: 1
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 0}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 2}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 3, y: 2}
+      direction: 2
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 0}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 2}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 3, y: 2}
+      direction: 3
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 2}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 3, y: 2}
+      direction: 0
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 2}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 3, y: 2}
+      direction: 1
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 2}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 3, y: 2}
+      direction: 2
+  - solution:
+    - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+      position: {x: 1, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
+      position: {x: 0, y: 1}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 1, y: 2}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 3, y: 2}
+      direction: 3
   currentSolutionIndex: 0

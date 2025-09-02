@@ -8,6 +8,16 @@ using System.Text;
 [CustomEditor(typeof(GridDataSO))]
 public class GridDataSOEditor : Editor
 {
+    public enum SolutionSelectionCriterion
+    {
+        FirstFound,
+        FewestPieces,
+        MostPieces
+    }
+    private int generationIterations = 10;
+    private SolutionSelectionCriterion selectionCriterion = SolutionSelectionCriterion.FewestPieces;
+
+
     private GridDataSO gridDataSO;
     private bool[,] editorGridCells;
 
@@ -20,7 +30,7 @@ public class GridDataSOEditor : Editor
     private static int desiredSmallFillers = 5;
     private static int desiredMediumFillers = 5;
     private static int desiredLargeFillers = 5;
-    private float generationTimeout = 10f;
+    private float generationTimeout = 20f;
 
     private bool useCalculationTimeout = true;
     private float calculationTimeout = 30f;
@@ -34,10 +44,28 @@ public class GridDataSOEditor : Editor
     private int _solutionCounter;
     private List<GridDataSO.SolutionWrapper> _allSolutionsList;
     private GUIStyle labelStyle;
+    private GUIStyle sequenceLabelStyle;
 
     private bool _calculationStopped;
 
     private int _globalMaxCount = 1;
+
+    private static readonly List<Color> colorPalette = new List<Color>
+    {
+        new Color(1.0f, 0.4f, 0.4f),   // Red
+        new Color(0.4f, 1.0f, 0.4f),   // Green
+        new Color(0.4f, 0.4f, 1.0f),   // Blue
+        new Color(1.0f, 1.0f, 0.4f),   // Yellow
+        new Color(1.0f, 0.4f, 1.0f),   // Magenta
+        new Color(0.4f, 1.0f, 1.0f),   // Cyan
+        new Color(1.0f, 0.6f, 0.2f),   // Orange
+        new Color(0.6f, 0.4f, 1.0f),   // Purple
+        new Color(0.2f, 0.8f, 0.6f),   // Teal
+        new Color(1.0f, 0.5f, 0.7f),   // Pink
+        new Color(0.7f, 0.9f, 0.2f),   // Lime
+        new Color(0.5f, 0.7f, 1.0f)    // Sky Blue
+    };
+    private static int colorIndex = 0;
 
 
     private void OnEnable()
@@ -54,6 +82,14 @@ public class GridDataSOEditor : Editor
             fontSize = 10,
             fontStyle = FontStyle.Bold
         };
+
+        sequenceLabelStyle = new GUIStyle
+        {
+            alignment = TextAnchor.LowerRight,
+            fontSize = 9,
+            fontStyle = FontStyle.BoldAndItalic,
+            padding = new RectOffset(0, 2, 0, 2)
+        };
     }
 
     public override void OnInspectorGUI()
@@ -63,12 +99,20 @@ public class GridDataSOEditor : Editor
         int oldWidth = gridDataSO.width;
         int oldHeight = gridDataSO.height;
 
-        DrawPropertiesExcluding(serializedObject, "m_Script", "puzzlePieces", "generatedPieceSummary", "puzzleSolution", "availablePieceTypesForGeneration", "generatorPieceConfig", "solutionVariantsCount", "allFoundSolutions", "currentSolutionIndex", "isComplete", "personalityData");
+        DrawPropertiesExcluding(serializedObject, "m_Script", "puzzlePieces", "generatedPieceSummary", "puzzleSolution", "availablePieceTypesForGeneration", "generatorPieceConfig", "solutionVariantsCount", "allFoundSolutions", "currentSolutionIndex", "isComplete", "personalityData", "width", "height");
+
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("width"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("height"));
+
+        serializedObject.ApplyModifiedProperties();
 
         if (gridDataSO.width != oldWidth || gridDataSO.height != oldHeight)
         {
             InitializeEditorGrid();
         }
+
+        serializedObject.Update();
+
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Buildable Cells Editor", EditorStyles.boldLabel);
@@ -83,6 +127,8 @@ public class GridDataSOEditor : Editor
 
         EditorGUILayout.PropertyField(serializedObject.FindProperty("availablePieceTypesForGeneration"), true);
         if (GUILayout.Button(new GUIContent("Update & Manage Generator Pieces", "Синхронізує список фігур нижче з тими, що вказані у 'Available Piece Types'. Додає нові та зберігає налаштування для існуючих."))) UpdateGeneratorPieceConfig();
+        if (GUILayout.Button(new GUIContent("Randomize All Colors", "Призначає фігурам нові кольори з палітри у випадковому порядку."))) RandomizeAllColors();
+
 
         DrawMaxCountControls();
 
@@ -99,8 +145,14 @@ public class GridDataSOEditor : Editor
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Generator Settings", EditorStyles.boldLabel);
-        generationTimeout = EditorGUILayout.FloatField(new GUIContent("Generation Timeout (Sec)", "Максимальний час у секундах, який генератор витратить на пошук ОДНОГО рішення."), generationTimeout);
+
+        generationIterations = EditorGUILayout.IntField(new GUIContent("Generation Iterations", "Кількість спроб для пошуку найкращого рішення."), generationIterations);
+        if (generationIterations < 1) generationIterations = 1;
+        selectionCriterion = (SolutionSelectionCriterion)EditorGUILayout.EnumPopup(new GUIContent("Selection Criterion", "Критерій для вибору найкращого рішення з усіх знайдених."), selectionCriterion);
+
+        generationTimeout = EditorGUILayout.FloatField(new GUIContent("Total Timeout (Sec)", "Максимальний загальний час у секундах на пошук рішення."), generationTimeout);
         enableDebugLogs = EditorGUILayout.Toggle(new GUIContent("Enable Debug Logs", "Вмикає вивід детальної інформації про процес генерації в консоль. Може сповільнювати роботу."), enableDebugLogs);
+
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Filler Piece Distribution Control", EditorStyles.boldLabel);
         smallPieceMaxCells = EditorGUILayout.IntField(new GUIContent("Small Piece Max Cells", "Максимальна кількість клітинок, щоб фігура вважалася 'маленькою'."), smallPieceMaxCells);
@@ -109,9 +161,26 @@ public class GridDataSOEditor : Editor
         desiredMediumFillers = EditorGUILayout.IntSlider(new GUIContent("Desired Medium Fillers", "Скільки середніх допоміжних фігур буде використано при генерації."), desiredMediumFillers, 0, 20);
         desiredLargeFillers = EditorGUILayout.IntSlider(new GUIContent("Desired Large Fillers", "Скільки великих допоміжних фігур буде використано при генерації."), desiredLargeFillers, 0, 20);
 
+        EditorGUILayout.Space();
+        DrawComplexityIndicator();
+        EditorGUILayout.Space();
+
         if (GUILayout.Button(new GUIContent("Generate Puzzle Solution", "Запускає повну генерацію пазла з нуля на основі поточних налаштувань.")))
         {
-            GeneratePuzzle();
+            var (complexity, _) = CalculateComplexity();
+            if (complexity >= 2)
+            {
+                if (EditorUtility.DisplayDialog("High Complexity Warning",
+                    "The current settings have high or extreme complexity. Generation may take a very long time or freeze the editor.\n\nAre you sure you want to continue?",
+                    "Yes, Generate", "Cancel"))
+                {
+                    GeneratePuzzle();
+                }
+            }
+            else
+            {
+                GeneratePuzzle();
+            }
         }
 
         if (gridDataSO.puzzleSolution != null && gridDataSO.puzzleSolution.Count > 0)
@@ -249,7 +318,6 @@ public class GridDataSOEditor : Editor
         if (!isSynced)
         {
             EditorGUILayout.HelpBox("Склад фігур у рівні не співпадає з налаштуваннями характерів!", MessageType.Error);
-            // --- ОНОВЛЕНА КНОПКА ---
             if (GUILayout.Button("Примусово синхронізувати характери"))
             {
                 SyncPersonalityMappings(personalityData, requiredPieceTypes);
@@ -349,6 +417,8 @@ public class GridDataSOEditor : Editor
     #region Buildable Cells Editor
     private void InitializeEditorGrid()
     {
+        if (gridDataSO.width <= 0 || gridDataSO.height <= 0) return;
+
         editorGridCells = new bool[gridDataSO.width, gridDataSO.height];
         if (gridDataSO.buildableCells != null)
         {
@@ -451,9 +521,10 @@ public class GridDataSOEditor : Editor
 
         stopwatch.Stop();
 
-        int previousSolutionIndex = gridDataSO.currentSolutionIndex;
+        serializedObject.Update();
 
-        serializedObject.FindProperty("solutionVariantsCount").intValue = _solutionCounter;
+        var solutionVariantsCountProp = serializedObject.FindProperty("solutionVariantsCount");
+        solutionVariantsCountProp.intValue = _solutionCounter;
 
         var allFoundSolutionsProp = serializedObject.FindProperty("allFoundSolutions");
         allFoundSolutionsProp.ClearArray();
@@ -473,11 +544,13 @@ public class GridDataSOEditor : Editor
             }
         }
 
+        serializedObject.ApplyModifiedProperties();
+
         string messageType = !findAllPermutations ? "unique layouts" : "total permutations";
         string stopMessage = _calculationStopped ? " (stopped by timeout)" : "";
         UnityEngine.Debug.Log($"<color=cyan>Calculation finished in {stopwatch.Elapsed.TotalSeconds:F2} sec{stopMessage}. Found {_solutionCounter} {messageType}. Stored: {_allSolutionsList.Count}.</color>");
 
-        SetSolutionIndex(Mathf.Min(previousSolutionIndex, _allSolutionsList.Count - 1));
+        SetSolutionIndex(0);
     }
 
     private void CountSolutionsRecursive(bool[,] currentGrid, List<GridDataSO.GeneratedPieceData> currentSolution, Dictionary<PlacedObjectTypeSO, int> pieceCounts, List<PlacedObjectTypeSO> uniquePieces)
@@ -588,33 +661,38 @@ public class GridDataSOEditor : Editor
 
     private void SetSolutionIndex(int newIndex)
     {
-        int storedCount = gridDataSO.allFoundSolutions?.Count ?? 0;
+        var allFoundSolutionsProp = serializedObject.FindProperty("allFoundSolutions");
+        int storedCount = allFoundSolutionsProp.arraySize;
         if (storedCount == 0) return;
 
         int clampedIndex = Mathf.Clamp(newIndex, 0, storedCount - 1);
 
-        serializedObject.FindProperty("currentSolutionIndex").intValue = clampedIndex;
+        serializedObject.Update();
+
+        var currentSolutionIndexProp = serializedObject.FindProperty("currentSolutionIndex");
+        currentSolutionIndexProp.intValue = clampedIndex;
         solutionToShowIndex = clampedIndex + 1;
 
+        var sourceSolutionProp = allFoundSolutionsProp.GetArrayElementAtIndex(clampedIndex).FindPropertyRelative("solution");
         var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
-        var newSolutionLayout = gridDataSO.allFoundSolutions[clampedIndex].solution;
 
         puzzleSolutionProp.ClearArray();
-
-        for (int i = 0; i < newSolutionLayout.Count; i++)
+        for (int i = 0; i < sourceSolutionProp.arraySize; i++)
         {
+            var sourceElement = sourceSolutionProp.GetArrayElementAtIndex(i);
             puzzleSolutionProp.InsertArrayElementAtIndex(i);
-            var pieceDataProp = puzzleSolutionProp.GetArrayElementAtIndex(i);
+            var destElement = puzzleSolutionProp.GetArrayElementAtIndex(i);
 
-            pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue = newSolutionLayout[i].pieceType;
-            pieceDataProp.FindPropertyRelative("position").vector2IntValue = newSolutionLayout[i].position;
-            pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)newSolutionLayout[i].direction;
+            destElement.FindPropertyRelative("pieceType").objectReferenceValue = sourceElement.FindPropertyRelative("pieceType").objectReferenceValue;
+            destElement.FindPropertyRelative("position").vector2IntValue = sourceElement.FindPropertyRelative("position").vector2IntValue;
+            destElement.FindPropertyRelative("direction").enumValueIndex = sourceElement.FindPropertyRelative("direction").enumValueIndex;
         }
 
         serializedObject.ApplyModifiedProperties();
-
+        UpdatePuzzleState();
         Repaint();
     }
+
 
     #endregion
 
@@ -623,14 +701,73 @@ public class GridDataSOEditor : Editor
     private void GeneratePuzzle()
     {
         stopwatch = Stopwatch.StartNew();
+        List<List<GridDataSO.GeneratedPieceData>> foundSolutions = new List<List<GridDataSO.GeneratedPieceData>>();
 
+        UnityEngine.Debug.Log($"Starting generation with {generationIterations} iterations...");
+
+        for (int i = 0; i < generationIterations; i++)
+        {
+            if (stopwatch.Elapsed.TotalSeconds > generationTimeout)
+            {
+                UnityEngine.Debug.LogWarning($"Total generation timeout of {generationTimeout}s reached. Stopping at iteration {i + 1}.");
+                break;
+            }
+
+            if (enableDebugLogs) UnityEngine.Debug.Log($"--- Iteration {i + 1} ---");
+
+            var solution = FindSingleSolution(stopwatch);
+            if (solution != null)
+            {
+                foundSolutions.Add(solution);
+            }
+            if (selectionCriterion == SolutionSelectionCriterion.FirstFound && foundSolutions.Count > 0)
+            {
+                if (enableDebugLogs) UnityEngine.Debug.Log("First solution found, stopping generation as per criterion.");
+                break;
+            }
+        }
+
+        stopwatch.Stop();
+
+        if (foundSolutions.Count > 0)
+        {
+            List<GridDataSO.GeneratedPieceData> bestSolution = null;
+
+            switch (selectionCriterion)
+            {
+                case SolutionSelectionCriterion.FirstFound:
+                    bestSolution = foundSolutions[0];
+                    break;
+                case SolutionSelectionCriterion.FewestPieces:
+                    bestSolution = foundSolutions.OrderBy(s => s.Count).FirstOrDefault();
+                    break;
+                case SolutionSelectionCriterion.MostPieces:
+                    bestSolution = foundSolutions.OrderByDescending(s => s.Count).FirstOrDefault();
+                    break;
+            }
+
+            UnityEngine.Debug.Log($"<color=green>Puzzle generation finished in {stopwatch.Elapsed.TotalSeconds:F3}s. Found {foundSolutions.Count} solutions. Selected best with {bestSolution.Count} pieces based on '{selectionCriterion}'.</color>");
+
+            SaveSolutionToSO(bestSolution);
+        }
+        else
+        {
+            UnityEngine.Debug.LogError($"Failed to generate any puzzle solution after {generationIterations} iterations. Total time: {stopwatch.Elapsed.TotalSeconds:F3}s.");
+            ClearAllPieces();
+        }
+
+        serializedObject.ApplyModifiedProperties();
+    }
+
+    private List<GridDataSO.GeneratedPieceData> FindSingleSolution(Stopwatch totalStopwatch)
+    {
         var requiredPiecesConfig = gridDataSO.generatorPieceConfig?.Where(c => c.isRequired && c.pieceType != null).ToList();
         var allAvailableFillersConfig = gridDataSO.generatorPieceConfig?.Where(c => !c.isRequired && c.pieceType != null).ToList();
 
         if ((requiredPiecesConfig == null || requiredPiecesConfig.Count == 0) && (allAvailableFillersConfig == null || allAvailableFillersConfig.Count == 0))
         {
             UnityEngine.Debug.LogError("No pieces specified for generation! Update the piece list.");
-            return;
+            return null;
         }
 
         List<PlacedObjectTypeSO> curatedFillerPieces = new List<PlacedObjectTypeSO>();
@@ -669,58 +806,25 @@ public class GridDataSOEditor : Editor
             pieceCountsInSolution[piece] = pieceCountsInSolution.GetValueOrDefault(piece, 0) + 1;
         }
 
-
         var orderedFillerPieces = curatedFillerPieces.OrderByDescending(p => p.relativeOccupiedCells.Count).ToList();
-        bool success = SolvePuzzleRecursiveGeneration(tempGrid, solution, requiredPiecesToPlace, orderedFillerPieces, pieceCountsInSolution);
-        stopwatch.Stop();
+
+        bool success = SolvePuzzleRecursiveGeneration(tempGrid, solution, requiredPiecesToPlace, orderedFillerPieces, pieceCountsInSolution, totalStopwatch);
 
         if (success)
         {
-            UnityEngine.Debug.Log($"<color=green>Puzzle generated successfully in {stopwatch.Elapsed.TotalSeconds:F3} seconds!</color>");
-
-            var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
-            puzzleSolutionProp.ClearArray();
-            for (int i = 0; i < solution.Count; i++)
-            {
-                puzzleSolutionProp.InsertArrayElementAtIndex(i);
-                var pieceDataProp = puzzleSolutionProp.GetArrayElementAtIndex(i);
-                pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue = solution[i].pieceType;
-                pieceDataProp.FindPropertyRelative("position").vector2IntValue = solution[i].position;
-                pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)solution[i].direction;
-            }
-
-            serializedObject.FindProperty("solutionVariantsCount").intValue = 1;
-            serializedObject.FindProperty("currentSolutionIndex").intValue = 0;
-
-            var allFoundSolutionsProp = serializedObject.FindProperty("allFoundSolutions");
-            allFoundSolutionsProp.ClearArray();
-            allFoundSolutionsProp.InsertArrayElementAtIndex(0);
-            var solutionProp = allFoundSolutionsProp.GetArrayElementAtIndex(0).FindPropertyRelative("solution");
-            solutionProp.ClearArray();
-            for (int j = 0; j < solution.Count; j++)
-            {
-                solutionProp.InsertArrayElementAtIndex(j);
-                var pieceDataProp = solutionProp.GetArrayElementAtIndex(j);
-                pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue = solution[j].pieceType;
-                pieceDataProp.FindPropertyRelative("position").vector2IntValue = solution[j].position;
-                pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)solution[j].direction;
-            }
-
-            solutionToShowIndex = 1;
-            UpdatePuzzleState();
+            return solution;
         }
         else
         {
-            UnityEngine.Debug.LogError($"Failed to generate puzzle. Timeout ({generationTimeout} sec) or no solution found.");
-            ClearAllPieces();
+            if (enableDebugLogs) UnityEngine.Debug.LogWarning($"Single solution search failed or timed out.");
+            return null;
         }
-
-        serializedObject.ApplyModifiedProperties();
     }
 
-    private bool SolvePuzzleRecursiveGeneration(bool[,] currentGrid, List<GridDataSO.GeneratedPieceData> solution, List<PlacedObjectTypeSO> required, List<PlacedObjectTypeSO> fillers, Dictionary<PlacedObjectTypeSO, int> pieceCounts)
+    private bool SolvePuzzleRecursiveGeneration(bool[,] currentGrid, List<GridDataSO.GeneratedPieceData> solution, List<PlacedObjectTypeSO> required, List<PlacedObjectTypeSO> fillers, Dictionary<PlacedObjectTypeSO, int> pieceCounts, Stopwatch activeStopwatch)
     {
-        if (stopwatch.Elapsed.TotalSeconds > generationTimeout) return false;
+        if (activeStopwatch.Elapsed.TotalSeconds > generationTimeout) return false;
+
         Vector2Int? emptyCell = FindFirstEmptyCell(currentGrid);
         if (emptyCell == null) return required.Count == 0;
 
@@ -735,7 +839,7 @@ public class GridDataSOEditor : Editor
             piecesToTry.AddRange(fillers);
         }
 
-        foreach (var pieceType in piecesToTry)
+        foreach (var pieceType in piecesToTry.OrderBy(p => Random.value))
         {
             if (pieceType.relativeOccupiedCells == null || pieceType.relativeOccupiedCells.Count == 0) continue;
 
@@ -752,27 +856,26 @@ public class GridDataSOEditor : Editor
             var shuffledDirs = System.Enum.GetValues(typeof(PlacedObjectTypeSO.Dir)).Cast<PlacedObjectTypeSO.Dir>().OrderBy(d => Random.value);
             foreach (PlacedObjectTypeSO.Dir dir in shuffledDirs)
             {
-                for (int x = -pieceType.GetMaxDimensions().x; x < gridDataSO.width; x++)
+                foreach (var occupiedCell in pieceType.relativeOccupiedCells)
                 {
-                    for (int z = -pieceType.GetMaxDimensions().y; z < gridDataSO.height; z++)
+                    Vector2Int startPosition = emptyCell.Value - GetRotatedCell(occupiedCell, dir, pieceType.GetMaxDimensions());
+
+                    List<Vector2Int> piecePositions = pieceType.GetGridPositionsList(startPosition, dir);
+
+                    if (CanPlace(currentGrid, piecePositions))
                     {
-                        Vector2Int startPosition = new Vector2Int(x, z);
-                        List<Vector2Int> piecePositions = pieceType.GetGridPositionsList(startPosition, dir);
-                        if (piecePositions.Contains(emptyCell.Value) && CanPlace(currentGrid, piecePositions))
-                        {
-                            var nextRequired = new List<PlacedObjectTypeSO>(required);
-                            if (tryingRequired) nextRequired.Remove(pieceType);
+                        var nextRequired = new List<PlacedObjectTypeSO>(required);
+                        if (tryingRequired) nextRequired.Remove(pieceType);
 
-                            Place(currentGrid, piecePositions, false);
-                            solution.Add(new GridDataSO.GeneratedPieceData { pieceType = pieceType, position = startPosition, direction = dir });
-                            pieceCounts[pieceType] = pieceCounts.GetValueOrDefault(pieceType, 0) + 1;
+                        Place(currentGrid, piecePositions, false);
+                        solution.Add(new GridDataSO.GeneratedPieceData { pieceType = pieceType, position = startPosition, direction = dir });
+                        pieceCounts[pieceType] = pieceCounts.GetValueOrDefault(pieceType, 0) + 1;
 
-                            if (SolvePuzzleRecursiveGeneration(currentGrid, solution, nextRequired, fillers, pieceCounts)) return true;
+                        if (SolvePuzzleRecursiveGeneration(currentGrid, solution, nextRequired, fillers, pieceCounts, activeStopwatch)) return true;
 
-                            Place(currentGrid, piecePositions, true);
-                            solution.RemoveAt(solution.Count - 1);
-                            pieceCounts[pieceType]--;
-                        }
+                        Place(currentGrid, piecePositions, true);
+                        solution.RemoveAt(solution.Count - 1);
+                        pieceCounts[pieceType]--;
                     }
                 }
             }
@@ -780,9 +883,99 @@ public class GridDataSOEditor : Editor
         return false;
     }
 
+    private Vector2Int GetRotatedCell(Vector2Int cell, PlacedObjectTypeSO.Dir direction, Vector2Int originalDims)
+    {
+        int originalWidth = originalDims.x;
+        int originalHeight = originalDims.y;
+
+        switch (direction)
+        {
+            case PlacedObjectTypeSO.Dir.Down:
+                return cell;
+            case PlacedObjectTypeSO.Dir.Left:
+                return new Vector2Int(cell.y, originalWidth - 1 - cell.x);
+            case PlacedObjectTypeSO.Dir.Up:
+                return new Vector2Int(originalWidth - 1 - cell.x, originalHeight - 1 - cell.y);
+            case PlacedObjectTypeSO.Dir.Right:
+                return new Vector2Int(originalHeight - 1 - cell.y, cell.x);
+        }
+        return cell;
+    }
+
+    private void SaveSolutionToSO(List<GridDataSO.GeneratedPieceData> solution)
+    {
+        var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
+        puzzleSolutionProp.ClearArray();
+        for (int i = 0; i < solution.Count; i++)
+        {
+            puzzleSolutionProp.InsertArrayElementAtIndex(i);
+            var pieceDataProp = puzzleSolutionProp.GetArrayElementAtIndex(i);
+            pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue = solution[i].pieceType;
+            pieceDataProp.FindPropertyRelative("position").vector2IntValue = solution[i].position;
+            pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)solution[i].direction;
+        }
+
+        serializedObject.FindProperty("solutionVariantsCount").intValue = 1;
+        serializedObject.FindProperty("currentSolutionIndex").intValue = 0;
+
+        var allFoundSolutionsProp = serializedObject.FindProperty("allFoundSolutions");
+        allFoundSolutionsProp.ClearArray();
+        allFoundSolutionsProp.InsertArrayElementAtIndex(0);
+        var solutionProp = allFoundSolutionsProp.GetArrayElementAtIndex(0).FindPropertyRelative("solution");
+        solutionProp.ClearArray();
+        for (int j = 0; j < solution.Count; j++)
+        {
+            solutionProp.InsertArrayElementAtIndex(j);
+            var pieceDataProp = solutionProp.GetArrayElementAtIndex(j);
+            pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue = solution[j].pieceType;
+            pieceDataProp.FindPropertyRelative("position").vector2IntValue = solution[j].position;
+            pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)solution[j].direction;
+        }
+
+        solutionToShowIndex = 1;
+        UpdatePuzzleState();
+    }
+
+
     #endregion
 
     #region Helper & UI Methods
+
+    private (int, float) CalculateComplexity()
+    {
+        int buildableCells = gridDataSO.buildableCells.Count;
+        int availablePieceTypes = gridDataSO.availablePieceTypesForGeneration?.Count(p => p != null) ?? 0;
+
+        float complexityScore = buildableCells * Mathf.Pow(availablePieceTypes, 1.2f);
+
+        int complexityLevel = 0; // 0=Low, 1=Medium, 2=High, 3=Extreme
+        if (complexityScore > 1000) complexityLevel = 1;
+        if (complexityScore > 3000) complexityLevel = 2;
+        if (complexityScore > 7000) complexityLevel = 3;
+
+        return (complexityLevel, complexityScore);
+    }
+
+    private void DrawComplexityIndicator()
+    {
+        var (complexityLevel, complexityScore) = CalculateComplexity();
+        string levelText = "Low";
+        Color textColor = Color.green;
+
+        switch (complexityLevel)
+        {
+            case 1: levelText = "Medium"; textColor = Color.yellow; break;
+            case 2: levelText = "High"; textColor = new Color(1.0f, 0.6f, 0.0f); break; // Orange
+            case 3: levelText = "Extreme"; textColor = Color.red; break;
+        }
+
+        GUIStyle style = new GUIStyle(EditorStyles.label);
+        style.normal.textColor = textColor;
+        style.fontStyle = FontStyle.Bold;
+
+        EditorGUILayout.LabelField(new GUIContent("Estimated Complexity", "A rough estimate based on grid size and number of available piece types. High complexity may lead to long generation times."), new GUIContent(levelText, $"Score: {complexityScore:F0}"), style);
+    }
+
 
     private void DrawPuzzlePreview()
     {
@@ -807,16 +1000,18 @@ public class GridDataSOEditor : Editor
         {
             var totalPieceCounts = gridDataSO.generatedPieceSummary.ToDictionary(s => s.pieceType, s => s.count);
             var pieceInstanceCounter = new Dictionary<PlacedObjectTypeSO, int>();
+            int sequenceCounter = 0;
 
             foreach (var pieceData in gridDataSO.puzzleSolution)
             {
                 if (pieceData.pieceType == null) continue;
 
+                sequenceCounter++;
+
                 var colorEntry = gridDataSO.generatorPieceConfig.FirstOrDefault(c => c.pieceType == pieceData.pieceType);
-
                 Color pieceColor = colorEntry.pieceType != null ? colorEntry.color : Color.magenta;
-
                 List<Vector2Int> positions = pieceData.pieceType.GetGridPositionsList(pieceData.position, pieceData.direction);
+
                 foreach (var pos in positions)
                 {
                     if (pos.x >= 0 && pos.x < gridDataSO.width && pos.y >= 0 && pos.y < gridDataSO.height)
@@ -826,23 +1021,27 @@ public class GridDataSOEditor : Editor
                     }
                 }
 
-                if (totalPieceCounts.TryGetValue(pieceData.pieceType, out int totalCount) && totalCount > 1)
+                float brightness = (pieceColor.r * 0.299f + pieceColor.g * 0.587f + pieceColor.b * 0.114f);
+                Color textColor = brightness > 0.5f ? Color.black : Color.white;
+
+                if (positions.Count > 0)
                 {
-                    if (!pieceInstanceCounter.ContainsKey(pieceData.pieceType))
+                    Vector2Int firstCellPos = positions[0];
+                    Rect labelCellRect = new Rect(previewRect.x + firstCellPos.x * cellSize, previewRect.y + (gridDataSO.height - 1 - firstCellPos.y) * cellSize, cellSize, cellSize);
+
+                    sequenceLabelStyle.normal.textColor = textColor;
+                    GUI.Label(labelCellRect, sequenceCounter.ToString(), sequenceLabelStyle);
+
+                    if (totalPieceCounts.TryGetValue(pieceData.pieceType, out int totalCount) && totalCount > 1)
                     {
-                        pieceInstanceCounter[pieceData.pieceType] = 0;
-                    }
-                    pieceInstanceCounter[pieceData.pieceType]++;
-                    int instanceId = pieceInstanceCounter[pieceData.pieceType];
+                        if (!pieceInstanceCounter.ContainsKey(pieceData.pieceType))
+                        {
+                            pieceInstanceCounter[pieceData.pieceType] = 0;
+                        }
+                        pieceInstanceCounter[pieceData.pieceType]++;
+                        int instanceId = pieceInstanceCounter[pieceData.pieceType];
 
-                    if (positions.Count > 0)
-                    {
-                        Vector2Int labelPos = positions[0];
-                        Rect labelCellRect = new Rect(previewRect.x + labelPos.x * cellSize, previewRect.y + (gridDataSO.height - 1 - labelPos.y) * cellSize, cellSize, cellSize);
-
-                        float brightness = (pieceColor.r * 0.299f + pieceColor.g * 0.587f + pieceColor.b * 0.114f);
-                        labelStyle.normal.textColor = brightness > 0.5f ? Color.black : Color.white;
-
+                        labelStyle.normal.textColor = textColor;
                         GUI.Label(labelCellRect, instanceId.ToString(), labelStyle);
                     }
                 }
@@ -853,6 +1052,8 @@ public class GridDataSOEditor : Editor
 
     private void UpdatePuzzleState()
     {
+        serializedObject.Update();
+
         var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
         var puzzlePiecesProp = serializedObject.FindProperty("puzzlePieces");
         var summaryProp = serializedObject.FindProperty("generatedPieceSummary");
@@ -898,13 +1099,15 @@ public class GridDataSOEditor : Editor
         int occupiedCellCount = 0;
         foreach (var piece in currentSolution)
         {
-            occupiedCellCount += piece.pieceType.relativeOccupiedCells.Count;
+            if (piece.pieceType != null)
+                occupiedCellCount += piece.pieceType.relativeOccupiedCells.Count;
         }
 
-        // --- ОНОВЛЕНА ЛОГІКА ---
-        // Завжди оновлюємо прапорець isComplete на основі поточного стану
         serializedObject.FindProperty("isComplete").boolValue = (buildableCellCount == occupiedCellCount);
+
+        serializedObject.ApplyModifiedProperties();
     }
+
 
     private Vector2Int? FindFirstEmptyCell(bool[,] grid)
     {
@@ -921,6 +1124,8 @@ public class GridDataSOEditor : Editor
     private void DrawPieceSummary()
     {
         var summaryProp = serializedObject.FindProperty("generatedPieceSummary");
+        var generatorConfigProp = serializedObject.FindProperty("generatorPieceConfig");
+
         for (int i = 0; i < summaryProp.arraySize; i++)
         {
             var summaryElement = summaryProp.GetArrayElementAtIndex(i);
@@ -929,14 +1134,38 @@ public class GridDataSOEditor : Editor
 
             if (pieceType == null) continue;
 
-            EditorGUILayout.BeginHorizontal();
-            Rect colorRect = GUILayoutUtility.GetRect(18, 18);
-            if (Event.current.type == EventType.Repaint)
+            // --- ЗНАХОДИМО ВІДПОВІДНИЙ ЕЛЕМЕНТ КОНФІГУРАЦІЇ ---
+            SerializedProperty configElementProp = null;
+            for (int j = 0; j < generatorConfigProp.arraySize; j++)
             {
-                var colorEntry = gridDataSO.generatorPieceConfig.FirstOrDefault(c => c.pieceType == pieceType);
-                Color pieceColor = colorEntry.pieceType != null ? colorEntry.color : Color.magenta;
-                EditorGUI.DrawRect(colorRect, pieceColor);
+                var currentConfigProp = generatorConfigProp.GetArrayElementAtIndex(j);
+                if (currentConfigProp.FindPropertyRelative("pieceType").objectReferenceValue == pieceType)
+                {
+                    configElementProp = currentConfigProp;
+                    break;
+                }
             }
+
+            EditorGUILayout.BeginHorizontal();
+
+            if (configElementProp != null)
+            {
+                var colorProp = configElementProp.FindPropertyRelative("color");
+                EditorGUI.BeginChangeCheck();
+                // --- ВИКОРИСТОВУЄМО ColorField, АЛЕ ХОВАЄМО ЙОГО МІТКУ ---
+                var newColor = EditorGUILayout.ColorField(GUIContent.none, colorProp.colorValue, true, true, false, GUILayout.Width(40));
+                if (EditorGUI.EndChangeCheck())
+                {
+                    colorProp.colorValue = newColor;
+                }
+            }
+            else
+            {
+                // Fallback, якщо конфігурацію не знайдено
+                Rect colorRect = GUILayoutUtility.GetRect(18, 18, GUILayout.Width(40));
+                EditorGUI.DrawRect(colorRect, Color.magenta);
+            }
+
             EditorGUILayout.ObjectField(pieceType, typeof(PlacedObjectTypeSO), false, GUILayout.Width(150));
             EditorGUILayout.LabelField($"x {count}");
 
@@ -949,6 +1178,7 @@ public class GridDataSOEditor : Editor
             EditorGUILayout.EndHorizontal();
         }
     }
+
 
     private bool CanPlace(bool[,] grid, List<Vector2Int> positions)
     {
@@ -996,6 +1226,9 @@ public class GridDataSOEditor : Editor
         var currentConfigs = gridDataSO.generatorPieceConfig ?? new List<GridDataSO.GeneratorPieceConfig>();
         var newConfigs = new List<GridDataSO.GeneratorPieceConfig>();
         var availableTypes = gridDataSO.availablePieceTypesForGeneration.Where(p => p != null).Distinct();
+
+        colorIndex = 0;
+
         foreach (var pieceType in availableTypes)
         {
             var existingConfig = currentConfigs.FirstOrDefault(c => c.pieceType == pieceType);
@@ -1005,7 +1238,9 @@ public class GridDataSOEditor : Editor
             }
             else
             {
-                newConfigs.Add(new GridDataSO.GeneratorPieceConfig { pieceType = pieceType, isRequired = false, requiredCount = 1, maxCount = 1, color = Random.ColorHSV(0f, 1f, 0.8f, 1f, 0.9f, 1f) });
+                Color newColor = colorPalette[colorIndex % colorPalette.Count];
+                colorIndex++;
+                newConfigs.Add(new GridDataSO.GeneratorPieceConfig { pieceType = pieceType, isRequired = false, requiredCount = 1, maxCount = 1, color = newColor });
             }
         }
 
@@ -1020,6 +1255,19 @@ public class GridDataSOEditor : Editor
             element.FindPropertyRelative("requiredCount").intValue = newConfigs[i].requiredCount;
             element.FindPropertyRelative("maxCount").intValue = newConfigs[i].maxCount;
             element.FindPropertyRelative("color").colorValue = newConfigs[i].color;
+        }
+    }
+
+    private void RandomizeAllColors()
+    {
+        var prop = serializedObject.FindProperty("generatorPieceConfig");
+        if (prop == null) return;
+
+        var shuffledPalette = colorPalette.OrderBy(c => Random.value).ToList();
+
+        for (int i = 0; i < prop.arraySize; i++)
+        {
+            prop.GetArrayElementAtIndex(i).FindPropertyRelative("color").colorValue = shuffledPalette[i % shuffledPalette.Count];
         }
     }
 
@@ -1174,13 +1422,13 @@ public class GridDataSOEditor : Editor
 
         var combinedFillers = priorityFillers.Concat(otherFillers).ToList();
 
-        stopwatch = Stopwatch.StartNew();
+        var fillStopwatch = Stopwatch.StartNew();
         List<GridDataSO.GeneratedPieceData> filledPieces = new List<GridDataSO.GeneratedPieceData>();
-        bool success = SolvePuzzleRecursiveGeneration(currentGrid, filledPieces, new List<PlacedObjectTypeSO>(), combinedFillers, pieceCountsInSolution);
+        bool success = SolvePuzzleRecursiveGeneration(currentGrid, filledPieces, new List<PlacedObjectTypeSO>(), combinedFillers, pieceCountsInSolution, fillStopwatch);
 
         if (success)
         {
-            UnityEngine.Debug.Log($"<color=green>Successfully filled empty space in {stopwatch.Elapsed.TotalSeconds:F3} seconds!</color>");
+            UnityEngine.Debug.Log($"<color=green>Successfully filled empty space in {fillStopwatch.Elapsed.TotalSeconds:F3} seconds!</color>");
             var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
             int initialCount = puzzleSolutionProp.arraySize;
             for (int i = 0; i < filledPieces.Count; i++)

@@ -78,9 +78,9 @@ MonoBehaviour:
   puzzlePieces:
   - {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
   - {fileID: 11400000, guid: a118f7d569340d64991dbb2e1f6d931c, type: 2}
-  - {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
-  - {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
   - {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+  - {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+  - {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
   generatedPieceSummary:
   - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
     count: 1
@@ -95,19 +95,19 @@ MonoBehaviour:
   puzzleSolution:
   - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
     position: {x: 0, y: 0}
-    direction: 0
+    direction: 1
   - pieceType: {fileID: 11400000, guid: a118f7d569340d64991dbb2e1f6d931c, type: 2}
+    position: {x: 1, y: 0}
+    direction: 0
+  - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
     position: {x: 1, y: 1}
     direction: 0
-  - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
-    position: {x: 0, y: 2}
-    direction: 1
   - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
-    position: {x: 1, y: 2}
-    direction: 3
-  - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
-    position: {x: 3, y: 2}
+    position: {x: 3, y: 1}
     direction: 0
+  - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+    position: {x: 2, y: 2}
+    direction: 2
   isComplete: 1
   solutionVariantsCount: 288
   allFoundSolutions:
@@ -4719,4 +4719,4 @@ MonoBehaviour:
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 0, y: 3}
       direction: 3
-  currentSolutionIndex: 54
+  currentSolutionIndex: 72
