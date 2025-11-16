@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: POT_TilePall_4x2 P_Long_Invert
   m_EditorClassIdentifier: 
   objectName: Shape_4x2
-  prefab: {fileID: 2065049021235378066, guid: 1c82ab7c46f7a2c438b28d49c2ebaf6d, type: 3}
-  visual: {fileID: 2065049021235378066, guid: 1c82ab7c46f7a2c438b28d49c2ebaf6d, type: 3}
+  prefab: {fileID: 2065049021235378066, guid: e9a96d33b6addf148ae76b2d41d5cac4, type: 3}
+  visual: {fileID: 2065049021235378066, guid: e9a96d33b6addf148ae76b2d41d5cac4, type: 3}
   relativeOccupiedCells:
   - {x: 0, y: 0}
   - {x: 1, y: 0}

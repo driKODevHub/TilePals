@@ -720,10 +720,20 @@ MonoBehaviour:
   pettingGentleEmotion: {fileID: 11400000, guid: bf4c2b01c4f9c5b4fad1ce32570500f8, type: 2}
   pettingTickleEmotion: {fileID: 11400000, guid: 6842745b8c3fadd40bbc5c2aee971caa, type: 2}
   pettingAnnoyedEmotion: {fileID: 11400000, guid: 86e8b4b56a620034080bdb0b8cd84384, type: 2}
-  timeToSleep: 10
+  curiousEmotion: {fileID: 11400000, guid: 1017e418c9b669c49b242d49acdb0385, type: 2}
+  timeToSleepMin: 15
+  timeToSleepMax: 30
+  timeToWakeMin: 10
+  timeToWakeMax: 20
   shakenEmotionDuration: 1
   gentlePettingSpeedThreshold: 200
   tickleSpeedThreshold: 800
+  idleLookIntervalMin: 1.5
+  idleLookIntervalMax: 4
+  idleLookDurationMin: 1
+  idleLookDurationMax: 2.5
+  idleLookRadius: 3
+  flyOverReactionRadius: 2.5
   facialController: {fileID: 8371808012640910952}
 --- !u!1 &7296068872233567880
 GameObject:
@@ -786,6 +796,7 @@ MonoBehaviour:
   blinkIntervalMax: 12
   blinkDuration: 0.1
   pupilMovementRadius: 0.5
+  pupilLookSpeed: 8
   sortingOrderIdle: 5
   sortingOrderHeld: 15
 --- !u!1 &8730349104430904190
