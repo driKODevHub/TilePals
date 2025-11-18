@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
 using System.Text;
+using Debug = UnityEngine.Debug; // Явне використання Debug.Log
 
 [CustomEditor(typeof(GridDataSO))]
 public class GridDataSOEditor : Editor
@@ -23,7 +24,7 @@ public class GridDataSOEditor : Editor
 
     private bool showRequiredPieces = true;
     private bool showAllPieces = true;
-    private bool enableDebugLogs = false;
+    private bool enableDebugLogs = false; // Використовуємо поле класу, як у вашому коді
 
     private static int smallPieceMaxCells = 3;
     private static int mediumPieceMaxCells = 5;
@@ -216,7 +217,7 @@ public class GridDataSOEditor : Editor
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Solution Analysis", EditorStyles.boldLabel);
 
-            string variantsLabel = $"Found: {gridDataSO.solutionVariantsCount} (Stored: {gridDataSO.allFoundSolutions.Count})";
+            string variantsLabel = $"Found: {gridDataSO.solutionVariantsCount} (Stored: {gridDataSO.allFoundSolutions?.Count ?? 0})";
             EditorGUILayout.LabelField(variantsLabel);
 
             useCalculationTimeout = EditorGUILayout.Toggle(new GUIContent("Use Timeout", "Якщо увімкнено, розрахунок зупиниться після вказаного часу, зберігши знайдені результати."), useCalculationTimeout);
@@ -266,7 +267,7 @@ public class GridDataSOEditor : Editor
                     gridDataSO.generatorPieceConfig[i] = config;
                 }
                 EditorUtility.SetDirty(gridDataSO);
-                UnityEngine.Debug.Log($"Встановлено ліміт {_globalMaxCount} для всіх фігур.");
+                Debug.Log($"Встановлено ліміт {_globalMaxCount} для всіх фігур.");
             }
         }
 
@@ -281,7 +282,7 @@ public class GridDataSOEditor : Editor
                     gridDataSO.generatorPieceConfig[i] = config;
                 }
                 EditorUtility.SetDirty(gridDataSO);
-                UnityEngine.Debug.Log("Скинуто ліміти для всіх фігур. Тепер кожна фігура унікальна.");
+                Debug.Log("Скинуто ліміти для всіх фігур. Тепер кожна фігура унікальна.");
             }
         }
         EditorGUILayout.EndHorizontal();
@@ -310,14 +311,15 @@ public class GridDataSOEditor : Editor
         SerializedObject personalitySerializedObject = new SerializedObject(personalityData);
         SerializedProperty mappingsProp = personalitySerializedObject.FindProperty("personalityMappings");
 
-        var requiredPieceTypes = gridDataSO.generatedPieceSummary.Select(s => s.pieceType).Where(p => p != null).Distinct().ToList();
+        // Використовуємо згенеровані фігури, щоб знати, які характери потрібні
+        var requiredPieceTypes = gridDataSO.puzzlePieces.Where(p => p != null).Distinct().ToList();
         var mappedPieceTypes = personalityData.personalityMappings.Where(m => m.pieceType != null).Select(m => m.pieceType).ToList();
 
         bool isSynced = requiredPieceTypes.Count == mappedPieceTypes.Count && requiredPieceTypes.All(mappedPieceTypes.Contains);
 
         if (!isSynced)
         {
-            EditorGUILayout.HelpBox("Склад фігур у рівні не співпадає з налаштуваннями характерів!", MessageType.Error);
+            EditorGUILayout.HelpBox("Склад фігур у рівні не співпадає з налаштуваннями характерів! Натисніть кнопку, щоб синхронізувати.", MessageType.Error);
             if (GUILayout.Button("Примусово синхронізувати характери"))
             {
                 SyncPersonalityMappings(personalityData, requiredPieceTypes);
@@ -386,6 +388,7 @@ public class GridDataSOEditor : Editor
             });
         }
         EditorUtility.SetDirty(pData);
+        AssetDatabase.SaveAssets(); // Зберігаємо, щоб зміни відобразилися
     }
 
     private void RandomizeUnassignedTemperaments(LevelPersonalitySO pData)
@@ -393,7 +396,7 @@ public class GridDataSOEditor : Editor
         string[] guids = AssetDatabase.FindAssets("t:TemperamentSO");
         if (guids.Length == 0)
         {
-            UnityEngine.Debug.LogWarning("Не знайдено жодного асету TemperamentSO для рандомізації.");
+            Debug.LogWarning("Не знайдено жодного асету TemperamentSO для рандомізації.");
             return;
         }
 
@@ -411,6 +414,7 @@ public class GridDataSOEditor : Editor
             }
         }
         EditorUtility.SetDirty(pData);
+        AssetDatabase.SaveAssets(); // Зберігаємо, щоб зміни відобразилися
     }
     #endregion
 
@@ -476,6 +480,8 @@ public class GridDataSOEditor : Editor
                 }
             }
         }
+        serializedObject.ApplyModifiedProperties();
+        UpdatePuzzleState(); // Оновлюємо стан пазла, щоб відобразити зміни в сітці
     }
 
     private void SelectAllBuildableCells(bool select)
@@ -497,7 +503,7 @@ public class GridDataSOEditor : Editor
     {
         if (gridDataSO.puzzlePieces == null || gridDataSO.puzzlePieces.Count == 0)
         {
-            UnityEngine.Debug.LogWarning("First, generate a puzzle solution.");
+            Debug.LogWarning("First, generate a puzzle solution.");
             return;
         }
 
@@ -548,7 +554,7 @@ public class GridDataSOEditor : Editor
 
         string messageType = !findAllPermutations ? "unique layouts" : "total permutations";
         string stopMessage = _calculationStopped ? " (stopped by timeout)" : "";
-        UnityEngine.Debug.Log($"<color=cyan>Calculation finished in {stopwatch.Elapsed.TotalSeconds:F2} sec{stopMessage}. Found {_solutionCounter} {messageType}. Stored: {_allSolutionsList.Count}.</color>");
+        Debug.Log($"<color=cyan>Calculation finished in {stopwatch.Elapsed.TotalSeconds:F2} sec{stopMessage}. Found {_solutionCounter} {messageType}. Stored: {_allSolutionsList.Count}.</color>");
 
         SetSolutionIndex(0);
     }
@@ -588,29 +594,44 @@ public class GridDataSOEditor : Editor
         {
             if (pieceCounts[pieceType] > 0)
             {
+                // Для кожного типу фігури, перебираємо всі можливі позиції, де ця фігура
+                // покриває emptyCell.Value
                 foreach (PlacedObjectTypeSO.Dir dir in System.Enum.GetValues(typeof(PlacedObjectTypeSO.Dir)))
                 {
-                    for (int x = -pieceType.GetMaxDimensions().x; x < gridDataSO.width; x++)
+                    // Отримуємо список всіх клітинок, які належать фігурі, незалежно від її розміру
+                    var relativeCells = pieceType.relativeOccupiedCells;
+
+                    // Перебираємо кожну клітинку фігури, щоб знайти її початкову позицію (origin),
+                    // якщо вона має покрити emptyCell.Value
+                    foreach (var occupiedCell in relativeCells)
                     {
-                        for (int z = -pieceType.GetMaxDimensions().y; z < gridDataSO.height; z++)
+                        Vector2Int rotatedCell = GetRotatedCell(occupiedCell, dir, pieceType.GetMaxDimensions());
+                        Vector2Int startPosition = emptyCell.Value - rotatedCell;
+
+                        List<Vector2Int> piecePositions = pieceType.GetGridPositionsList(startPosition, dir);
+
+                        if (CanPlace(currentGrid, piecePositions))
                         {
-                            Vector2Int startPosition = new Vector2Int(x, z);
-                            List<Vector2Int> piecePositions = pieceType.GetGridPositionsList(startPosition, dir);
+                            // Уникнення дублювання при рекурсії, якщо різні відносні клітинки
+                            // дають однаковий startPosition та напрямок
+                            bool alreadyProcessed = currentSolution.Any(p =>
+                                p.pieceType == pieceType &&
+                                p.position == startPosition &&
+                                p.direction == dir);
 
-                            if (piecePositions.Contains(emptyCell.Value) && CanPlace(currentGrid, piecePositions))
-                            {
-                                Place(currentGrid, piecePositions, false);
-                                pieceCounts[pieceType]--;
-                                currentSolution.Add(new GridDataSO.GeneratedPieceData { pieceType = pieceType, position = startPosition, direction = dir });
+                            if (alreadyProcessed) continue;
 
-                                CountSolutionsRecursive(currentGrid, currentSolution, pieceCounts, uniquePieces);
+                            Place(currentGrid, piecePositions, false);
+                            pieceCounts[pieceType]--;
+                            currentSolution.Add(new GridDataSO.GeneratedPieceData { pieceType = pieceType, position = startPosition, direction = dir });
 
-                                Place(currentGrid, piecePositions, true);
-                                pieceCounts[pieceType]++;
-                                currentSolution.RemoveAt(currentSolution.Count - 1);
+                            CountSolutionsRecursive(currentGrid, currentSolution, pieceCounts, uniquePieces);
 
-                                if (_calculationStopped) return;
-                            }
+                            Place(currentGrid, piecePositions, true);
+                            pieceCounts[pieceType]++;
+                            currentSolution.RemoveAt(currentSolution.Count - 1);
+
+                            if (_calculationStopped) return;
                         }
                     }
                 }
@@ -620,7 +641,8 @@ public class GridDataSOEditor : Editor
 
     private string GenerateSolutionHash(List<GridDataSO.GeneratedPieceData> solution)
     {
-        var sortedPieces = solution.OrderBy(p => p.position.x).ThenBy(p => p.position.y);
+        // Хешування для унікальних рішень
+        var sortedPieces = solution.OrderBy(p => p.pieceType.name).ThenBy(p => p.position.x).ThenBy(p => p.position.y);
 
         StringBuilder stringBuilder = new StringBuilder();
         foreach (var piece in sortedPieces)
@@ -703,17 +725,17 @@ public class GridDataSOEditor : Editor
         stopwatch = Stopwatch.StartNew();
         List<List<GridDataSO.GeneratedPieceData>> foundSolutions = new List<List<GridDataSO.GeneratedPieceData>>();
 
-        UnityEngine.Debug.Log($"Starting generation with {generationIterations} iterations...");
+        Debug.Log($"Starting generation with {generationIterations} iterations...");
 
         for (int i = 0; i < generationIterations; i++)
         {
             if (stopwatch.Elapsed.TotalSeconds > generationTimeout)
             {
-                UnityEngine.Debug.LogWarning($"Total generation timeout of {generationTimeout}s reached. Stopping at iteration {i + 1}.");
+                Debug.LogWarning($"Total generation timeout of {generationTimeout}s reached. Stopping at iteration {i + 1}.");
                 break;
             }
 
-            if (enableDebugLogs) UnityEngine.Debug.Log($"--- Iteration {i + 1} ---");
+            if (enableDebugLogs) Debug.Log($"--- Iteration {i + 1} ---");
 
             var solution = FindSingleSolution(stopwatch);
             if (solution != null)
@@ -722,7 +744,7 @@ public class GridDataSOEditor : Editor
             }
             if (selectionCriterion == SolutionSelectionCriterion.FirstFound && foundSolutions.Count > 0)
             {
-                if (enableDebugLogs) UnityEngine.Debug.Log("First solution found, stopping generation as per criterion.");
+                if (enableDebugLogs) Debug.Log("First solution found, stopping generation as per criterion.");
                 break;
             }
         }
@@ -746,13 +768,13 @@ public class GridDataSOEditor : Editor
                     break;
             }
 
-            UnityEngine.Debug.Log($"<color=green>Puzzle generation finished in {stopwatch.Elapsed.TotalSeconds:F3}s. Found {foundSolutions.Count} solutions. Selected best with {bestSolution.Count} pieces based on '{selectionCriterion}'.</color>");
+            Debug.Log($"<color=green>Puzzle generation finished in {stopwatch.Elapsed.TotalSeconds:F3}s. Found {foundSolutions.Count} solutions. Selected best with {bestSolution.Count} pieces based on '{selectionCriterion}'.</color>");
 
             SaveSolutionToSO(bestSolution);
         }
         else
         {
-            UnityEngine.Debug.LogError($"Failed to generate any puzzle solution after {generationIterations} iterations. Total time: {stopwatch.Elapsed.TotalSeconds:F3}s.");
+            Debug.LogError($"Failed to generate any puzzle solution after {generationIterations} iterations. Total time: {stopwatch.Elapsed.TotalSeconds:F3}s.");
             ClearAllPieces();
         }
 
@@ -766,7 +788,7 @@ public class GridDataSOEditor : Editor
 
         if ((requiredPiecesConfig == null || requiredPiecesConfig.Count == 0) && (allAvailableFillersConfig == null || allAvailableFillersConfig.Count == 0))
         {
-            UnityEngine.Debug.LogError("No pieces specified for generation! Update the piece list.");
+            Debug.LogError("No pieces specified for generation! Update the piece list.");
             return null;
         }
 
@@ -816,7 +838,7 @@ public class GridDataSOEditor : Editor
         }
         else
         {
-            if (enableDebugLogs) UnityEngine.Debug.LogWarning($"Single solution search failed or timed out.");
+            if (enableDebugLogs) Debug.LogWarning($"Single solution search failed or timed out.");
             return null;
         }
     }
@@ -824,27 +846,34 @@ public class GridDataSOEditor : Editor
     private bool SolvePuzzleRecursiveGeneration(bool[,] currentGrid, List<GridDataSO.GeneratedPieceData> solution, List<PlacedObjectTypeSO> required, List<PlacedObjectTypeSO> fillers, Dictionary<PlacedObjectTypeSO, int> pieceCounts, Stopwatch activeStopwatch)
     {
         if (activeStopwatch.Elapsed.TotalSeconds > generationTimeout) return false;
+        if (enableDebugLogs) Debug.Log($"Depth: {solution.Count}, Required Left: {required.Count}, Total Time: {activeStopwatch.Elapsed.TotalSeconds:F2}s");
 
         Vector2Int? emptyCell = FindFirstEmptyCell(currentGrid);
         if (emptyCell == null) return required.Count == 0;
 
         var piecesToTry = new List<PlacedObjectTypeSO>();
         bool tryingRequired = required.Count > 0;
+
+        // Порядок вибору фігур: спочатку всі необхідні (required), потім усі наповнювачі (fillers)
         if (tryingRequired)
         {
+            // Обов'язкові фігури: сортуємо за розміром, щоб спробувати найбільші в першу чергу
             piecesToTry.AddRange(required.Distinct().OrderByDescending(p => p.relativeOccupiedCells.Count));
         }
         else
         {
-            piecesToTry.AddRange(fillers);
+            // Наповнювачі: сортуємо випадково, щоб збільшити варіативність
+            piecesToTry.AddRange(fillers.OrderBy(p => Random.value));
         }
 
-        foreach (var pieceType in piecesToTry.OrderBy(p => Random.value))
+
+        foreach (var pieceType in piecesToTry)
         {
             if (pieceType.relativeOccupiedCells == null || pieceType.relativeOccupiedCells.Count == 0) continue;
 
             if (!tryingRequired)
             {
+                // Перевірка ліміту для наповнювачів
                 var config = gridDataSO.generatorPieceConfig.FirstOrDefault(c => c.pieceType == pieceType);
                 int maxCount = config.pieceType != null ? config.maxCount : int.MaxValue;
                 if (pieceCounts.GetValueOrDefault(pieceType, 0) >= maxCount)
@@ -854,16 +883,28 @@ public class GridDataSOEditor : Editor
             }
 
             var shuffledDirs = System.Enum.GetValues(typeof(PlacedObjectTypeSO.Dir)).Cast<PlacedObjectTypeSO.Dir>().OrderBy(d => Random.value);
+
+            // Перебираємо всі можливі клітинки фігури та напрямки для покриття emptyCell
             foreach (PlacedObjectTypeSO.Dir dir in shuffledDirs)
             {
                 foreach (var occupiedCell in pieceType.relativeOccupiedCells)
                 {
-                    Vector2Int startPosition = emptyCell.Value - GetRotatedCell(occupiedCell, dir, pieceType.GetMaxDimensions());
+                    Vector2Int rotatedCell = GetRotatedCell(occupiedCell, dir, pieceType.GetMaxDimensions());
+                    Vector2Int startPosition = emptyCell.Value - rotatedCell;
 
                     List<Vector2Int> piecePositions = pieceType.GetGridPositionsList(startPosition, dir);
 
                     if (CanPlace(currentGrid, piecePositions))
                     {
+                        // Уникнення дублювання при рекурсії, якщо різні відносні клітинки
+                        // дають однаковий startPosition та напрямок
+                        bool alreadyProcessed = solution.Any(p =>
+                            p.pieceType == pieceType &&
+                            p.position == startPosition &&
+                            p.direction == dir);
+
+                        if (alreadyProcessed) continue;
+
                         var nextRequired = new List<PlacedObjectTypeSO>(required);
                         if (tryingRequired) nextRequired.Remove(pieceType);
 
@@ -904,6 +945,8 @@ public class GridDataSOEditor : Editor
 
     private void SaveSolutionToSO(List<GridDataSO.GeneratedPieceData> solution)
     {
+        serializedObject.Update();
+
         var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
         puzzleSolutionProp.ClearArray();
         for (int i = 0; i < solution.Count; i++)
@@ -932,8 +975,10 @@ public class GridDataSOEditor : Editor
             pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)solution[j].direction;
         }
 
+        serializedObject.ApplyModifiedProperties();
+
         solutionToShowIndex = 1;
-        UpdatePuzzleState();
+        UpdatePuzzleState(); // !!! ОНОВЛЮЄМО СТАН ПАЗЛА ПІСЛЯ ЗБЕРЕЖЕННЯ !!!
     }
 
 
@@ -990,6 +1035,7 @@ public class GridDataSOEditor : Editor
         {
             for (int x = 0; x < gridDataSO.width; x++)
             {
+                // Малюємо лише забудовувані клітинки сірого кольору, інші - темно-сірого
                 Color bgColor = gridDataSO.buildableCells.Contains(new Vector2Int(x, z)) ? new Color(0.5f, 0.5f, 0.5f) : new Color(0.2f, 0.2f, 0.2f);
                 Rect cellRect = new Rect(previewRect.x + x * cellSize, previewRect.y + (gridDataSO.height - 1 - z) * cellSize, cellSize - 1, cellSize - 1);
                 EditorGUI.DrawRect(cellRect, bgColor);
@@ -998,11 +1044,15 @@ public class GridDataSOEditor : Editor
 
         if (gridDataSO.puzzleSolution != null)
         {
-            var totalPieceCounts = gridDataSO.generatedPieceSummary.ToDictionary(s => s.pieceType, s => s.count);
-            var pieceInstanceCounter = new Dictionary<PlacedObjectTypeSO, int>();
+            // Створюємо мапу, щоб зберігати ID інстансу для кожної фігури
+            var pieceInstanceTracker = new Dictionary<PlacedObjectTypeSO, int>();
+
+            // Створюємо копію списку, щоб нумерувати фігури послідовно
+            List<GridDataSO.GeneratedPieceData> piecesInOrder = gridDataSO.puzzleSolution.ToList();
+
             int sequenceCounter = 0;
 
-            foreach (var pieceData in gridDataSO.puzzleSolution)
+            foreach (var pieceData in piecesInOrder)
             {
                 if (pieceData.pieceType == null) continue;
 
@@ -1021,29 +1071,36 @@ public class GridDataSOEditor : Editor
                     }
                 }
 
+                // Визначаємо колір тексту (чорний/білий) для контрасту
                 float brightness = (pieceColor.r * 0.299f + pieceColor.g * 0.587f + pieceColor.b * 0.114f);
                 Color textColor = brightness > 0.5f ? Color.black : Color.white;
 
                 if (positions.Count > 0)
                 {
+                    // Обчислюємо ID інстансу
+                    if (!pieceInstanceTracker.ContainsKey(pieceData.pieceType))
+                    {
+                        pieceInstanceTracker[pieceData.pieceType] = 0;
+                    }
+                    pieceInstanceTracker[pieceData.pieceType]++;
+                    int instanceId = pieceInstanceTracker[pieceData.pieceType];
+
+                    // Обчислюємо загальну кількість фігур цього типу
+                    var summaryEntry = gridDataSO.generatedPieceSummary.FirstOrDefault(s => s.pieceType == pieceData.pieceType);
+                    int totalCount = summaryEntry.count;
+
+
+                    // Виводимо номер у центрі першої клітинки фігури
                     Vector2Int firstCellPos = positions[0];
                     Rect labelCellRect = new Rect(previewRect.x + firstCellPos.x * cellSize, previewRect.y + (gridDataSO.height - 1 - firstCellPos.y) * cellSize, cellSize, cellSize);
 
-                    sequenceLabelStyle.normal.textColor = textColor;
-                    GUI.Label(labelCellRect, sequenceCounter.ToString(), sequenceLabelStyle);
+                    // Якщо фігура унікальна, виводимо її порядковий номер (sequenceCounter)
+                    // Якщо фігура дублюється (totalCount > 1), виводимо її ID інстансу (1, 2, 3...)
+                    string labelText = (totalCount > 1) ? instanceId.ToString() : sequenceCounter.ToString();
 
-                    if (totalPieceCounts.TryGetValue(pieceData.pieceType, out int totalCount) && totalCount > 1)
-                    {
-                        if (!pieceInstanceCounter.ContainsKey(pieceData.pieceType))
-                        {
-                            pieceInstanceCounter[pieceData.pieceType] = 0;
-                        }
-                        pieceInstanceCounter[pieceData.pieceType]++;
-                        int instanceId = pieceInstanceCounter[pieceData.pieceType];
-
-                        labelStyle.normal.textColor = textColor;
-                        GUI.Label(labelCellRect, instanceId.ToString(), labelStyle);
-                    }
+                    labelStyle.normal.textColor = textColor;
+                    labelStyle.alignment = TextAnchor.MiddleCenter; // Виводимо по центру
+                    GUI.Label(labelCellRect, labelText, labelStyle);
                 }
             }
         }
@@ -1106,6 +1163,9 @@ public class GridDataSOEditor : Editor
         serializedObject.FindProperty("isComplete").boolValue = (buildableCellCount == occupiedCellCount);
 
         serializedObject.ApplyModifiedProperties();
+        EditorUtility.SetDirty(gridDataSO); // Позначаємо SO як змінений
+        AssetDatabase.SaveAssets(); // Зберігаємо асет
+        Repaint(); // Забезпечуємо оновлення вікна Інспектора
     }
 
 
@@ -1157,6 +1217,7 @@ public class GridDataSOEditor : Editor
                 if (EditorGUI.EndChangeCheck())
                 {
                     colorProp.colorValue = newColor;
+                    EditorUtility.SetDirty(gridDataSO);
                 }
             }
             else
@@ -1256,6 +1317,8 @@ public class GridDataSOEditor : Editor
             element.FindPropertyRelative("maxCount").intValue = newConfigs[i].maxCount;
             element.FindPropertyRelative("color").colorValue = newConfigs[i].color;
         }
+        serializedObject.ApplyModifiedProperties();
+        EditorUtility.SetDirty(gridDataSO);
     }
 
     private void RandomizeAllColors()
@@ -1269,6 +1332,8 @@ public class GridDataSOEditor : Editor
         {
             prop.GetArrayElementAtIndex(i).FindPropertyRelative("color").colorValue = shuffledPalette[i % shuffledPalette.Count];
         }
+        serializedObject.ApplyModifiedProperties();
+        EditorUtility.SetDirty(gridDataSO);
     }
 
     private void DrawGeneratorPieceConfigList(bool onlyRequired)
@@ -1326,6 +1391,7 @@ public class GridDataSOEditor : Editor
     private void HandlePreviewMouseInput(Rect previewRect, float cellSize)
     {
         Event e = Event.current;
+        // !!! ВИДАЛЕННЯ ФІГУРИ ПРАВОЮ КНОПКОЮ МИШІ !!!
         if (e.type == EventType.MouseDown && e.button == 1 && previewRect.Contains(e.mousePosition))
         {
             Vector2 localPos = e.mousePosition - previewRect.position;
@@ -1343,24 +1409,36 @@ public class GridDataSOEditor : Editor
         var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
         int pieceIndexToRemove = -1;
 
-        for (int i = 0; i < puzzleSolutionProp.arraySize; i++)
+        // Потрібно видалити лише одну фігуру, яка займає цю клітинку. 
+        // Починаємо з кінця, щоб видаляти останні додані елементи.
+        for (int i = puzzleSolutionProp.arraySize - 1; i >= 0; i--)
         {
             var pieceDataProp = puzzleSolutionProp.GetArrayElementAtIndex(i);
             var pieceType = (PlacedObjectTypeSO)pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue;
-            var origin = pieceDataProp.FindPropertyRelative("position").vector2IntValue;
-            var dir = (PlacedObjectTypeSO.Dir)pieceDataProp.FindPropertyRelative("direction").enumValueIndex;
 
-            if (pieceType.GetGridPositionsList(origin, dir).Contains(gridPosition))
+            if (pieceType != null)
             {
-                pieceIndexToRemove = i;
-                break;
+                var origin = pieceDataProp.FindPropertyRelative("position").vector2IntValue;
+                var dir = (PlacedObjectTypeSO.Dir)pieceDataProp.FindPropertyRelative("direction").enumValueIndex;
+
+                if (pieceType.GetGridPositionsList(origin, dir).Contains(gridPosition))
+                {
+                    pieceIndexToRemove = i;
+                    break;
+                }
             }
         }
 
         if (pieceIndexToRemove != -1)
         {
             puzzleSolutionProp.DeleteArrayElementAtIndex(pieceIndexToRemove);
-            UpdatePuzzleState();
+            UpdatePuzzleState(); // Обов'язкове оновлення стану
+            Repaint(); // !!! ПРИМУСОВЕ ПЕРЕМАЛЬОВУВАННЯ ДЛЯ ВИДАЛЕННЯ ВІЗУАЛУ !!!
+            Debug.Log($"Видалено фігуру на позиції {gridPosition}.");
+        }
+        else
+        {
+            Debug.LogWarning($"На клітинці {gridPosition} не знайдено фігури для видалення.");
         }
     }
 
@@ -1391,6 +1469,7 @@ public class GridDataSOEditor : Editor
     {
         serializedObject.FindProperty("puzzleSolution").ClearArray();
         UpdatePuzzleState();
+        Debug.Log("Усі фігури з рішення очищено.");
     }
 
     private void FillEmptySpace()
@@ -1424,11 +1503,13 @@ public class GridDataSOEditor : Editor
 
         var fillStopwatch = Stopwatch.StartNew();
         List<GridDataSO.GeneratedPieceData> filledPieces = new List<GridDataSO.GeneratedPieceData>();
+
+        // Використовуємо рекурсивне вирішення, але без обов'язкових фігур (required)
         bool success = SolvePuzzleRecursiveGeneration(currentGrid, filledPieces, new List<PlacedObjectTypeSO>(), combinedFillers, pieceCountsInSolution, fillStopwatch);
 
         if (success)
         {
-            UnityEngine.Debug.Log($"<color=green>Successfully filled empty space in {fillStopwatch.Elapsed.TotalSeconds:F3} seconds!</color>");
+            Debug.Log($"<color=green>Successfully filled empty space in {fillStopwatch.Elapsed.TotalSeconds:F3} seconds!</color>");
             var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
             int initialCount = puzzleSolutionProp.arraySize;
             for (int i = 0; i < filledPieces.Count; i++)
@@ -1444,10 +1525,9 @@ public class GridDataSOEditor : Editor
         }
         else
         {
-            UnityEngine.Debug.LogError("Failed to fill the empty space. No solution found with the available pieces.");
+            Debug.LogError("Failed to fill the empty space. No solution found with the available pieces.");
         }
     }
 
     #endregion
 }
-

@@ -8,7 +8,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private LevelCollectionSO levelCollection;
     [SerializeField] private LevelLoader levelLoader;
 
-    // --- НОВЕ ПОЛЕ ДЛЯ UI ---
     [Header("UI Елементи")]
     [Tooltip("Об'єкт, який буде показано при завершенні рівня (напр. панель з текстом).")]
     [SerializeField] private GameObject levelCompleteScreen;
@@ -16,6 +15,9 @@ public class GameManager : MonoBehaviour
     public int CurrentLevelIndex { get; private set; }
     private enum GameState { Playing, LevelComplete }
     private GameState _gameState;
+
+    // --- НОВЕ ПОЛЕ ДЛЯ ДЕБАГУ ---
+    private bool _isDebugTextVisible = false;
 
     private void Awake()
     {
@@ -44,10 +46,10 @@ public class GameManager : MonoBehaviour
             {
                 SwitchToNextLevel(true); // Завантажуємо наступний рівень, очищуючи його прогрес
             }
-            return; // Блокуємо інший інпут, коли рівень пройдено
+            // --- ЛОГІКА ДЕБАГУ ПРАЦЮЄ НАВІТЬ КОЛИ РІВЕНЬ ПРОЙДЕНО ---
         }
 
-        // --- Стара логіка для дебагу ---
+        // --- Логіка для дебагу ---
         if (Input.GetKeyDown(KeyCode.F1))
         {
             SaveSystem.ClearLastCompletedLevel();
@@ -55,6 +57,16 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F2))
         {
             SaveSystem.ClearLevelProgress(CurrentLevelIndex);
+        }
+        if (Input.GetKeyDown(KeyCode.F3)) // --- ПЕРЕМИКАННЯ ДЕБАГ-ТЕКСТУ ---
+        {
+            _isDebugTextVisible = !_isDebugTextVisible;
+            if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
+            {
+                // ВИКЛИК МЕТОДУ SetDebugTextVisibility
+                GridBuildingSystem.Instance.GetGrid().SetDebugTextVisibility(_isDebugTextVisible);
+                Debug.Log($"Видимість дебаг-тексту: {(_isDebugTextVisible ? "УВІМКНЕНО" : "ВИМКНЕНО")}");
+            }
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
@@ -97,6 +109,13 @@ public class GameManager : MonoBehaviour
         CurrentLevelIndex = index;
         levelLoader.LoadLevel(levelCollection.levels[CurrentLevelIndex], loadFromSave);
         _gameState = GameState.Playing;
+
+        // --- ОНОВЛЕННЯ: Встановлюємо видимість дебагу при завантаженні ---
+        if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
+        {
+            // ВИКЛИК МЕТОДУ SetDebugTextVisibility (Fix CS1061)
+            GridBuildingSystem.Instance.GetGrid().SetDebugTextVisibility(_isDebugTextVisible);
+        }
     }
 
     public void RestartCurrentLevel()

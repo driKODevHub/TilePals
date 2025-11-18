@@ -19,9 +19,9 @@ public class GridXZ<TGridObject>
     private Vector3 originPosition;
     private TGridObject[,] gridArray;
 
-    // --- НОВЕ ПОЛЕ ---
-    // Зберігаємо посилання на створені дебаг-об'єкти
+    // --- ПОЛЕ ДЛЯ ДЕБАГУ ---
     private List<GameObject> _debugTextObjects;
+    private bool _showDebug = false; // Початковий стан: ВИМКНЕНО
 
     public GridXZ(int width, int height, float cellSize, Vector3 originPosition, Func<GridXZ<TGridObject>, int, int, TGridObject> createGridObject)
     {
@@ -40,43 +40,63 @@ public class GridXZ<TGridObject>
             }
         }
 
-        bool showDebug = true;
-        if (showDebug)
+        // --- ІНІЦІАЛІЗАЦІЯ ДЕБАГ-ТЕКСТУ ---
+        InitializeDebugText();
+    }
+
+    // --- НОВИЙ ПРИВАТНИЙ МЕТОД: Ініціалізація дебаг-тексту ---
+    private void InitializeDebugText()
+    {
+        _debugTextObjects = new List<GameObject>();
+        TextMesh[,] debugTextArray = new TextMesh[width, height];
+
+        for (int x = 0; x < width; x++)
         {
-            _debugTextObjects = new List<GameObject>(); // Ініціалізуємо список
-            TextMesh[,] debugTextArray = new TextMesh[width, height];
-
-            for (int x = 0; x < gridArray.GetLength(0); x++)
+            for (int z = 0; z < height; z++)
             {
-                for (int z = 0; z < gridArray.GetLength(1); z++)
-                {
-                    GameObject textGameObject = UtilsClass.CreateWorldText(
-                        gridArray[x, z]?.ToString(),
-                        null,
-                        GetWorldPosition(x, z) + new Vector3(cellSize, 0, cellSize) * .5f,
-                        35,
-                        Color.white,
-                        TextAnchor.MiddleCenter,
-                        TextAlignment.Center
-                    ).gameObject;
+                GameObject textGameObject = UtilsClass.CreateWorldText(
+                    gridArray[x, z]?.ToString(),
+                    null,
+                    GetWorldPosition(x, z) + new Vector3(cellSize, 0, cellSize) * .5f,
+                    35,
+                    Color.white,
+                    TextAnchor.MiddleCenter,
+                    TextAlignment.Center
+                ).gameObject;
 
-                    textGameObject.transform.localScale = Vector3.one * 0.03f;
-                    debugTextArray[x, z] = textGameObject.GetComponent<TextMesh>();
+                textGameObject.transform.localScale = Vector3.one * 0.03f;
+                debugTextArray[x, z] = textGameObject.GetComponent<TextMesh>();
 
-                    // Додаємо об'єкт до списку для подальшого видалення
-                    _debugTextObjects.Add(textGameObject);
-                }
+                // Встановлюємо видимість відповідно до початкового стану _showDebug
+                textGameObject.SetActive(_showDebug);
+
+                _debugTextObjects.Add(textGameObject);
             }
+        }
 
-            OnGridObjectChanged += (object sender, OnGridObjectChangedEventArgs eventArgs) => {
-                if (debugTextArray[eventArgs.x, eventArgs.z] != null)
-                    debugTextArray[eventArgs.x, eventArgs.z].text = gridArray[eventArgs.x, eventArgs.z]?.ToString();
-            };
+        OnGridObjectChanged += (object sender, OnGridObjectChangedEventArgs eventArgs) => {
+            if (eventArgs.x >= 0 && eventArgs.x < width && eventArgs.z >= 0 && eventArgs.z < height && debugTextArray[eventArgs.x, eventArgs.z] != null)
+                debugTextArray[eventArgs.x, eventArgs.z].text = gridArray[eventArgs.x, eventArgs.z]?.ToString();
+        };
+    }
+
+    // --- ПУБЛІЧНИЙ МЕТОД: Перемикання видимості дебаг-тексту (Fix CS1061) ---
+    public void SetDebugTextVisibility(bool isVisible)
+    {
+        if (_showDebug == isVisible) return;
+
+        _showDebug = isVisible;
+        if (_debugTextObjects == null) return;
+
+        foreach (var textObject in _debugTextObjects)
+        {
+            if (textObject != null)
+            {
+                textObject.SetActive(isVisible);
+            }
         }
     }
 
-    // --- НОВИЙ МЕТОД ---
-    // Метод для очищення дебаг-тексту
     public void ClearDebugText()
     {
         if (_debugTextObjects == null) return;

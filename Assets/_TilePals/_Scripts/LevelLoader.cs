@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Debug = UnityEngine.Debug; // Явне використання Debug.Log
 
 public class LevelLoader : MonoBehaviour
 {
@@ -10,14 +11,24 @@ public class LevelLoader : MonoBehaviour
     private GridDataSO _currentLevelData;
     private List<PuzzlePiece> _spawnedPieces = new List<PuzzlePiece>();
 
+    // --- НОВЕ ПОЛЕ: Збільшена кількість спроб (для надійності) ---
+    private const int MAX_PLACEMENT_ATTEMPTS = 500;
+
     public void LoadLevel(GridDataSO levelData, bool loadFromSave)
     {
         ClearLevel();
         _currentLevelData = levelData;
 
         if (_currentLevelData == null) return;
-        if (!_currentLevelData.isComplete) return;
-        if (_currentLevelData.personalityData == null) return;
+        if (!_currentLevelData.isComplete)
+        {
+            Debug.LogWarning($"Рівень {_currentLevelData.name} позначено як нерозв'язний (isComplete=false). Завантаження фігур скасовано.");
+            return;
+        }
+        if (_currentLevelData.personalityData == null)
+        {
+            Debug.LogWarning($"Рівень {_currentLevelData.name} не має PersonalityData. Фігури можуть бути завантажені без характерів.");
+        }
 
         GridBuildingSystem.Instance.InitializeGrid(_currentLevelData);
         if (GridVisualManager.Instance != null) GridVisualManager.Instance.ReinitializeVisuals();
@@ -31,8 +42,8 @@ public class LevelLoader : MonoBehaviour
     {
         if (_currentLevelData.puzzlePieces == null || _currentLevelData.puzzlePieces.Count == 0) return;
 
-        var personalityMap = _currentLevelData.personalityData.personalityMappings
-            .ToDictionary(m => m.pieceType, m => m.temperament);
+        var personalityMap = _currentLevelData.personalityData?.personalityMappings
+            .ToDictionary(m => m.pieceType, m => m.temperament) ?? new Dictionary<PlacedObjectTypeSO, TemperamentSO>();
 
         List<PlacedObjectTypeSO> piecesToSpawnTypes = new List<PlacedObjectTypeSO>(_currentLevelData.puzzlePieces);
         piecesToSpawnTypes.Shuffle(); // Цей рядок тепер буде працювати
@@ -41,28 +52,34 @@ public class LevelLoader : MonoBehaviour
 
         foreach (var pieceType in piecesToSpawnTypes)
         {
-            if (pieceType.prefab != null)
+            // --- ДОДАТКОВА ПЕРЕВІРКА НА NULL ---
+            if (pieceType == null || pieceType.prefab == null)
             {
-                Transform pieceTransform = Instantiate(pieceType.prefab, pieceSpawnParent);
-                PuzzlePiece pieceComponent = pieceTransform.GetComponent<PuzzlePiece>();
-                if (pieceComponent != null)
+                Debug.LogError($"PlacedObjectTypeSO або його префаб відсутній у списку фігур для спавну.");
+                continue;
+            }
+
+            Transform pieceTransform = Instantiate(pieceType.prefab, pieceSpawnParent);
+            PuzzlePiece pieceComponent = pieceTransform.GetComponent<PuzzlePiece>();
+            if (pieceComponent != null)
+            {
+                if (pieceComponent.FacialController != null && pieceType.relativeOccupiedCells.Count > 0)
                 {
-                    if (pieceComponent.FacialController != null && pieceType.relativeOccupiedCells.Count > 0)
-                    {
-                        Vector2Int randomCell = pieceType.relativeOccupiedCells[Random.Range(0, pieceType.relativeOccupiedCells.Count)];
-                        pieceComponent.FacialController.transform.localPosition = new Vector3(randomCell.x + 0.5f, 0.01f, randomCell.y + 0.5f);
-                    }
-
-                    PiecePersonality personality = pieceComponent.GetComponent<PiecePersonality>();
-                    if (personality != null && personalityMap.TryGetValue(pieceType, out TemperamentSO temperament))
-                    {
-                        personality.Setup(temperament);
-                    }
-
-                    PlacedObjectTypeSO.Dir randomDir = (PlacedObjectTypeSO.Dir)Random.Range(0, 4);
-                    pieceComponent.SetInitialRotation(randomDir);
-                    piecesToPlace.Add(pieceComponent);
+                    // Рандомна клітинка для розміщення обличчя
+                    Vector2Int randomCell = pieceType.relativeOccupiedCells[Random.Range(0, pieceType.relativeOccupiedCells.Count)];
+                    pieceComponent.FacialController.transform.localPosition = new Vector3(randomCell.x + 0.5f, 0.01f, randomCell.y + 0.5f);
                 }
+
+                PiecePersonality personality = pieceComponent.GetComponent<PiecePersonality>();
+                if (personality != null && personalityMap.TryGetValue(pieceType, out TemperamentSO temperament))
+                {
+                    pieceComponent.SetTemperamentMaterial(temperament.temperamentMaterial); // Встановлюємо матеріал
+                    personality.Setup(temperament); // Встановлюємо характер
+                }
+
+                PlacedObjectTypeSO.Dir randomDir = (PlacedObjectTypeSO.Dir)Random.Range(0, 4);
+                pieceComponent.SetInitialRotation(randomDir);
+                piecesToPlace.Add(pieceComponent);
             }
         }
 
@@ -71,7 +88,8 @@ public class LevelLoader : MonoBehaviour
 
         int padding = _currentLevelData.boardToSpawnPadding;
         int radius = _currentLevelData.maxSpawnRadius;
-        int attempts = _currentLevelData.placementAttempts;
+        // !!! ВИКОРИСТОВУЄМО БІЛЬШЕ СПРОБ !!!
+        int attempts = MAX_PLACEMENT_ATTEMPTS;
         int pieceSpacing = _currentLevelData.pieceToPiecePadding;
 
         RectInt forbiddenZone = new RectInt(-padding, -padding, grid.GetWidth() + padding * 2, grid.GetHeight() + padding * 2);
@@ -81,13 +99,17 @@ public class LevelLoader : MonoBehaviour
             bool placed = false;
             for (int attempt = 0; attempt < attempts; attempt++)
             {
+                // Розширюємо зону випадкового спавну за межі ForbiddenZone
                 int x = Random.Range(forbiddenZone.xMin - radius, forbiddenZone.xMax + radius);
                 int z = Random.Range(forbiddenZone.yMin - radius, forbiddenZone.yMax + radius);
                 Vector2Int origin = new Vector2Int(x, z);
 
                 List<Vector2Int> pieceCells = piece.PieceTypeSO.GetGridPositionsList(origin, piece.CurrentDirection);
+
+                // Перевірка 1: Чи не потрапляє жодна клітинка фігури у "заборонену зону" (поле + педдінг)
                 if (pieceCells.Any(cell => forbiddenZone.Contains(cell))) continue;
 
+                // Перевірка 2: Чи є достатній відступ від інших OffGrid фігур
                 if (OffGridManager.CanPlacePieceWithPadding(piece, origin, pieceSpacing))
                 {
                     PlacePieceOffGrid(piece, origin, cellSize);
@@ -100,7 +122,9 @@ public class LevelLoader : MonoBehaviour
             {
                 Debug.LogWarning($"Could not find ideal spot for {piece.name} in {attempts} attempts. Force placing.");
                 bool emergencyPlaced = false;
-                for (int r = padding; r < 100; r++)
+
+                // Аварійне розміщення: пробуємо по периметру
+                for (int r = radius; r < 50; r++) // Обмежимо радіус пошуку
                 {
                     List<Vector2Int> perimeter = GetPerimeterCells(forbiddenZone.xMin - r, forbiddenZone.xMax + r, forbiddenZone.yMin - r, forbiddenZone.yMax + r);
                     foreach (var origin in perimeter)
@@ -113,6 +137,12 @@ public class LevelLoader : MonoBehaviour
                         }
                     }
                     if (emergencyPlaced) break;
+                }
+
+                if (!emergencyPlaced)
+                {
+                    Debug.LogError($"Аварійне розміщення для {piece.name} також не вдалося. Фігура не буде розміщена.");
+                    Destroy(piece.gameObject);
                 }
             }
         }
@@ -197,7 +227,8 @@ public class LevelLoader : MonoBehaviour
 
         foreach (var pieceData in saveData.onGridPieces)
         {
-            PuzzlePiece pieceToPlace = availablePieces.FirstOrDefault(p => p.PieceTypeSO.name == pieceData.pieceTypeName);
+            // --- Перевіряємо наявність PieceTypeSO перед фільтрацією ---
+            PuzzlePiece pieceToPlace = availablePieces.FirstOrDefault(p => p != null && p.PieceTypeSO != null && p.PieceTypeSO.name == pieceData.pieceTypeName);
             if (pieceToPlace != null)
             {
                 ICommand command = new PlaceCommand(pieceToPlace, pieceData.origin, pieceData.direction, pieceToPlace.transform.position, pieceToPlace.transform.rotation);
@@ -208,7 +239,8 @@ public class LevelLoader : MonoBehaviour
 
         foreach (var pieceData in saveData.offGridPieces)
         {
-            PuzzlePiece pieceToPlace = availablePieces.FirstOrDefault(p => p.PieceTypeSO.name == pieceData.pieceTypeName);
+            // --- Перевіряємо наявність PieceTypeSO перед фільтрацією ---
+            PuzzlePiece pieceToPlace = availablePieces.FirstOrDefault(p => p != null && p.PieceTypeSO != null && p.PieceTypeSO.name == pieceData.pieceTypeName);
             if (pieceToPlace != null)
             {
                 float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();

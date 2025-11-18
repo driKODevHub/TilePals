@@ -93,7 +93,7 @@ public class PiecePersonality : MonoBehaviour
         if (_temperament == null)
         {
             Debug.LogError("Спроба ініціалізувати фігуру без темпераменту!", this);
-            this.enabled = false;
+            // Залишаємо enabled = true, але логіка всередині методів має перевіряти _temperament
             return;
         }
 
@@ -133,6 +133,8 @@ public class PiecePersonality : MonoBehaviour
     private void HandlePettingUpdate(PuzzlePiece piece, float mouseSpeed)
     {
         if (piece != _puzzlePiece || !_isBeingPetted) return;
+        // --- ВИПРАВЛЕННЯ NRE: Перевірка на темперамент ---
+        if (_temperament == null) return;
 
         EmotionProfileSO targetEmotion = null;
 
@@ -217,6 +219,8 @@ public class PiecePersonality : MonoBehaviour
     private void HandlePieceShaken(PuzzlePiece piece, float velocity)
     {
         if (piece != _puzzlePiece || _isSleeping) return;
+        // --- ВИПРАВЛЕННЯ NRE: Перевірка на темперамент ---
+        if (_temperament == null) return;
 
         float irritationGain = 0.05f * _temperament.irritationModifier;
         _currentIrritation = Mathf.Clamp01(_currentIrritation + irritationGain);
@@ -260,6 +264,9 @@ public class PiecePersonality : MonoBehaviour
 
     private void CheckForNeighborReaction(PuzzlePiece newNeighbor)
     {
+        // --- ВИПРАВЛЕННЯ NRE: Перевірка на темперамент поточної фігури ---
+        if (_temperament == null) return;
+
         List<PuzzlePiece> neighborsToCheck = new List<PuzzlePiece>();
         if (newNeighbor != null) neighborsToCheck.Add(newNeighbor);
         else neighborsToCheck.AddRange(FindAllNeighbors());
@@ -268,6 +275,8 @@ public class PiecePersonality : MonoBehaviour
         {
             if (neighbor == null) continue;
             var neighborPersonality = neighbor.GetComponent<PiecePersonality>();
+
+            // --- ВИПРАВЛЕННЯ NRE: Перевірка на темперамент сусіда ---
             if (neighborPersonality == null || neighborPersonality._temperament == null) continue;
 
             foreach (var rule in _temperament.synergyRules)
@@ -442,4 +451,3 @@ public class PiecePersonality : MonoBehaviour
         }
     }
 }
-
