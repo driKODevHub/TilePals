@@ -49,7 +49,10 @@ public class GameManager : MonoBehaviour
             // --- ЛОГІКА ДЕБАГУ ПРАЦЮЄ НАВІТЬ КОЛИ РІВЕНЬ ПРОЙДЕНО ---
         }
 
-        // --- Логіка для дебагу ---
+        // --- Логіка для дебагу та управління ---
+        bool isShiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+
         if (Input.GetKeyDown(KeyCode.F1))
         {
             SaveSystem.ClearLastCompletedLevel();
@@ -73,7 +76,30 @@ public class GameManager : MonoBehaviour
             RestartCurrentLevel();
         }
 
-        bool isShiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        // --- ЛОГІКА UNDO/REDO (працює лише під час гри) ---
+        if (_gameState == GameState.Playing)
+        {
+            // UNDO: Клавіша Z
+            if (Input.GetKeyDown(KeyCode.Z))
+            {
+                CommandHistory.Undo();
+                // Зберігаємо прогрес після відміни
+                GameManager.Instance.SaveCurrentProgress();
+                Debug.Log("Undo виконано (клавіша Z). Історія Redo очищається при наступній мануальній дії.");
+            }
+
+            // REDO: Клавіша X
+            if (Input.GetKeyDown(KeyCode.X))
+            {
+                CommandHistory.Redo();
+                // Зберігаємо прогрес після повтору
+                GameManager.Instance.SaveCurrentProgress();
+                Debug.Log("Redo виконано (клавіша X).");
+            }
+        }
+        // -------------------------
+
+        // Чіти переходу між рівнями
         if (Input.GetKeyDown(KeyCode.Mouse4)) // Next Level
         {
             SwitchToNextLevel(!isShiftHeld);
