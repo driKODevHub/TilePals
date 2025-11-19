@@ -124,6 +124,8 @@ public class GridBuildingSystem : MonoBehaviour
 
     public GridXZ<GridObject> GetGrid() => grid;
 
+    // --- œ–»¡–¿ÕŒ GetGridData() ---
+
     public bool IsValidGridPosition(int x, int z)
     {
         if (grid == null) return false;
