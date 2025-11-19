@@ -154,8 +154,15 @@ public class GridVisualManager : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, LayerMask.GetMask("OffGridPlane")))
         {
-            grid.GetXZ(hit.point, out int originX, out int originZ);
-            Vector2Int origin = new Vector2Int(originX, originZ);
+            grid.GetXZ(hit.point, out int cursorX, out int cursorZ);
+
+            // --- ¬»ѕ–ј¬Ћ≈ЌЌя: «ј—“ќ—”¬јЌЌя «ћ≤ў≈ЌЌя  Ћ≤ ” ---
+            // 1. ќтримуЇмо зм≥щенн€, €ке було збережено в PuzzleManager п≥д час кл≥ку
+            Vector2Int clickOffset = currentlyHeldPiece.ClickOffset;
+
+            // 2. ќбчислюЇмо фактичний Origin ф≥гури (њњ 0,0) на основ≥ курсора та зм≥щенн€
+            Vector2Int origin = new Vector2Int(cursorX, cursorZ) - clickOffset;
+            // ----------------------------------------------------
 
             List<Vector2Int> occupiedPositionsOfGhost = currentlyHeldPiece.PieceTypeSO.GetGridPositionsList(origin, currentlyHeldPiece.CurrentDirection);
             bool canBuildEntireObject = GridBuildingSystem.Instance.CanPlacePiece(currentlyHeldPiece, origin, currentlyHeldPiece.CurrentDirection);

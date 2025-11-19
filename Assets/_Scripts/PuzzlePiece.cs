@@ -11,7 +11,7 @@ public class PuzzlePiece : MonoBehaviour
     [SerializeField] private List<MeshRenderer> meshesToColor;
 
     [Header("Налаштування обертання")]
-    [SerializeField] private float rotationSpeed = 270f;
+    [SerializeField] private float rotationSpeed = 360f; // Трохи пришвидшимо для кращого відчуття
 
     [Header("Посилання на компоненти особистості")]
     [SerializeField] private FacialExpressionController facialController;
@@ -24,6 +24,9 @@ public class PuzzlePiece : MonoBehaviour
     public bool IsOffGrid { get; private set; } = false;
     public Vector2Int OffGridOrigin { get; private set; }
     public PlacedObject PlacedObjectComponent { get; private set; }
+
+    // Зміщення відносної клітинки (на яку клікнули) до точки прив'язки фігури (0,0)
+    public Vector2Int ClickOffset { get; set; }
 
     private Coroutine _rotationCoroutine;
     private Dictionary<MeshRenderer, Material[]> _originalMaterials;
@@ -38,7 +41,6 @@ public class PuzzlePiece : MonoBehaviour
         }
     }
 
-    // --- ПРИВАТНИЙ МЕТОД, винесений для перевикористання ---
     private void CacheOriginalMaterials()
     {
         _originalMaterials = new Dictionary<MeshRenderer, Material[]>();
@@ -53,10 +55,6 @@ public class PuzzlePiece : MonoBehaviour
         }
     }
 
-    // --- НОВИЙ ПУБЛІЧНИЙ МЕТОД ---
-    /// <summary>
-    /// Встановлює новий основний матеріал для фігури та оновлює кеш оригінальних матеріалів.
-    /// </summary>
     public void SetTemperamentMaterial(Material temperamentMaterial)
     {
         if (temperamentMaterial == null || meshesToColor == null) return;
@@ -73,8 +71,6 @@ public class PuzzlePiece : MonoBehaviour
                 meshRenderer.materials = newMaterials;
             }
         }
-        // Після встановлення нового матеріалу, повторно кешуємо його.
-        // Це потрібно, щоб логіка підсвічування знала, на який матеріал повертатися.
         CacheOriginalMaterials();
     }
 
@@ -133,39 +129,79 @@ public class PuzzlePiece : MonoBehaviour
         _rotationCoroutine = StartCoroutine(SmoothRotationCoroutine());
     }
 
+    // --- ОНОВЛЕНИЙ МЕТОД ОБЕРТАННЯ ---
     private IEnumerator SmoothRotationCoroutine()
     {
         IsRotating = true;
 
-        PlacedObjectTypeSO.Dir nextDirection = PlacedObjectTypeSO.GetNextDirencion(CurrentDirection);
-        float targetAngle = pieceTypeSO.GetRotationAngle(nextDirection);
-        Quaternion targetRotation = Quaternion.Euler(0, targetAngle, 0);
-
+        // 1. Отримуємо параметри сітки
         float cellSize = 1f;
         if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
         {
             cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
         }
-        Vector3 centerOffset = pieceTypeSO.GetBoundsCenterOffset(CurrentDirection) * cellSize;
-        Vector3 pivotPoint = transform.position + transform.rotation * centerOffset;
 
-        float totalRotation = 0f;
+        // 2. Обчислюємо поточну точку 0,0 (Grid Origin) у світових координатах
+        // transform.position = GridOrigin + VisualOffset
+        Vector2Int currentRotationOffset = pieceTypeSO.GetRotationOffset(CurrentDirection);
+        Vector3 currentVisualOffset = new Vector3(currentRotationOffset.x, 0, currentRotationOffset.y) * cellSize;
+
+        // Коригуємо Y, щоб не втратити висоту підйому фігури
+        Vector3 currentGridOrigin = transform.position;
+        currentGridOrigin.x -= currentVisualOffset.x;
+        currentGridOrigin.z -= currentVisualOffset.z;
+
+        // 3. Обчислюємо точку півота (Центр клітинки, за яку тримаємо)
+        // Pivot = GridOrigin + ClickOffset * CellSize + HalfCellSize
+        Vector3 clickOffsetVector = new Vector3(ClickOffset.x, 0, ClickOffset.y) * cellSize;
+        Vector3 halfCellVector = new Vector3(cellSize * 0.5f, 0, cellSize * 0.5f);
+        Vector3 pivotPoint = currentGridOrigin + clickOffsetVector + halfCellVector;
+
+        // 4. Налаштування обертання
+        PlacedObjectTypeSO.Dir nextDirection = PlacedObjectTypeSO.GetNextDirencion(CurrentDirection);
+        float targetAngle = pieceTypeSO.GetRotationAngle(nextDirection);
+        Quaternion targetRotation = Quaternion.Euler(0, targetAngle, 0);
+
         float angleToRotate = 90f;
+        float totalRotation = 0f;
 
         while (totalRotation < angleToRotate)
         {
             float rotationAmount = Time.deltaTime * rotationSpeed;
             rotationAmount = Mathf.Min(rotationAmount, angleToRotate - totalRotation);
 
+            // Обертаємо трансформ довкола нашої точки півота (клітинки під мишкою)
             transform.RotateAround(pivotPoint, Vector3.up, rotationAmount);
 
             totalRotation += rotationAmount;
             yield return null;
         }
 
+        // 5. Фіналізація
         transform.rotation = targetRotation;
-
         CurrentDirection = nextDirection;
+
+        // 6. Перерахунок ClickOffset
+        // Після повороту фігура змістилася, але півот залишився на місці.
+        // Нам треба знайти, які тепер координати (x, z) у цього півота відносно НОВОГО Origin фігури.
+
+        Vector2Int newRotationOffset = pieceTypeSO.GetRotationOffset(CurrentDirection);
+        Vector3 newVisualOffset = new Vector3(newRotationOffset.x, 0, newRotationOffset.y) * cellSize;
+
+        // Знаходимо де тепер теоретичний Origin
+        Vector3 newGridOrigin = transform.position;
+        newGridOrigin.x -= newVisualOffset.x;
+        newGridOrigin.z -= newVisualOffset.z;
+
+        // Вектор від Origin до Pivot
+        Vector3 newOffsetVector = pivotPoint - newGridOrigin - halfCellVector;
+
+        // Конвертуємо назад у координати сітки
+        ClickOffset = new Vector2Int(
+            Mathf.RoundToInt(newOffsetVector.x / cellSize),
+            Mathf.RoundToInt(newOffsetVector.z / cellSize)
+        );
+
         IsRotating = false;
         _rotationCoroutine = null;
     }

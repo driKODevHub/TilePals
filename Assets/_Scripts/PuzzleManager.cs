@@ -36,6 +36,8 @@ public class PuzzleManager : MonoBehaviour
     private float _heldPieceVelocity;
     private bool _isLevelComplete = false;
     private bool _justPlacedPiece = false;
+    
+    // «Ã≤ÕÕ¿ _currentPieceClickOffset ¬»ƒ¿À≈Õ¿, ‚ËÍÓËÒÚÓ‚Û∫ÏÓ _heldPiece.ClickOffset Ì‡ÔˇÏÛ.
 
     private List<PuzzlePiece> _piecesBeingFlownOver = new List<PuzzlePiece>();
     private List<PiecePersonality> _allPersonalities = new List<PiecePersonality>();
@@ -140,7 +142,15 @@ public class PuzzleManager : MonoBehaviour
                     {
                         PersonalityEventManager.RaisePettingEnd(_pieceBeingPetted);
                     }
-                    PickUpPiece(_pieceBeingPetted);
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
+                    {
+                        PickUpPiece(_pieceBeingPetted, hit.point);
+                    }
+                    else
+                    {
+                         PickUpPiece(_pieceBeingPetted, _pieceBeingPetted.transform.position); // Fallback
+                    }
                 }
                 else if (!_pieceBeingPetted.IsPlaced)
                 {
@@ -151,7 +161,7 @@ public class PuzzleManager : MonoBehaviour
         }
     }
 
-    private void PickUpPiece(PuzzlePiece piece)
+    private void PickUpPiece(PuzzlePiece piece, Vector3 hitPoint)
     {
         if (_heldPiece != null) return;
 
@@ -160,6 +170,16 @@ public class PuzzleManager : MonoBehaviour
         _initialPieceRotation = piece.transform.rotation;
         _lastHeldPiecePosition = piece.transform.position;
         _heldPieceVelocity = 0f;
+
+        // --- ÀŒ√≤ ¿ Œ¡◊»—À≈ÕÕﬂ «Ã≤Ÿ≈ÕÕﬂ  À≤ ” ---
+        Vector3 pieceOriginWorld = piece.transform.position - new Vector3(piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection).x, 0, piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection).y) * GridBuildingSystem.Instance.GetGrid().GetCellSize();
+        
+        GridBuildingSystem.Instance.GetGrid().GetXZ(hitPoint, out int clickX, out int clickZ);
+        GridBuildingSystem.Instance.GetGrid().GetXZ(pieceOriginWorld, out int originX, out int originZ);
+
+        // «·Â≥„‡∫ÏÓ ÁÏ≥˘ÂÌÌˇ œ–ﬂÃŒ Û Ù≥„ÛÛ
+        piece.ClickOffset = new Vector2Int(clickX - originX, clickZ - originZ);
+        // ----------------------------------------
 
         if (piece.IsPlaced)
         {
@@ -199,13 +219,18 @@ public class PuzzleManager : MonoBehaviour
         {
             var grid = GridBuildingSystem.Instance.GetGrid();
             float cellSize = grid.GetCellSize();
-            grid.GetXZ(hit.point, out int x, out int z);
-            Vector2Int origin = new Vector2Int(x, z);
+            
+            grid.GetXZ(hit.point, out int cursorX, out int cursorZ);
+            
+            // --- ¬» Œ–»—“Œ¬”™ÃŒ «Ã≤Ÿ≈ÕÕﬂ « ‘≤√”–», ¬ŒÕŒ ÃŒ√ÀŒ «Ã≤Õ»“»—ﬂ œ≤—Àﬂ Œ¡≈–“¿ÕÕﬂ ---
+            Vector2Int newOrigin = new Vector2Int(cursorX, cursorZ) - _heldPiece.ClickOffset;
+            Vector2Int origin = newOrigin;
 
             Vector2Int rotationOffset = _heldPiece.PieceTypeSO.GetRotationOffset(_heldPiece.CurrentDirection);
             Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
             Vector3 snappedPosition = new Vector3(origin.x * cellSize, 0, origin.y * cellSize);
             Vector3 targetPosition = new Vector3(snappedPosition.x, pieceHeightWhenHeld, snappedPosition.z) + offset;
+            
             _heldPiece.transform.position = Vector3.Lerp(_heldPiece.transform.position, targetPosition, Time.deltaTime * pieceFollowSpeed);
 
             _heldPieceVelocity = (_heldPiece.transform.position - _lastHeldPiecePosition).magnitude / Time.deltaTime;
@@ -258,8 +283,11 @@ public class PuzzleManager : MonoBehaviour
         if (!Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer)) return;
 
         var grid = GridBuildingSystem.Instance.GetGrid();
-        grid.GetXZ(hit.point, out int x, out int z);
-        Vector2Int origin = new Vector2Int(x, z);
+        grid.GetXZ(hit.point, out int cursorX, out int cursorZ);
+        
+        // --- ¬» Œ–»—“Œ¬”™ÃŒ «Ã≤Ÿ≈ÕÕﬂ « ‘≤√”–» ---
+        Vector2Int origin = new Vector2Int(cursorX, cursorZ) - _heldPiece.ClickOffset;
+        // ----------------------------------------
 
         bool canPlaceOnGrid, canPlaceOffGrid;
         CanPlaceHeldPiece(origin, out canPlaceOnGrid, out canPlaceOffGrid);
@@ -293,6 +321,8 @@ public class PuzzleManager : MonoBehaviour
             _justPlacedPiece = true;
             CheckForWin();
             GameManager.Instance.SaveCurrentProgress();
+            
+            // œË ÓÁÏ≥˘ÂÌÌ≥ ÁÏ≥˘ÂÌÌˇ ‚ÊÂ ÌÂ ‚‡ÊÎË‚Â
         }
     }
 
@@ -369,4 +399,3 @@ public class PuzzleManager : MonoBehaviour
         }
     }
 }
-
