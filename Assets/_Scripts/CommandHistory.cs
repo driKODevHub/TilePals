@@ -4,7 +4,7 @@ public static class CommandHistory
 {
     private static Stack<ICommand> undoStack = new Stack<ICommand>();
     private static Stack<ICommand> redoStack = new Stack<ICommand>();
-    private static int capacity = 10;
+    private static int capacity = 256;
 
     public static void SetCapacity(int cap)
     {

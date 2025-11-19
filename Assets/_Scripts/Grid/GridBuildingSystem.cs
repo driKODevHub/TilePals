@@ -96,7 +96,16 @@ public class GridBuildingSystem : MonoBehaviour
                 grid.GetGridObject(gridPosition.x, gridPosition.y).ClearPlacedObject();
             }
         }
-        Destroy(placedObject);
+        // !!! бхопюбкеммъ аюцс: бхйнпхярнбс╙лн DestroyImmediate, ъйын гмюундхлняъ б педюйрнп╡ (ЮАН Б КНЦЁЖЁ Undo/Redo),
+        // ына цюпюмрсбюрх яхмупнмме бхдюкеммъ йнлонмемрю.
+        if (Application.isEditor && !Application.isPlaying)
+        {
+            Object.DestroyImmediate(placedObject);
+        }
+        else
+        {
+            Object.Destroy(placedObject);
+        }
     }
 
     public float CalculateGridFillPercentage()

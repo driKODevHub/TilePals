@@ -19,6 +19,20 @@ public class PlaceCommand : ICommand
 
     public bool Execute()
     {
+        // --- ВИПРАВЛЕННЯ БАГУ REDO ---
+        // Перед тим як поставити фігуру на нове місце, ми мусимо переконатися, 
+        // що вона не займає старе місце (це критично для ланцюжків Redo).
+        if (piece.IsPlaced)
+        {
+            GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
+        }
+        else if (piece.IsOffGrid)
+        {
+            OffGridManager.RemovePiece(piece);
+            piece.SetOffGrid(false);
+        }
+        // -----------------------------
+
         if (GridBuildingSystem.Instance.CanPlacePiece(piece, gridPosition, direction))
         {
             PlacedObject placedObjectComponent = GridBuildingSystem.Instance.PlacePieceOnGrid(piece, gridPosition, direction);
@@ -31,7 +45,6 @@ public class PlaceCommand : ICommand
 
             piece.UpdateTransform(finalPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(direction), 0));
 
-            // ОНОВЛЕНО: Викликаємо подію про успішне розміщення
             PersonalityEventManager.RaisePiecePlaced(piece);
 
             return true;
@@ -42,6 +55,12 @@ public class PlaceCommand : ICommand
     public void Undo()
     {
         GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
+
+        if (piece.PlacedObjectComponent != null)
+        {
+            Object.Destroy(piece.PlacedObjectComponent);
+        }
+
         piece.SetPlaced(null);
         piece.UpdateTransform(previousPosition, previousRotation);
     }

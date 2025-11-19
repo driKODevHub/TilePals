@@ -172,7 +172,9 @@ public class PuzzleManager : MonoBehaviour
         _heldPieceVelocity = 0f;
 
         // --- Ћќ√≤ ј ќЅ„»—Ћ≈ЌЌя «ћ≤ў≈ЌЌя  Ћ≤ ” ---
-        Vector3 pieceOriginWorld = piece.transform.position - new Vector3(piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection).x, 0, piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection).y) * GridBuildingSystem.Instance.GetGrid().GetCellSize();
+        // ¬икористовуЇмо CellSize з GridBuildingSystem, оск≥льки OffGridManager не маЇ доступу
+        float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
+        Vector3 pieceOriginWorld = piece.transform.position - new Vector3(piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection).x, 0, piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection).y) * cellSize;
 
         GridBuildingSystem.Instance.GetGrid().GetXZ(hitPoint, out int clickX, out int clickZ);
         GridBuildingSystem.Instance.GetGrid().GetXZ(pieceOriginWorld, out int originX, out int originZ);
@@ -183,11 +185,13 @@ public class PuzzleManager : MonoBehaviour
 
         if (piece.IsPlaced)
         {
+            // якщо ф≥гура була на гр≥ду, видал€Їмо з гр≥ду
             GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
             piece.SetPlaced(null);
         }
         else
         {
+            // якщо ф≥гура була off-grid, видал€Їмо з OffGridManager
             OffGridManager.RemovePiece(piece);
             piece.SetOffGrid(false);
         }
@@ -296,6 +300,7 @@ public class PuzzleManager : MonoBehaviour
         {
             TryPlaceOnGrid(origin);
         }
+        // --- ¬»ѕ–ј¬Ћ≈ЌЌя: “епер використовуЇмо TryPlaceOffGrid, €кий створюЇ команду ---
         else if (canPlaceOffGrid)
         {
             TryPlaceOffGrid(origin);
@@ -326,27 +331,26 @@ public class PuzzleManager : MonoBehaviour
         }
     }
 
+    // --- ќЌќ¬Ћ≈Ќ»… ћ≈“ќƒ: ¬икористовуЇ OffGridPlaceCommand ---
     private void TryPlaceOffGrid(Vector2Int offGridOrigin)
     {
-        PuzzlePiece placedPiece = _heldPiece;
-        _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
+        ICommand placeCommand = new OffGridPlaceCommand(_heldPiece, offGridOrigin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
 
-        float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
-        Vector2Int rotationOffset = _heldPiece.PieceTypeSO.GetRotationOffset(_heldPiece.CurrentDirection);
-        Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
-        Vector3 finalPos = new Vector3(offGridOrigin.x * cellSize, 0, offGridOrigin.y * cellSize) + offset;
+        if (placeCommand.Execute())
+        {
+            PuzzlePiece placedPiece = _heldPiece;
+            _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
+            CommandHistory.AddCommand(placeCommand); // ƒодаЇмо команду в ≥стор≥ю!
 
-        _heldPiece.transform.position = finalPos;
-        _heldPiece.SetOffGrid(true, offGridOrigin);
-        OffGridManager.PlacePiece(_heldPiece, offGridOrigin);
+            OnPieceDropped?.Invoke(placedPiece);
+            PersonalityEventManager.RaisePieceDropped(placedPiece);
 
-        OnPieceDropped?.Invoke(placedPiece);
-        PersonalityEventManager.RaisePieceDropped(placedPiece);
-
-        _heldPiece = null;
-        _justPlacedPiece = true;
-        GameManager.Instance.SaveCurrentProgress();
+            _heldPiece = null;
+            _justPlacedPiece = true;
+            GameManager.Instance.SaveCurrentProgress();
+        }
     }
+    // -----------------------------------------------------
 
     private void CanPlaceHeldPiece(Vector2Int origin, out bool canPlaceOnGrid, out bool canPlaceOffGrid)
     {
@@ -356,11 +360,6 @@ public class PuzzleManager : MonoBehaviour
         if (_heldPiece == null) return;
 
         var grid = GridBuildingSystem.Instance.GetGrid();
-
-        // --- ¬»ƒјЋя™ћќ: Ќ≈ ѕќ“–≤Ѕ≈Ќ ƒЋя –”„Ќќ√ќ –ќ«ћ≤ў≈ЌЌя ---
-        // GridDataSO gridData = GridBuildingSystem.Instance.GetGridData();
-        // int pieceSpacing = (gridData != null) ? gridData.pieceToPiecePadding : 0; 
-        // -------------------------------------------------------------
 
         List<Vector2Int> pieceCells = _heldPiece.PieceTypeSO.GetGridPositionsList(origin, _heldPiece.CurrentDirection);
 
