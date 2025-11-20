@@ -33,6 +33,9 @@ public class CameraController : MonoBehaviour
 
     private void Update()
     {
+        // --- ЅЋќ ”¬јЌЌя  јћ≈–» ѕ–» ѕј”«≤ ---
+        if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
+
         HandleMovement();
         HandleRotation();
         HandleZoom();
@@ -43,6 +46,8 @@ public class CameraController : MonoBehaviour
         inputMoveDirection = GetMoveInputCameraDirections();
 
         Vector3 moveVector = transform.forward * inputMoveDirection.z + transform.right * inputMoveDirection.x;
+        // ¬икористовуЇмо unscaledDeltaTime, щоб камера не застр€гала, €кщо ми захочемо ан≥мувати щось у меню, 
+        // але оск≥льки ми повертаЇмось з Update при IsPaused, тут можна лишити deltaTime
         transform.position += moveVector * moveSpeed * Time.deltaTime;
     }
     private void HandleRotation()
@@ -65,7 +70,7 @@ public class CameraController : MonoBehaviour
 
     private PlayerInputActions playerInputActions;
 
-   
+
     public Vector2 GetMousePosition()
     {
 #if USE_NEW_INPUT_SYSTEM

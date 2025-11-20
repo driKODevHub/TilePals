@@ -13,7 +13,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject levelCompleteScreen;
 
     public int CurrentLevelIndex { get; private set; }
-    private enum GameState { Playing, LevelComplete }
+
+    // --- ДОДАНО: Публічна властивість для перевірки стану гри ---
+    public bool IsLevelActive => _gameState == GameState.Playing;
+
+    private enum GameState { MainMenu, Playing, LevelComplete } // Додано MainMenu
     private GameState _gameState;
 
     // --- НОВЕ ПОЛЕ ДЛЯ ДЕБАГУ ---
@@ -33,12 +37,20 @@ public class GameManager : MonoBehaviour
             levelCompleteScreen.SetActive(false);
         }
 
-        CurrentLevelIndex = SaveSystem.LoadCurrentLevelIndex();
-        LoadLevel(CurrentLevelIndex, true);
+        // --- ЗМІНА: На старті ми не вантажимо рівень автоматично, а йдемо в меню ---
+        _gameState = GameState.MainMenu;
+
+        // Очищаємо сцену (якщо раптом щось було)
+        levelLoader.ClearLevel();
+
+        // UIManager на своєму Start() покаже MainMenu
     }
 
     private void Update()
     {
+        // Якщо ми в меню, ігноруємо інпут гри
+        if (_gameState == GameState.MainMenu) return;
+
         // --- НОВА ЛОГІКА ДЛЯ ПЕРЕХОДУ НА НАСТУПНИЙ РІВЕНЬ ---
         if (_gameState == GameState.LevelComplete)
         {
@@ -46,106 +58,111 @@ public class GameManager : MonoBehaviour
             {
                 SwitchToNextLevel(true); // Завантажуємо наступний рівень, очищуючи його прогрес
             }
-            // --- ЛОГІКА ДЕБАГУ ПРАЦЮЄ НАВІТЬ КОЛИ РІВЕНЬ ПРОЙДЕНО ---
         }
 
         // --- Логіка для дебагу та управління ---
         bool isShiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
+        if (Input.GetKeyDown(KeyCode.F1)) SaveSystem.ClearLastCompletedLevel();
+        if (Input.GetKeyDown(KeyCode.F2)) SaveSystem.ClearLevelProgress(CurrentLevelIndex);
 
-        if (Input.GetKeyDown(KeyCode.F1))
-        {
-            SaveSystem.ClearLastCompletedLevel();
-        }
-        if (Input.GetKeyDown(KeyCode.F2))
-        {
-            SaveSystem.ClearLevelProgress(CurrentLevelIndex);
-        }
         if (Input.GetKeyDown(KeyCode.F3)) // --- ПЕРЕМИКАННЯ ДЕБАГ-ТЕКСТУ ---
         {
             _isDebugTextVisible = !_isDebugTextVisible;
             if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
             {
-                // ВИКЛИК МЕТОДУ SetDebugTextVisibility
                 GridBuildingSystem.Instance.GetGrid().SetDebugTextVisibility(_isDebugTextVisible);
-                Debug.Log($"Видимість дебаг-тексту: {(_isDebugTextVisible ? "УВІМКНЕНО" : "ВИМКНЕНО")}");
             }
         }
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            RestartCurrentLevel();
-        }
 
-        // --- ЛОГІКА UNDO/REDO (працює лише під час гри) ---
+        if (Input.GetKeyDown(KeyCode.R)) RestartCurrentLevel();
+
+        // --- ЛОГІКА UNDO/REDO (працює лише під час гри та коли НЕМАЄ паузи) ---
         if (_gameState == GameState.Playing)
         {
-            // UNDO: Клавіша Z
+            // Блокуємо Undo/Redo, якщо гра на паузі
+            if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
+
             if (Input.GetKeyDown(KeyCode.Z))
             {
                 CommandHistory.Undo();
-                // Зберігаємо прогрес після відміни
-                GameManager.Instance.SaveCurrentProgress();
-                Debug.Log("Undo виконано (клавіша Z). Історія Redo очищається при наступній мануальній дії.");
+                SaveCurrentProgress();
             }
 
-            // REDO: Клавіша X
             if (Input.GetKeyDown(KeyCode.X))
             {
                 CommandHistory.Redo();
-                // Зберігаємо прогрес після повтору
-                GameManager.Instance.SaveCurrentProgress();
-                Debug.Log("Redo виконано (клавіша X).");
+                SaveCurrentProgress();
             }
         }
-        // -------------------------
 
         // Чіти переходу між рівнями
-        if (Input.GetKeyDown(KeyCode.Mouse4)) // Next Level
-        {
-            SwitchToNextLevel(!isShiftHeld);
-        }
-        if (Input.GetKeyDown(KeyCode.Mouse3)) // Prev Level
-        {
-            SwitchToPreviousLevel(!isShiftHeld);
-        }
+        if (Input.GetKeyDown(KeyCode.Mouse4)) SwitchToNextLevel(!isShiftHeld);
+        if (Input.GetKeyDown(KeyCode.Mouse3)) SwitchToPreviousLevel(!isShiftHeld);
     }
+
+    // --- НОВІ ПУБЛІЧНІ МЕТОДИ ДЛЯ МЕНЮ ---
+
+    public void StartGameAtLevel(int levelIndex, bool loadFromSave)
+    {
+        // Переконуємось, що індекс валідний
+        if (levelIndex < 0 || levelIndex >= levelCollection.levels.Count)
+            levelIndex = 0;
+
+        LoadLevel(levelIndex, loadFromSave);
+        UIManager.Instance.ShowGameUI();
+    }
+
+    public void ReturnToMainMenu()
+    {
+        _gameState = GameState.MainMenu;
+
+        // Очищаємо поточний рівень
+        levelLoader.ClearLevel();
+
+        // Показуємо UI меню
+        UIManager.Instance.ShowMainMenu();
+    }
+
+    // ---------------------------------------
 
     public void LoadLevel(int index, bool loadFromSave)
     {
+        // Скидаємо паузу
+        if (PauseManager.Instance != null) PauseManager.Instance.ResetPauseState();
+        else Time.timeScale = 1f;
+
         if (levelCollection == null || levelCollection.levels.Count == 0) return;
 
-        // Ховаємо екран завершення при завантаженні нового рівня
-        if (levelCompleteScreen != null)
-        {
-            levelCompleteScreen.SetActive(false);
-        }
+        if (levelCompleteScreen != null) levelCompleteScreen.SetActive(false);
 
         if (index >= levelCollection.levels.Count)
         {
             Debug.Log("Всі рівні пройдено!");
-            // Тут можна показати екран фінальних титрів або щось подібне
+            ReturnToMainMenu(); // Повертаємось в меню, якщо пройшли все
             return;
         }
 
-        if (PuzzleManager.Instance != null)
-        {
-            PuzzleManager.Instance.ResetState();
-        }
+        if (PuzzleManager.Instance != null) PuzzleManager.Instance.ResetState();
 
         CurrentLevelIndex = index;
+        // Зберігаємо індекс як "Останній зіграний"
+        SaveSystem.SaveCurrentLevelIndex(CurrentLevelIndex);
+
         levelLoader.LoadLevel(levelCollection.levels[CurrentLevelIndex], loadFromSave);
         _gameState = GameState.Playing;
 
-        // --- ОНОВЛЕННЯ: Встановлюємо видимість дебагу при завантаженні ---
         if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
         {
-            // ВИКЛИК МЕТОДУ SetDebugTextVisibility (Fix CS1061)
             GridBuildingSystem.Instance.GetGrid().SetDebugTextVisibility(_isDebugTextVisible);
         }
     }
 
     public void RestartCurrentLevel()
     {
+        if (PauseManager.Instance != null) PauseManager.Instance.ResetPauseState();
+        else Time.timeScale = 1f;
+
         SaveSystem.ClearLevelProgress(CurrentLevelIndex);
         LoadLevel(CurrentLevelIndex, false);
     }
@@ -161,7 +178,7 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.Log("Це був останній рівень!");
-            // Можна додати логіку для екрану "Дякуємо за гру"
+            ReturnToMainMenu();
         }
     }
 
@@ -180,11 +197,16 @@ public class GameManager : MonoBehaviour
         if (_gameState == GameState.Playing)
         {
             _gameState = GameState.LevelComplete;
-            SaveSystem.SaveCurrentLevelIndex(CurrentLevelIndex + 1);
-            SaveSystem.ClearLevelProgress(CurrentLevelIndex);
+
+            // Зберігаємо наступний рівень як поточний (щоб кнопка Continue в меню вела на нього)
+            if (CurrentLevelIndex + 1 < levelCollection.levels.Count)
+            {
+                SaveSystem.SaveCurrentLevelIndex(CurrentLevelIndex + 1);
+            }
+
+            SaveSystem.ClearLevelProgress(CurrentLevelIndex); // Очищаємо прогрес пройденого
             Debug.Log("Рівень пройдено! Натисніть ПРОБІЛ, щоб продовжити.");
 
-            // Показуємо екран завершення
             if (levelCompleteScreen != null)
             {
                 levelCompleteScreen.SetActive(true);

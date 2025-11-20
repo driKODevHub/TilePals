@@ -177,7 +177,8 @@ public class LevelLoader : MonoBehaviour
         SaveSystem.SaveLevelProgress(GameManager.Instance.CurrentLevelIndex, saveData);
     }
 
-    private void ClearLevel()
+    // --- ВИПРАВЛЕННЯ: Змінено з private на public ---
+    public void ClearLevel()
     {
         foreach (var piece in _spawnedPieces)
         {
@@ -186,8 +187,14 @@ public class LevelLoader : MonoBehaviour
         _spawnedPieces.Clear();
         CommandHistory.Clear();
         OffGridManager.Clear();
-        GridBuildingSystem.Instance.ClearGrid();
+
+        // Додана перевірка на null, щоб уникнути помилок при виході в меню
+        if (GridBuildingSystem.Instance != null)
+        {
+            GridBuildingSystem.Instance.ClearGrid();
+        }
     }
+    // ------------------------------------------------
 
     private void PlacePieceOffGrid(PuzzlePiece piece, Vector2Int origin, float cellSize)
     {
@@ -258,7 +265,6 @@ public class LevelLoader : MonoBehaviour
     }
 }
 
-// --- ПОВЕРНУВ ЦЕЙ КЛАС НА МІСЦЕ ---
 public static class ListExtensions
 {
     private static System.Random rng = new System.Random();

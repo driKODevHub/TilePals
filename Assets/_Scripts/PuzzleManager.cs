@@ -72,6 +72,9 @@ public class PuzzleManager : MonoBehaviour
 
     private void Update()
     {
+        // --- БЛОКУВАННЯ ВВОДУ ПРИ ПАУЗІ ---
+        if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
+
         UpdateMouseState();
 
         if (_heldPiece != null)
@@ -104,6 +107,9 @@ public class PuzzleManager : MonoBehaviour
 
     private void HandleIdleInput()
     {
+        // Додаткова перевірка на паузу (хоча Update вже блокує, це для безпеки)
+        if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
+
         if (Input.GetMouseButtonDown(0))
         {
             if (_pieceUnderMouse != null && !_justPlacedPiece)
@@ -235,6 +241,9 @@ public class PuzzleManager : MonoBehaviour
             Vector3 snappedPosition = new Vector3(origin.x * cellSize, 0, origin.y * cellSize);
             Vector3 targetPosition = new Vector3(snappedPosition.x, pieceHeightWhenHeld, snappedPosition.z) + offset;
 
+            // Використовуємо UnscaledTime, щоб фігура не зависала в повітрі, якщо час = 0,
+            // АЛЕ якщо гра на паузі, Update() все одно блокує цей метод.
+            // Проте, якщо ми колись захочемо рухати щось під час паузи, краще використовувати unscaledDeltaTime для візуалу.
             _heldPiece.transform.position = Vector3.Lerp(_heldPiece.transform.position, targetPosition, Time.deltaTime * pieceFollowSpeed);
 
             _heldPieceVelocity = (_heldPiece.transform.position - _lastHeldPiecePosition).magnitude / Time.deltaTime;
