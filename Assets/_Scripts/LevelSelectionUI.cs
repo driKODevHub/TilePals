@@ -1,8 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // Якщо використовуєш TextMeshPro, інакше використовуй Text
+using TMPro;
 using System.Collections.Generic;
 
+// Вішайте цей скрипт на КОРІНЬ префабу LevelSelection
 public class LevelSelectionUI : MonoBehaviour
 {
     [Header("References")]
@@ -12,20 +13,33 @@ public class LevelSelectionUI : MonoBehaviour
     [SerializeField] private Button backButton;
 
     private List<GameObject> _spawnedButtons = new List<GameObject>();
+    private bool _isInitialized = false;
 
-    private void Start()
+    private void Awake()
     {
-        backButton.onClick.AddListener(() =>
+        if (backButton)
         {
-            UIManager.Instance.OnLevelSelectionBack();
-        });
+            backButton.onClick.AddListener(() =>
+            {
+                UIManager.Instance.OnLevelSelectionBack();
+            });
+        }
+    }
 
-        GenerateLevelButtons();
+    public void SetActive(bool isActive)
+    {
+        gameObject.SetActive(isActive);
+
+        // Генеруємо кнопки при першому відкритті
+        if (isActive && !_isInitialized)
+        {
+            GenerateLevelButtons();
+            _isInitialized = true;
+        }
     }
 
     private void GenerateLevelButtons()
     {
-        // Очищення старих кнопок (якщо ми будемо регенерувати)
         foreach (var btn in _spawnedButtons) Destroy(btn);
         _spawnedButtons.Clear();
 
@@ -33,20 +47,21 @@ public class LevelSelectionUI : MonoBehaviour
 
         for (int i = 0; i < levelCollection.levels.Count; i++)
         {
-            int levelIndex = i; // Локальна копія для замикання (closure)
+            int levelIndex = i;
             GridDataSO levelData = levelCollection.levels[i];
 
             GameObject btnObj = Instantiate(levelButtonPrefab, buttonsContainer);
             _spawnedButtons.Add(btnObj);
 
-            // Налаштування тексту кнопки (підлаштуй під свою структуру префабу)
-            // Якщо використовуєш звичайний Text:
-            // btnObj.GetComponentInChildren<Text>().text = (i + 1).ToString();
-            // Якщо TextMeshPro:
             TextMeshProUGUI btnText = btnObj.GetComponentInChildren<TextMeshProUGUI>();
             if (btnText != null)
             {
-                btnText.text = (i + 1).ToString(); // Або levelData.name, якщо хочеш повну назву
+                btnText.text = (i + 1).ToString();
+            }
+            else
+            {
+                Text legacyText = btnObj.GetComponentInChildren<Text>();
+                if (legacyText != null) legacyText.text = (i + 1).ToString();
             }
 
             Button btnComp = btnObj.GetComponent<Button>();
@@ -59,10 +74,7 @@ public class LevelSelectionUI : MonoBehaviour
 
     private void OnLevelButtonClicked(int levelIndex)
     {
-        // При виборі конкретного рівня з меню, ми скидаємо прогрес цього рівня (починаємо спочатку)
         SaveSystem.ClearLevelProgress(levelIndex);
-
-        // Запускаємо гру
         GameManager.Instance.StartGameAtLevel(levelIndex, false);
     }
 }

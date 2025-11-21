@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// Вішайте цей скрипт на КОРІНЬ префабу MainMenu
 public class MainMenuUI : MonoBehaviour
 {
     [Header("Buttons")]
@@ -8,41 +9,41 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button levelSelectButton;
     [SerializeField] private Button quitButton;
 
-    private void Start()
+    // Використовуємо Awake, щоб ініціалізація пройшла відразу після Instantiate, 
+    // навіть якщо об'єкт потім вимкнуть.
+    private void Awake()
     {
-        // Кнопка "Продовжити"
-        continueButton.onClick.AddListener(() =>
+        if (continueButton)
         {
-            // Завантажуємо останній збережений рівень
-            int lastLevelIndex = SaveSystem.LoadCurrentLevelIndex();
-            // Переходимо в гру, завантажуючи збереження (loadFromSave = true)
-            GameManager.Instance.StartGameAtLevel(lastLevelIndex, true);
-        });
+            continueButton.onClick.AddListener(() =>
+            {
+                int lastLevelIndex = SaveSystem.LoadCurrentLevelIndex();
+                GameManager.Instance.StartGameAtLevel(lastLevelIndex, true);
+            });
+        }
 
-        // Кнопка "Вибір Рівнів"
-        levelSelectButton.onClick.AddListener(() =>
+        if (levelSelectButton)
         {
-            UIManager.Instance.ShowLevelSelection();
-        });
+            levelSelectButton.onClick.AddListener(() =>
+            {
+                UIManager.Instance.ShowLevelSelection();
+            });
+        }
 
-        // Кнопка "Вихід"
-        quitButton.onClick.AddListener(() =>
+        if (quitButton)
         {
-            Application.Quit();
+            quitButton.onClick.AddListener(() =>
+            {
+                Application.Quit();
 #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
+                UnityEditor.EditorApplication.isPlaying = false;
 #endif
-        });
+            });
+        }
     }
 
-    private void OnEnable()
+    public void SetActive(bool isActive)
     {
-        // Перевіряємо, чи є збереження, щоб активувати/деактивувати кнопку "Продовжити"
-        // Якщо це перший запуск (рівень 0 і немає збережених даних про фігури), можна зробити перевірку.
-        // Для спрощення: кнопка завжди активна, просто вантажить останній відомий індекс.
-
-        // Але якщо хочеш заблокувати, якщо гравець ще не грав:
-        // bool hasSave = PlayerPrefs.HasKey("CurrentLevelIndex");
-        // continueButton.interactable = hasSave;
+        gameObject.SetActive(isActive);
     }
 }

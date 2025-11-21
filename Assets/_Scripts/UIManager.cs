@@ -4,83 +4,137 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager Instance { get; private set; }
 
-    [Header("Панелі Меню")]
-    [SerializeField] private GameObject mainMenuPanel;
-    [SerializeField] private GameObject levelSelectionPanel;
-    [SerializeField] private GameObject pauseMenuPanel;
-    [SerializeField] private GameObject gameHUDPanel; // Панель з кнопками гри (якщо є), або просто пустий об'єкт для групування
+    [Header("Canvas Reference")]
+    [Tooltip("Трансформ Канвасу, куди будуть спавнитись вікна.")]
+    [SerializeField] private Transform uiCanvasTransform;
 
-    // Зберігаємо, звідки ми відкрили вибір рівня (з Головного меню чи з Паузи), щоб знати куди повертатись кнопкою "Назад"
-    private GameObject _previousPanelBeforeLevelSelect;
+    [Header("UI Prefabs")]
+    [SerializeField] private GameObject mainMenuPrefab;
+    [SerializeField] private GameObject levelSelectionPrefab;
+    [SerializeField] private GameObject pauseMenuPrefab;
+    [SerializeField] private GameObject gameHUDPrefab;
+
+    // Приватні інстанси (створені об'єкти)
+    private MainMenuUI _mainMenuInstance;
+    private LevelSelectionUI _levelSelectionInstance;
+    private PauseMenuUI _pauseMenuInstance;
+    private GameObject _gameHUDInstance;
+
+    private bool _wasPauseMenuOpenBeforeLevelSelect = false;
 
     private void Awake()
     {
         if (Instance != null) { Destroy(gameObject); return; }
         Instance = this;
+
+        // Спавнимо всі вікна одразу, ініціалізуємо їх та ховаємо
+        SpawnAllUI();
     }
 
     private void Start()
     {
-        // На старті показуємо Головне Меню
+        // На старті показуємо головне меню
         ShowMainMenu();
+    }
+
+    private void SpawnAllUI()
+    {
+        if (uiCanvasTransform == null)
+        {
+            Debug.LogError("UIManager: UI Canvas Transform is not assigned!");
+            return;
+        }
+
+        // 1. Main Menu
+        if (mainMenuPrefab)
+        {
+            GameObject obj = Instantiate(mainMenuPrefab, uiCanvasTransform);
+            _mainMenuInstance = obj.GetComponent<MainMenuUI>();
+            if (_mainMenuInstance == null) Debug.LogError("Main Menu Prefab is missing MainMenuUI script!");
+            obj.SetActive(false); // Ховаємо
+        }
+
+        // 2. Level Selection
+        if (levelSelectionPrefab)
+        {
+            GameObject obj = Instantiate(levelSelectionPrefab, uiCanvasTransform);
+            _levelSelectionInstance = obj.GetComponent<LevelSelectionUI>();
+            if (_levelSelectionInstance == null) Debug.LogError("Level Selection Prefab is missing LevelSelectionUI script!");
+            obj.SetActive(false);
+        }
+
+        // 3. Pause Menu
+        if (pauseMenuPrefab)
+        {
+            GameObject obj = Instantiate(pauseMenuPrefab, uiCanvasTransform);
+            _pauseMenuInstance = obj.GetComponent<PauseMenuUI>();
+            // Важливо: PauseMenu має бути останнім у ієрархії (поверх інших), тому SetAsLastSibling
+            obj.transform.SetAsLastSibling();
+            if (_pauseMenuInstance == null) Debug.LogError("Pause Menu Prefab is missing PauseMenuUI script!");
+            obj.SetActive(false);
+        }
+
+        // 4. Game HUD
+        if (gameHUDPrefab)
+        {
+            _gameHUDInstance = Instantiate(gameHUDPrefab, uiCanvasTransform);
+            _gameHUDInstance.transform.SetAsFirstSibling(); // HUD зазвичай знизу (під меню паузи)
+            _gameHUDInstance.SetActive(false);
+        }
     }
 
     public void ShowMainMenu()
     {
-        mainMenuPanel.SetActive(true);
-        levelSelectionPanel.SetActive(false);
-        pauseMenuPanel.SetActive(false);
-        if (gameHUDPanel) gameHUDPanel.SetActive(false);
+        if (_mainMenuInstance) _mainMenuInstance.SetActive(true);
+        if (_levelSelectionInstance) _levelSelectionInstance.SetActive(false);
+        if (_pauseMenuInstance) _pauseMenuInstance.SetActive(false);
+        if (_gameHUDInstance) _gameHUDInstance.SetActive(false);
 
-        // Переконуємось, що час йде (якщо ми вийшли з паузи)
         Time.timeScale = 1f;
     }
 
     public void ShowGameUI()
     {
-        mainMenuPanel.SetActive(false);
-        levelSelectionPanel.SetActive(false);
-        pauseMenuPanel.SetActive(false);
-        if (gameHUDPanel) gameHUDPanel.SetActive(true);
+        if (_mainMenuInstance) _mainMenuInstance.SetActive(false);
+        if (_levelSelectionInstance) _levelSelectionInstance.SetActive(false);
+        if (_pauseMenuInstance) _pauseMenuInstance.SetActive(false);
+        if (_gameHUDInstance) _gameHUDInstance.SetActive(true);
     }
 
     public void ShowPauseMenu()
     {
-        // Пауза викликається поверх гри, тому HUD не ховаємо, або ховаємо за бажанням
-        pauseMenuPanel.SetActive(true);
-        // Час зупиняється в PauseManager
+        if (_pauseMenuInstance) _pauseMenuInstance.SetActive(true);
     }
 
     public void HidePauseMenu()
     {
-        pauseMenuPanel.SetActive(false);
+        if (_pauseMenuInstance) _pauseMenuInstance.SetActive(false);
     }
 
     public void ShowLevelSelection()
     {
-        // Запам'ятовуємо, що було відкрито до цього
-        if (mainMenuPanel.activeSelf) _previousPanelBeforeLevelSelect = mainMenuPanel;
-        else if (pauseMenuPanel.activeSelf) _previousPanelBeforeLevelSelect = pauseMenuPanel;
-        else _previousPanelBeforeLevelSelect = mainMenuPanel; // Fallback
+        // Запам'ятовуємо, чи була відкрита пауза
+        _wasPauseMenuOpenBeforeLevelSelect = (_pauseMenuInstance != null && _pauseMenuInstance.IsActive);
 
-        mainMenuPanel.SetActive(false);
-        pauseMenuPanel.SetActive(false);
+        if (_mainMenuInstance) _mainMenuInstance.SetActive(false);
+        if (_pauseMenuInstance) _pauseMenuInstance.SetActive(false); // Тимчасово ховаємо паузу
 
-        levelSelectionPanel.SetActive(true);
+        if (_levelSelectionInstance) _levelSelectionInstance.SetActive(true);
     }
 
     public void OnLevelSelectionBack()
     {
-        levelSelectionPanel.SetActive(false);
+        if (_levelSelectionInstance) _levelSelectionInstance.SetActive(false);
 
-        // Повертаємось туди, звідки прийшли
-        if (_previousPanelBeforeLevelSelect != null)
+        if (_wasPauseMenuOpenBeforeLevelSelect)
         {
-            _previousPanelBeforeLevelSelect.SetActive(true);
+            // Повертаємось в меню паузи
+            if (_pauseMenuInstance) _pauseMenuInstance.SetActive(true);
         }
         else
         {
-            ShowMainMenu();
+            // Повертаємось в головне меню
+            if (_mainMenuInstance) _mainMenuInstance.SetActive(true);
         }
     }
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System;
 
 public class PauseManager : MonoBehaviour
@@ -18,14 +19,23 @@ public class PauseManager : MonoBehaviour
 
     private void Update()
     {
-        // Перевіряємо натискання Escape для паузи/відновлення
-        // Перевіряємо GameManager, щоб не ставити на паузу, якщо рівень вже завершено
-        if (Input.GetKeyDown(KeyCode.Escape))
+        // Якщо ми в головному меню (рівень не активний) - пауза недоступна
+        if (GameManager.Instance == null || !GameManager.Instance.IsLevelActive) return;
+
+        // Перевірка на натискання ESC (підтримує і стару, і нову систему)
+        bool escapePressed = false;
+
+        // Old Input
+        if (Input.GetKeyDown(KeyCode.Escape)) escapePressed = true;
+
+        // New Input (безпечна перевірка)
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) escapePressed = true;
+#endif
+
+        if (escapePressed)
         {
-            if (GameManager.Instance != null && GameManager.Instance.IsLevelActive)
-            {
-                TogglePause();
-            }
+            TogglePause();
         }
     }
 
@@ -43,21 +53,27 @@ public class PauseManager : MonoBehaviour
 
     public void PauseGame()
     {
+        if (IsPaused) return;
+
         IsPaused = true;
-        Time.timeScale = 0f; // Зупиняємо час
+        Time.timeScale = 0f;
         OnGamePaused?.Invoke();
+
+        // Прямий виклик UI для надійності
+        if (UIManager.Instance != null) UIManager.Instance.ShowPauseMenu();
     }
 
     public void ResumeGame()
     {
+        if (!IsPaused) return;
+
         IsPaused = false;
-        Time.timeScale = 1f; // Відновлюємо час
+        Time.timeScale = 1f;
         OnGameResumed?.Invoke();
+
+        if (UIManager.Instance != null) UIManager.Instance.HidePauseMenu();
     }
 
-    /// <summary>
-    /// Примусово скидає паузу (наприклад, при рестарті рівня)
-    /// </summary>
     public void ResetPauseState()
     {
         IsPaused = false;
