@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   temperamentName: "\u041D\u043E\u0432\u0438\u0439 \u0442\u0435\u043C\u043F\u0435\u0440\u0430\u043C\u0435\u043D\u0442"
   description: 
-  temperamentMaterial: {fileID: 2100000, guid: 8859cd1496820b9459386f2022102a02, type: 2}
+  temperamentMaterial: {fileID: 2100000, guid: a889c2f799aff394fa96c854300b8522, type: 2}
   initialFatigue: 0.1
   initialIrritation: 0.1
   initialTrust: 0.5

@@ -1,0 +1,124 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 187a4d228514abd47aeb8772198b1abe, type: 3}
+  m_Name: Level_GridDataSO_01 1
+  m_EditorClassIdentifier: 
+  width: 4
+  height: 4
+  cellSize: 1
+  buildableCells:
+  - {x: 0, y: 0}
+  - {x: 0, y: 1}
+  - {x: 0, y: 2}
+  - {x: 0, y: 3}
+  - {x: 1, y: 0}
+  - {x: 1, y: 1}
+  - {x: 1, y: 2}
+  - {x: 1, y: 3}
+  - {x: 2, y: 0}
+  - {x: 2, y: 1}
+  - {x: 2, y: 2}
+  - {x: 2, y: 3}
+  - {x: 3, y: 0}
+  - {x: 3, y: 1}
+  - {x: 3, y: 2}
+  - {x: 3, y: 3}
+  boardToSpawnPadding: 1
+  pieceToPiecePadding: 1
+  maxSpawnRadius: 2
+  placementAttempts: 100
+  personalityData: {fileID: 11400000, guid: ead75da8da323e440b970cea577756b6, type: 2}
+  availablePieceTypesForGeneration:
+  - {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+  - {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+  - {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
+  - {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
+  - {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
+  generatorPieceConfig:
+  - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+    isRequired: 0
+    requiredCount: 1
+    color: {r: 1, g: 0.4, b: 0.4, a: 1}
+    maxCount: 1
+  - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+    isRequired: 0
+    requiredCount: 1
+    color: {r: 0.2, g: 0.8, b: 0.6, a: 1}
+    maxCount: 1
+  - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
+    isRequired: 0
+    requiredCount: 1
+    color: {r: 1, g: 0.6, b: 0.2, a: 1}
+    maxCount: 1
+  - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
+    isRequired: 0
+    requiredCount: 1
+    color: {r: 1, g: 0.4, b: 1, a: 1}
+    maxCount: 1
+  - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
+    isRequired: 0
+    requiredCount: 1
+    color: {r: 0.6, g: 0.4, b: 1, a: 1}
+    maxCount: 1
+  puzzlePieces:
+  - {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+  - {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
+  - {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+  - {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
+  - {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
+  generatedPieceSummary:
+  - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
+    count: 1
+  - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
+    count: 1
+  - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
+    count: 1
+  - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+    count: 1
+  - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+    count: 1
+  puzzleSolution:
+  - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+    position: {x: 0, y: 0}
+    direction: 3
+  - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
+    position: {x: 1, y: 0}
+    direction: 0
+  - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+    position: {x: 0, y: 1}
+    direction: 1
+  - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
+    position: {x: 1, y: 1}
+    direction: 3
+  - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
+    position: {x: 0, y: 3}
+    direction: 3
+  isComplete: 1
+  solutionVariantsCount: 1
+  allFoundSolutions:
+  - solution:
+    - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+      position: {x: 0, y: 0}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
+      position: {x: 1, y: 0}
+      direction: 0
+    - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+      position: {x: 0, y: 1}
+      direction: 1
+    - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
+      position: {x: 1, y: 1}
+      direction: 3
+    - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
+      position: {x: 0, y: 3}
+      direction: 3
+  currentSolutionIndex: 0
