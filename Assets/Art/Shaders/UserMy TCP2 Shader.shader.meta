@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: fe905ead128bdff48ac6df7897cc2a7d
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures:
+  - _BaseMap: {instanceID: 0}
+  - _StylizedThreshold: {instanceID: 0}
+  - _DiffuseTintMask: {instanceID: 0}
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

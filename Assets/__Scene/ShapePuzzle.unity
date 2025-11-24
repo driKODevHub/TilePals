@@ -636,7 +636,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 50
+  field of view: 30
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -663,7 +663,7 @@ Transform:
   m_GameObject: {fileID: 1005976325}
   serializedVersion: 2
   m_LocalRotation: {x: 0.64278764, y: 0, z: 0, w: 0.7660445}
-  m_LocalPosition: {x: 10, y: 15, z: -4}
+  m_LocalPosition: {x: 2.4, y: 20, z: -1.1000004}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1038,7 +1038,7 @@ Transform:
   m_GameObject: {fileID: 1353730454}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 10, y: 5, z: 6}
+  m_LocalPosition: {x: 2.4, y: 5, z: 8.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1619,7 +1619,7 @@ Transform:
   m_GameObject: {fileID: 8313729344133577910}
   serializedVersion: 2
   m_LocalRotation: {x: 0.64278764, y: 0, z: 0, w: 0.7660445}
-  m_LocalPosition: {x: 10, y: 15, z: -4}
+  m_LocalPosition: {x: 2.4, y: 20, z: -1.1000004}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1693,7 +1693,7 @@ MonoBehaviour:
     LookAtTarget: {fileID: 1353730456}
     CustomLookAtTarget: 0
   Lens:
-    FieldOfView: 50
+    FieldOfView: 30
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -1730,7 +1730,7 @@ MonoBehaviour:
     AngularDampingMode: 0
     RotationDamping: {x: 1, y: 1, z: 1}
     QuaternionDamping: 1
-  FollowOffset: {x: 0, y: 10, z: -10}
+  FollowOffset: {x: 0, y: 15, z: -10}
 --- !u!114 &8434513683717558063
 MonoBehaviour:
   m_ObjectHideFlags: 0
