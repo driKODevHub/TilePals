@@ -1,7 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using Debug = UnityEngine.Debug; // Явне використання Debug.Log
+using EZhex1991.EZSoftBone; // Додаємо простір імен асету
+using Debug = UnityEngine.Debug;
 
 public class LevelLoader : MonoBehaviour
 {
@@ -11,7 +12,6 @@ public class LevelLoader : MonoBehaviour
     private GridDataSO _currentLevelData;
     private List<PuzzlePiece> _spawnedPieces = new List<PuzzlePiece>();
 
-    // --- НОВЕ ПОЛЕ: Збільшена кількість спроб (для надійності) ---
     private const int MAX_PLACEMENT_ATTEMPTS = 500;
 
     public void LoadLevel(GridDataSO levelData, bool loadFromSave)
@@ -46,18 +46,13 @@ public class LevelLoader : MonoBehaviour
             .ToDictionary(m => m.pieceType, m => m.temperament) ?? new Dictionary<PlacedObjectTypeSO, TemperamentSO>();
 
         List<PlacedObjectTypeSO> piecesToSpawnTypes = new List<PlacedObjectTypeSO>(_currentLevelData.puzzlePieces);
-        piecesToSpawnTypes.Shuffle(); // Цей рядок тепер буде працювати
+        piecesToSpawnTypes.Shuffle();
 
         List<PuzzlePiece> piecesToPlace = new List<PuzzlePiece>();
 
         foreach (var pieceType in piecesToSpawnTypes)
         {
-            // --- ДОДАТКОВА ПЕРЕВІРКА НА NULL ---
-            if (pieceType == null || pieceType.prefab == null)
-            {
-                Debug.LogError($"PlacedObjectTypeSO або його префаб відсутній у списку фігур для спавну.");
-                continue;
-            }
+            if (pieceType == null || pieceType.prefab == null) continue;
 
             Transform pieceTransform = Instantiate(pieceType.prefab, pieceSpawnParent);
             PuzzlePiece pieceComponent = pieceTransform.GetComponent<PuzzlePiece>();
@@ -65,7 +60,6 @@ public class LevelLoader : MonoBehaviour
             {
                 if (pieceComponent.FacialController != null && pieceType.relativeOccupiedCells.Count > 0)
                 {
-                    // Рандомна клітинка для розміщення обличчя
                     Vector2Int randomCell = pieceType.relativeOccupiedCells[Random.Range(0, pieceType.relativeOccupiedCells.Count)];
                     pieceComponent.FacialController.transform.localPosition = new Vector3(randomCell.x + 0.5f, 0.01f, randomCell.y + 0.5f);
                 }
@@ -73,8 +67,8 @@ public class LevelLoader : MonoBehaviour
                 PiecePersonality personality = pieceComponent.GetComponent<PiecePersonality>();
                 if (personality != null && personalityMap.TryGetValue(pieceType, out TemperamentSO temperament))
                 {
-                    pieceComponent.SetTemperamentMaterial(temperament.temperamentMaterial); // Встановлюємо матеріал
-                    personality.Setup(temperament); // Встановлюємо характер
+                    pieceComponent.SetTemperamentMaterial(temperament.temperamentMaterial);
+                    personality.Setup(temperament);
                 }
 
                 PlacedObjectTypeSO.Dir randomDir = (PlacedObjectTypeSO.Dir)Random.Range(0, 4);
@@ -88,7 +82,6 @@ public class LevelLoader : MonoBehaviour
 
         int padding = _currentLevelData.boardToSpawnPadding;
         int radius = _currentLevelData.maxSpawnRadius;
-        // !!! ВИКОРИСТОВУЄМО БІЛЬШЕ СПРОБ !!!
         int attempts = MAX_PLACEMENT_ATTEMPTS;
         int pieceSpacing = _currentLevelData.pieceToPiecePadding;
 
@@ -99,17 +92,14 @@ public class LevelLoader : MonoBehaviour
             bool placed = false;
             for (int attempt = 0; attempt < attempts; attempt++)
             {
-                // Розширюємо зону випадкового спавну за межі ForbiddenZone
                 int x = Random.Range(forbiddenZone.xMin - radius, forbiddenZone.xMax + radius);
                 int z = Random.Range(forbiddenZone.yMin - radius, forbiddenZone.yMax + radius);
                 Vector2Int origin = new Vector2Int(x, z);
 
                 List<Vector2Int> pieceCells = piece.PieceTypeSO.GetGridPositionsList(origin, piece.CurrentDirection);
 
-                // Перевірка 1: Чи не потрапляє жодна клітинка фігури у "заборонену зону" (поле + педдінг)
                 if (pieceCells.Any(cell => forbiddenZone.Contains(cell))) continue;
 
-                // Перевірка 2: Чи є достатній відступ від інших OffGrid фігур
                 if (OffGridManager.CanPlacePieceWithPadding(piece, origin, pieceSpacing))
                 {
                     PlacePieceOffGrid(piece, origin, cellSize);
@@ -122,9 +112,7 @@ public class LevelLoader : MonoBehaviour
             {
                 Debug.LogWarning($"Could not find ideal spot for {piece.name} in {attempts} attempts. Force placing.");
                 bool emergencyPlaced = false;
-
-                // Аварійне розміщення: пробуємо по периметру
-                for (int r = radius; r < 50; r++) // Обмежимо радіус пошуку
+                for (int r = radius; r < 50; r++)
                 {
                     List<Vector2Int> perimeter = GetPerimeterCells(forbiddenZone.xMin - r, forbiddenZone.xMax + r, forbiddenZone.yMin - r, forbiddenZone.yMax + r);
                     foreach (var origin in perimeter)
@@ -138,12 +126,7 @@ public class LevelLoader : MonoBehaviour
                     }
                     if (emergencyPlaced) break;
                 }
-
-                if (!emergencyPlaced)
-                {
-                    Debug.LogError($"Аварійне розміщення для {piece.name} також не вдалося. Фігура не буде розміщена.");
-                    Destroy(piece.gameObject);
-                }
+                if (!emergencyPlaced) Destroy(piece.gameObject);
             }
         }
     }
@@ -177,7 +160,6 @@ public class LevelLoader : MonoBehaviour
         SaveSystem.SaveLevelProgress(GameManager.Instance.CurrentLevelIndex, saveData);
     }
 
-    // --- ВИПРАВЛЕННЯ: Змінено з private на public ---
     public void ClearLevel()
     {
         foreach (var piece in _spawnedPieces)
@@ -187,14 +169,33 @@ public class LevelLoader : MonoBehaviour
         _spawnedPieces.Clear();
         CommandHistory.Clear();
         OffGridManager.Clear();
+        if (GridBuildingSystem.Instance != null) GridBuildingSystem.Instance.ClearGrid();
+    }
 
-        // Додана перевірка на null, щоб уникнути помилок при виході в меню
-        if (GridBuildingSystem.Instance != null)
+    // --- НОВИЙ МЕТОД ДЛЯ БЕЗПЕЧНОГО ТЕЛЕПОРТУ ---
+    private void TeleportPieceAndResetPhysics(PuzzlePiece piece, Vector3 position, Quaternion rotation)
+    {
+        // 1. Знаходимо всі компоненти EZSoftBone на фігурі (може бути кілька хвостів/вух)
+        var softBones = piece.GetComponentsInChildren<EZSoftBone>();
+
+        // 2. Вимикаємо їх, щоб вони не симулювали рух під час телепортації
+        foreach (var sb in softBones)
         {
-            GridBuildingSystem.Instance.ClearGrid();
+            sb.enabled = false;
+        }
+
+        // 3. Телепортуємо
+        piece.UpdateTransform(position, rotation);
+
+        // 4. Примусово оновлюємо фізику, щоб вона "прийняла" нову позицію як стартову
+        foreach (var sb in softBones)
+        {
+            sb.enabled = true;           // Вмикаємо назад
+            sb.RevertTransforms();       // Скидаємо трансформації до початкових (відносно батька)
+            sb.SetRestState();           // Кажемо: "Тут твоя нова точка спокою, швидкість = 0"
         }
     }
-    // ------------------------------------------------
+    // ----------------------------------------------
 
     private void PlacePieceOffGrid(PuzzlePiece piece, Vector2Int origin, float cellSize)
     {
@@ -202,7 +203,9 @@ public class LevelLoader : MonoBehaviour
         Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
         Vector3 finalPos = new Vector3(origin.x * cellSize, 0, origin.y * cellSize) + offset;
 
-        piece.transform.position = finalPos;
+        // Використовуємо новий метод замість прямого присвоєння transform.position
+        TeleportPieceAndResetPhysics(piece, finalPos, piece.transform.rotation);
+
         piece.SetOffGrid(true, origin);
         OffGridManager.PlacePiece(piece, origin);
 
@@ -234,19 +237,25 @@ public class LevelLoader : MonoBehaviour
 
         foreach (var pieceData in saveData.onGridPieces)
         {
-            // --- Перевіряємо наявність PieceTypeSO перед фільтрацією ---
             PuzzlePiece pieceToPlace = availablePieces.FirstOrDefault(p => p != null && p.PieceTypeSO != null && p.PieceTypeSO.name == pieceData.pieceTypeName);
             if (pieceToPlace != null)
             {
+                // При відновленні збереження ми теж використовуємо телепорт в команді PlaceCommand,
+                // але PlaceCommand всередині викликає piece.UpdateTransform.
+                // Можна модифікувати PlaceCommand, але простіше тут зробити Reset після виконання команди.
+
                 ICommand command = new PlaceCommand(pieceToPlace, pieceData.origin, pieceData.direction, pieceToPlace.transform.position, pieceToPlace.transform.rotation);
                 command.Execute();
+
+                // ПРИМУСОВИЙ СКИНУТИ ФІЗИКИ ПІСЛЯ ЗАВАНТАЖЕННЯ ПОЗИЦІЇ
+                TeleportPieceAndResetPhysics(pieceToPlace, pieceToPlace.transform.position, pieceToPlace.transform.rotation);
+
                 availablePieces.Remove(pieceToPlace);
             }
         }
 
         foreach (var pieceData in saveData.offGridPieces)
         {
-            // --- Перевіряємо наявність PieceTypeSO перед фільтрацією ---
             PuzzlePiece pieceToPlace = availablePieces.FirstOrDefault(p => p != null && p.PieceTypeSO != null && p.PieceTypeSO.name == pieceData.pieceTypeName);
             if (pieceToPlace != null)
             {
@@ -255,7 +264,9 @@ public class LevelLoader : MonoBehaviour
                 Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
                 Vector3 finalPos = new Vector3(pieceData.origin.x * cellSize, 0, pieceData.origin.y * cellSize) + offset;
 
-                pieceToPlace.UpdateTransform(finalPos, Quaternion.Euler(0, pieceToPlace.PieceTypeSO.GetRotationAngle(pieceData.direction), 0));
+                // ТЕЛЕПОРТ ЗІ СКИДАННЯМ ФІЗИКИ
+                TeleportPieceAndResetPhysics(pieceToPlace, finalPos, Quaternion.Euler(0, pieceToPlace.PieceTypeSO.GetRotationAngle(pieceData.direction), 0));
+
                 pieceToPlace.SetOffGrid(true, pieceData.origin);
                 OffGridManager.PlacePiece(pieceToPlace, pieceData.origin);
                 availablePieces.Remove(pieceToPlace);
