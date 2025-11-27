@@ -225,6 +225,14 @@ PrefabInstance:
       propertyPath: m_Color.a
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1545702117781013090, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: m_RootBones.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1545702117781013090, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: 'm_RootBones.Array.data[0]'
+      value: 
+      objectReference: {fileID: 7962210913473887312}
     - target: {fileID: 3647591016452806247, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a
       value: 0

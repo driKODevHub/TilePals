@@ -1,7 +1,7 @@
 /* Author:          ezhex1991@outlook.com
  * CreateTime:      2018-12-18 19:33:50
  * Organization:    #ORGANIZATION#
- * Description:     
+ * Description:     Fixed Timestep logic added by Gemini + Ukrainian Tooltips.
  */
 using System.Collections.Generic;
 using System.Linq;
@@ -221,14 +221,15 @@ namespace EZhex1991.EZSoftBone
             }
         }
 
-        [SerializeField]
+        [SerializeField, Tooltip("Кореневі кістки. Вкажіть тут об'єкти, з яких починається ланцюжок кісток (наприклад, початок хвоста або коріння волосся).")]
         private List<Transform> m_RootBones;
         public List<Transform> rootBones { get { return m_RootBones; } }
-        [SerializeField]
+
+        [SerializeField, Tooltip("Кінцеві кістки. Якщо потрібно виключити певні частини ієрархії з симуляції, додайте їх сюди.")]
         private List<Transform> m_EndBones;
         public List<Transform> endBones { get { return m_EndBones; } }
 
-        [SerializeField]
+        [SerializeField, Tooltip("Матеріал з налаштуваннями фізики (пружність, опір тощо). Можна створити окремий асет або використовувати дефолтний.")]
         private EZSoftBoneMaterial m_Material;
         private EZSoftBoneMaterial m_InstanceMaterial;
         public EZSoftBoneMaterial sharedMaterial
@@ -261,76 +262,85 @@ namespace EZhex1991.EZSoftBone
         }
 
         #region Structure
-        [SerializeField]
+        [SerializeField, Tooltip("Глибина старту. 0 - симуляція починається з кореневої кістки. 1 - корінь нерухомий, симуляція з першої дитини.")]
         private int m_StartDepth;
         public int startDepth { get { return m_StartDepth; } set { m_StartDepth = value; } }
 
-        [SerializeField]
+        [SerializeField, Tooltip("Зв'язок між сусідніми кістками. None - немає, Rooted - зв'язок від кореня, Unified - загальний зв'язок (корисно для тканин/волосся).")]
         private UnificationMode m_SiblingConstraints = UnificationMode.None;
         public UnificationMode siblingConstraints { get { return m_SiblingConstraints; } set { m_SiblingConstraints = value; } }
-        [SerializeField]
+
+        [SerializeField, Tooltip("Замкнути коло сусідів. Корисно для спідниць або одягу, що йде по колу.")]
         private bool m_ClosedSiblings = false;
         public bool closedSiblings { get { return m_ClosedSiblings; } set { m_ClosedSiblings = value; } }
-        [SerializeField]
+
+        [SerializeField, Tooltip("Чи враховувати обертання при розрахунку зв'язків сусідів.")]
         private bool m_SiblingRotationConstraints = true;
         public bool siblingRotationConstraints { get { return m_SiblingRotationConstraints; } set { m_SiblingRotationConstraints = value; } }
-        [SerializeField]
+
+        [SerializeField, Tooltip("Вирівнювання довжини. Дозволяє зробити так, щоб всі ланцюжки мали однакову 'логічну' довжину для розрахунків.")]
         private UnificationMode m_LengthUnification = UnificationMode.None;
         public UnificationMode lengthUnification { get { return m_LengthUnification; } set { m_LengthUnification = value; } }
         #endregion
 
         #region Collision
-        [SerializeField]
+        [SerializeField, Tooltip("Шари (Layers), з якими будуть стикатися кістки (для стандартних колайдерів Unity).")]
         private LayerMask m_CollisionLayers = 1;
         public LayerMask collisionLayers { get { return m_CollisionLayers; } set { m_CollisionLayers = value; } }
-        [SerializeField]
+
+        [SerializeField, Tooltip("Список додаткових колайдерів для взаємодії, які не потрапляють у вибрані шари.")]
         private List<Collider> m_ExtraColliders = new List<Collider>();
         public List<Collider> extraColliders { get { return m_ExtraColliders; } }
-        [SerializeField]
+
+        [SerializeField, Tooltip("Базовий радіус колізії кісток (товщина).")]
         private float m_Radius = 0;
         public float radius { get { return m_Radius; } set { m_Radius = value; } }
-        [SerializeField, EZCurveRect(0, 0, 1, 1)]
+
+        [SerializeField, EZCurveRect(0, 0, 1, 1), Tooltip("Крива зміни радіусу вздовж ланцюжка (зліва - корінь, справа - кінець).")]
         private AnimationCurve m_RadiusCurve = AnimationCurve.Linear(0, 1, 1, 1);
         public AnimationCurve radiusCurve { get { return m_RadiusCurve; } }
         #endregion
 
         #region Performance
-        [SerializeField]
+        [SerializeField, Tooltip("Режим часу. 'Constant' - найкращий для стабільної фізики незалежно від FPS.")]
         private DeltaTimeMode m_DeltaTimeMode = DeltaTimeMode.DeltaTime;
         public DeltaTimeMode deltaTimeMode { get { return m_DeltaTimeMode; } set { m_DeltaTimeMode = value; } }
-        [SerializeField]
-        private float m_ConstantDeltaTime = 0.03f;
+
+        [SerializeField, Tooltip("Фіксований крок часу (тільки для режиму Constant). 0.02 = 50 оновлень/сек. Менше значення = жорсткіша і точніша фізика.")]
+        private float m_ConstantDeltaTime = 0.02f;
         public float constantDeltaTime { get { return m_ConstantDeltaTime; } set { m_ConstantDeltaTime = value; } }
 
-        [SerializeField, Range(1, 10)]
+        [SerializeField, Range(1, 10), Tooltip("Кількість ітерацій розрахунку за один крок. Більше = стабільніше (менше проходжень крізь колайдери), але важче для процесора.")]
         private int m_Iterations = 1;
         public int iterations { get { return m_Iterations; } set { m_Iterations = value; } }
 
-        [SerializeField]
+        [SerializeField, Tooltip("Поріг сну. Якщо кістка рухається повільніше за це значення, фізика для неї вимикається для економії ресурсів.")]
         private float m_SleepThreshold = 0.005f;
         public float sleepThreshold { get { return m_SleepThreshold; } set { m_SleepThreshold = Mathf.Max(0, value); } }
         #endregion
 
         #region Gravity
-        [SerializeField]
+        [SerializeField, Tooltip("Об'єкт для вирівнювання гравітації. Якщо вказати тут персонажа, гравітація може 'обертатися' разом з ним (корисно, якщо персонаж ходить по стінах).")]
         private Transform m_GravityAligner;
         public Transform gravityAligner { get { return m_GravityAligner; } set { m_GravityAligner = value; } }
-        [SerializeField]
+
+        [SerializeField, Tooltip("Вектор гравітації (зазвичай 0, -9.81, 0).")]
         private Vector3 m_Gravity;
         public Vector3 gravity { get { return m_Gravity; } set { m_Gravity = value; } }
         #endregion
 
         #region Force
-        [SerializeField]
+        [SerializeField, Tooltip("Посилання на модуль сил (вітер, турбулентність).")]
         private EZSoftBoneForceField m_ForceModule;
         public EZSoftBoneForceField forceModule { get { return m_ForceModule; } set { m_ForceModule = value; } }
-        [SerializeField]
+
+        [SerializeField, Tooltip("Множник сили. Дозволяє підсилити або послабити вплив Force Module.")]
         private float m_ForceScale = 1;
         public float forceScale { get { return m_ForceScale; } set { m_ForceScale = value; } }
         #endregion
 
         #region References
-        [SerializeField]
+        [SerializeField, Tooltip("Простір симуляції. Якщо пусто - використовується світовий простір. Якщо вказати батьківський об'єкт - симуляція буде локальною (корисно для транспорту, що швидко рухається).")]
         private Transform m_SimulateSpace;
         public Transform simulateSpace { get { return m_SimulateSpace; } set { m_SimulateSpace = value; } }
         #endregion
@@ -342,6 +352,9 @@ namespace EZhex1991.EZSoftBone
 
         private List<Bone> m_Structures = new List<Bone>();
 
+        // New variable for Fixed Timestep Logic
+        private float m_TimeAccumulator = 0f;
+
         private void Awake()
         {
             InitStructures();
@@ -349,27 +362,52 @@ namespace EZhex1991.EZSoftBone
         private void OnEnable()
         {
             SetRestState();
+            m_TimeAccumulator = 0f;
         }
         private void Update()
         {
             RevertTransforms(startDepth);
         }
+
         private void LateUpdate()
         {
-            switch (deltaTimeMode)
+            // Modified LateUpdate to handle Fixed Time Step accumulator for Constant mode
+            if (deltaTimeMode == DeltaTimeMode.Constant)
             {
-                case DeltaTimeMode.DeltaTime:
-                    UpdateStructures(Time.deltaTime);
-                    break;
-                case DeltaTimeMode.UnscaledDeltaTime:
-                    UpdateStructures(Time.unscaledDeltaTime);
-                    break;
-                case DeltaTimeMode.Constant:
-                    UpdateStructures(constantDeltaTime);
-                    break;
+                // Safety check to prevent infinite loops if user sets extremely small or zero delta time
+                float step = Mathf.Max(m_ConstantDeltaTime, 0.001f);
+
+                // Add frame time to accumulator
+                m_TimeAccumulator += Time.deltaTime;
+
+                // Prevent spiral of death (if FPS drops too low, don't simulate 100 steps)
+                // Cap at roughly 10 steps (0.2s)
+                m_TimeAccumulator = Mathf.Min(m_TimeAccumulator, 0.2f);
+
+                // Run fixed steps
+                while (m_TimeAccumulator >= step)
+                {
+                    UpdateStructures(step);
+                    m_TimeAccumulator -= step;
+                }
             }
+            else
+            {
+                // Legacy behaviors
+                switch (deltaTimeMode)
+                {
+                    case DeltaTimeMode.DeltaTime:
+                        UpdateStructures(Time.deltaTime);
+                        break;
+                    case DeltaTimeMode.UnscaledDeltaTime:
+                        UpdateStructures(Time.unscaledDeltaTime);
+                        break;
+                }
+            }
+
             UpdateTransforms();
         }
+
         private void OnDisable()
         {
             RevertTransforms(startDepth);

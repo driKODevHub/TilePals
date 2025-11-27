@@ -196,8 +196,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  m_DeltaTimeMode: 0
-  m_ConstantDeltaTime: 0.03
+  m_DeltaTimeMode: 2
+  m_ConstantDeltaTime: 0.016
   m_Iterations: 1
   m_SleepThreshold: 0.005
   m_GravityAligner: {fileID: 0}
@@ -231,6 +231,14 @@ PrefabInstance:
       propertyPath: m_Color.a
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1545702117781013090, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: m_RootBones.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1545702117781013090, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: 'm_RootBones.Array.data[0]'
+      value: 
+      objectReference: {fileID: 5391806083238025089}
     - target: {fileID: 3647591016452806247, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a
       value: 0
