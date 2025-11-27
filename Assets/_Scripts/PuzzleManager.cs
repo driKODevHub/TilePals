@@ -214,10 +214,13 @@ public class PuzzleManager : MonoBehaviour
         {
             TryToPlaceOrDropPiece();
         }
-        if (Input.GetKeyDown(KeyCode.Space) && !_heldPiece.IsRotating)
+
+        // --- дндюмн: наепрюммъ мю опна╡к юан опюбс ймнойс лхь╡ (ойл) ---
+        if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(1)) && !_heldPiece.IsRotating)
         {
             _heldPiece.StartSmoothRotation();
         }
+        // -----------------------------------------------------------------
     }
 
     private void HandlePieceMovement()
