@@ -10,6 +10,10 @@ public class PuzzleManager : MonoBehaviour
 {
     public static PuzzleManager Instance { get; private set; }
 
+    [Header("Game Flow Settings")]
+    [Tooltip("Якщо істина, гравці не зможуть піднімати фігури з сітки після завершення рівня.")]
+    [SerializeField] private bool lockPiecesOnLevelComplete = true;
+
     [Header("Налаштування руху фігур")]
     [SerializeField] private float pieceFollowSpeed = 20f;
     [SerializeField] private float pieceHeightWhenHeld = 0.5f;
@@ -169,6 +173,13 @@ public class PuzzleManager : MonoBehaviour
 
     private void PickUpPiece(PuzzlePiece piece, Vector3 hitPoint)
     {
+        // --- ПЕРЕВІРКА НА БЛОКУВАННЯ ПІСЛЯ ЗАВЕРШЕННЯ РІВНЯ ---
+        if (lockPiecesOnLevelComplete && _isLevelComplete && piece.IsPlaced)
+        {
+            return;
+        }
+        // -----------------------------------------------------
+
         if (_heldPiece != null) return;
 
         _heldPiece = piece;
