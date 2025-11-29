@@ -8,65 +8,74 @@ public class GameManager : MonoBehaviour
     [SerializeField] private LevelCollectionSO levelCollection;
     [SerializeField] private LevelLoader levelLoader;
 
+    [Header("Камера")]
+    [Tooltip("Посилання на контролер камери в сцені.")]
+    [SerializeField] private CameraController cameraController;
+
     [Header("UI Елементи")]
     [Tooltip("Об'єкт, який буде показано при завершенні рівня (напр. панель з текстом).")]
     [SerializeField] private GameObject levelCompleteScreen;
 
     public int CurrentLevelIndex { get; private set; }
 
-    // --- ДОДАНО: Публічна властивість для перевірки стану гри ---
     public bool IsLevelActive => _gameState == GameState.Playing;
 
-    private enum GameState { MainMenu, Playing, LevelComplete } // Додано MainMenu
+    private enum GameState { MainMenu, Playing, LevelComplete }
     private GameState _gameState;
 
-    // --- НОВЕ ПОЛЕ ДЛЯ ДЕБАГУ ---
     private bool _isDebugTextVisible = false;
+
+    // Зберігаємо посилання на поточний активний SO
+    private GridDataSO _activeLevelData;
 
     private void Awake()
     {
         if (Instance != null) { Destroy(gameObject); return; }
         Instance = this;
+
+        if (cameraController == null)
+        {
+            cameraController = FindObjectOfType<CameraController>();
+        }
     }
 
     private void Start()
     {
-        // Ховаємо екран завершення на старті
         if (levelCompleteScreen != null)
         {
             levelCompleteScreen.SetActive(false);
         }
 
-        // --- ЗМІНА: На старті ми не вантажимо рівень автоматично, а йдемо в меню ---
         _gameState = GameState.MainMenu;
-
-        // Очищаємо сцену (якщо раптом щось було)
         levelLoader.ClearLevel();
+    }
 
-        // UIManager на своєму Start() покаже MainMenu
+    private void OnDestroy()
+    {
+        if (_activeLevelData != null)
+        {
+            _activeLevelData.OnValuesChanged -= OnLevelSettingsChanged;
+        }
     }
 
     private void Update()
     {
-        // Якщо ми в меню, ігноруємо інпут гри
         if (_gameState == GameState.MainMenu) return;
 
-        // --- НОВА ЛОГІКА ДЛЯ ПЕРЕХОДУ НА НАСТУПНИЙ РІВЕНЬ ---
         if (_gameState == GameState.LevelComplete)
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                SwitchToNextLevel(true); // Завантажуємо наступний рівень, очищуючи його прогрес
+                SwitchToNextLevel(true);
             }
         }
 
-        // --- Логіка для дебагу та управління ---
         bool isShiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
         if (Input.GetKeyDown(KeyCode.F1)) SaveSystem.ClearLastCompletedLevel();
         if (Input.GetKeyDown(KeyCode.F2)) SaveSystem.ClearLevelProgress(CurrentLevelIndex);
 
-        if (Input.GetKeyDown(KeyCode.F3)) // --- ПЕРЕМИКАННЯ ДЕБАГ-ТЕКСТУ ---
+        if (Input.GetKeyDown(KeyCode.F3))
         {
             _isDebugTextVisible = !_isDebugTextVisible;
             if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
@@ -77,10 +86,8 @@ public class GameManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.R)) RestartCurrentLevel();
 
-        // --- ЛОГІКА UNDO/REDO (працює лише під час гри та коли НЕМАЄ паузи) ---
         if (_gameState == GameState.Playing)
         {
-            // Блокуємо Undo/Redo, якщо гра на паузі
             if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
 
             if (Input.GetKeyDown(KeyCode.Z))
@@ -96,16 +103,12 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Чіти переходу між рівнями
         if (Input.GetKeyDown(KeyCode.Mouse4)) SwitchToNextLevel(!isShiftHeld);
         if (Input.GetKeyDown(KeyCode.Mouse3)) SwitchToPreviousLevel(!isShiftHeld);
     }
 
-    // --- НОВІ ПУБЛІЧНІ МЕТОДИ ДЛЯ МЕНЮ ---
-
     public void StartGameAtLevel(int levelIndex, bool loadFromSave)
     {
-        // Переконуємось, що індекс валідний
         if (levelIndex < 0 || levelIndex >= levelCollection.levels.Count)
             levelIndex = 0;
 
@@ -116,19 +119,12 @@ public class GameManager : MonoBehaviour
     public void ReturnToMainMenu()
     {
         _gameState = GameState.MainMenu;
-
-        // Очищаємо поточний рівень
         levelLoader.ClearLevel();
-
-        // Показуємо UI меню
         UIManager.Instance.ShowMainMenu();
     }
 
-    // ---------------------------------------
-
     public void LoadLevel(int index, bool loadFromSave)
     {
-        // Скидаємо паузу
         if (PauseManager.Instance != null) PauseManager.Instance.ResetPauseState();
         else Time.timeScale = 1f;
 
@@ -139,22 +135,59 @@ public class GameManager : MonoBehaviour
         if (index >= levelCollection.levels.Count)
         {
             Debug.Log("Всі рівні пройдено!");
-            ReturnToMainMenu(); // Повертаємось в меню, якщо пройшли все
+            ReturnToMainMenu();
             return;
         }
 
-        if (PuzzleManager.Instance != null) PuzzleManager.Instance.ResetState();
+        if (_activeLevelData != null)
+        {
+            _activeLevelData.OnValuesChanged -= OnLevelSettingsChanged;
+        }
 
         CurrentLevelIndex = index;
-        // Зберігаємо індекс як "Останній зіграний"
         SaveSystem.SaveCurrentLevelIndex(CurrentLevelIndex);
 
-        levelLoader.LoadLevel(levelCollection.levels[CurrentLevelIndex], loadFromSave);
+        _activeLevelData = levelCollection.levels[CurrentLevelIndex];
+
+        _activeLevelData.OnValuesChanged += OnLevelSettingsChanged;
+
+        if (PuzzleManager.Instance != null) PuzzleManager.Instance.ResetState();
+
+        // 1. Завантажуємо рівень
+        levelLoader.LoadLevel(_activeLevelData, loadFromSave);
+
+        // 2. Налаштовуємо камеру та передаємо їй дані для редагування
+        if (cameraController != null)
+        {
+            cameraController.activeGridData = _activeLevelData; // !!! ВАЖЛИВО: Передаємо посилання для Editor Script
+            ApplyCameraSettings();
+        }
+
         _gameState = GameState.Playing;
 
         if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
         {
             GridBuildingSystem.Instance.GetGrid().SetDebugTextVisibility(_isDebugTextVisible);
+        }
+    }
+
+    private void OnLevelSettingsChanged()
+    {
+        if (_gameState == GameState.Playing && _activeLevelData != null)
+        {
+            ApplyCameraSettings();
+        }
+    }
+
+    private void ApplyCameraSettings()
+    {
+        if (cameraController != null && _activeLevelData != null)
+        {
+            cameraController.SetCameraBounds(
+                _activeLevelData.cameraBoundsCenter,
+                _activeLevelData.cameraBoundsSize,
+                _activeLevelData.cameraBoundsYRotation
+            );
         }
     }
 
@@ -198,13 +231,12 @@ public class GameManager : MonoBehaviour
         {
             _gameState = GameState.LevelComplete;
 
-            // Зберігаємо наступний рівень як поточний (щоб кнопка Continue в меню вела на нього)
             if (CurrentLevelIndex + 1 < levelCollection.levels.Count)
             {
                 SaveSystem.SaveCurrentLevelIndex(CurrentLevelIndex + 1);
             }
 
-            SaveSystem.ClearLevelProgress(CurrentLevelIndex); // Очищаємо прогрес пройденого
+            SaveSystem.ClearLevelProgress(CurrentLevelIndex);
             Debug.Log("Рівень пройдено! Натисніть ПРОБІЛ, щоб продовжити.");
 
             if (levelCompleteScreen != null)

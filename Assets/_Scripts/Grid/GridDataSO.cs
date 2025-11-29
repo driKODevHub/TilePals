@@ -5,6 +5,21 @@ using System;
 [CreateAssetMenu(fileName = "GridData", menuName = "GridBuildingSystem/Grid Data", order = 2)]
 public class GridDataSO : ScriptableObject
 {
+    // --- ПОДІЯ ДЛЯ РЕАКЦІЇ НА ЗМІНИ В РЕАЛЬНОМУ ЧАСІ ---
+    public event Action OnValuesChanged;
+
+    private void OnValidate()
+    {
+        OnValuesChanged?.Invoke();
+    }
+
+    // Публічний метод для виклику події з кастомних едіторів
+    public void TriggerOnValuesChanged()
+    {
+        OnValuesChanged?.Invoke();
+    }
+    // ---------------------------------------------------
+
     // --- Внутрішні структури даних для серіалізації ---
     [Serializable]
     public class GeneratedPieceData
@@ -29,7 +44,6 @@ public class GridDataSO : ScriptableObject
         [Min(1)] public int requiredCount;
         public Color color;
 
-        // --- НОВЕ ПОЛЕ ---
         [Tooltip("Максимальна кількість таких фігур у згенерованому пазлі. 1 = унікальна.")]
         [Min(1)] public int maxCount;
     }
@@ -47,6 +61,14 @@ public class GridDataSO : ScriptableObject
     public int height = 10;
     public float cellSize = 1f;
     public List<Vector2Int> buildableCells = new List<Vector2Int>();
+
+    [Header("Camera Settings (Boundaries)")]
+    [Tooltip("Центр дозволеної зони для камери (X, Z).")]
+    public Vector2 cameraBoundsCenter;
+    [Tooltip("Розмір дозволеної зони для камери (Width, Height).")]
+    public Vector2 cameraBoundsSize = new Vector2(20, 20);
+    [Tooltip("Кут повороту зони обмеження навколо осі Y (в градусах).")]
+    public float cameraBoundsYRotation = 0f;
 
     [Header("Piece Spawning Settings")]
     [Tooltip("Мінімальний гарантований відступ від краю ігрового поля (в клітинках).")]

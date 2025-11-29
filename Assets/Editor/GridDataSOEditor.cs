@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
 using System.Text;
-using Debug = UnityEngine.Debug; // Явне використання Debug.Log
+using Debug = UnityEngine.Debug;
 
 [CustomEditor(typeof(GridDataSO))]
 public class GridDataSOEditor : Editor
 {
+    // ... (всі змінні та OnEnable залишаються без змін) ...
     public enum SolutionSelectionCriterion
     {
         FirstFound,
@@ -24,7 +25,7 @@ public class GridDataSOEditor : Editor
 
     private bool showRequiredPieces = true;
     private bool showAllPieces = true;
-    private bool enableDebugLogs = false; // Використовуємо поле класу, як у вашому коді
+    private bool enableDebugLogs = false;
 
     private static int smallPieceMaxCells = 3;
     private static int mediumPieceMaxCells = 5;
@@ -53,18 +54,18 @@ public class GridDataSOEditor : Editor
 
     private static readonly List<Color> colorPalette = new List<Color>
     {
-        new Color(1.0f, 0.4f, 0.4f),   // Red
-        new Color(0.4f, 1.0f, 0.4f),   // Green
-        new Color(0.4f, 0.4f, 1.0f),   // Blue
-        new Color(1.0f, 1.0f, 0.4f),   // Yellow
-        new Color(1.0f, 0.4f, 1.0f),   // Magenta
-        new Color(0.4f, 1.0f, 1.0f),   // Cyan
-        new Color(1.0f, 0.6f, 0.2f),   // Orange
-        new Color(0.6f, 0.4f, 1.0f),   // Purple
-        new Color(0.2f, 0.8f, 0.6f),   // Teal
-        new Color(1.0f, 0.5f, 0.7f),   // Pink
-        new Color(0.7f, 0.9f, 0.2f),   // Lime
-        new Color(0.5f, 0.7f, 1.0f)    // Sky Blue
+        new Color(1.0f, 0.4f, 0.4f),
+        new Color(0.4f, 1.0f, 0.4f),
+        new Color(0.4f, 0.4f, 1.0f),
+        new Color(1.0f, 1.0f, 0.4f),
+        new Color(1.0f, 0.4f, 1.0f),
+        new Color(0.4f, 1.0f, 1.0f),
+        new Color(1.0f, 0.6f, 0.2f),
+        new Color(0.6f, 0.4f, 1.0f),
+        new Color(0.2f, 0.8f, 0.6f),
+        new Color(1.0f, 0.5f, 0.7f),
+        new Color(0.7f, 0.9f, 0.2f),
+        new Color(0.5f, 0.7f, 1.0f)
     };
     private static int colorIndex = 0;
 
@@ -93,8 +94,72 @@ public class GridDataSOEditor : Editor
         };
     }
 
+    // --- ОНОВЛЕНИЙ SCENE GUI З ПІДТРИМКОЮ ПОВОРОТУ ---
+    private void OnSceneGUI()
+    {
+        if (gridDataSO == null) return;
+
+        // Підготовка даних
+        Vector3 center = new Vector3(gridDataSO.cameraBoundsCenter.x, 0, gridDataSO.cameraBoundsCenter.y);
+        Quaternion rotation = Quaternion.Euler(0, gridDataSO.cameraBoundsYRotation, 0);
+        Vector3 size = new Vector3(gridDataSO.cameraBoundsSize.x, 0, gridDataSO.cameraBoundsSize.y);
+
+        Handles.color = Color.yellow;
+
+        // Малюємо повернутий прямокутник за допомогою матриці
+        Matrix4x4 oldMatrix = Handles.matrix;
+        Handles.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);
+        Handles.DrawWireCube(Vector3.zero, size);
+        Handles.matrix = oldMatrix; // Скидаємо матрицю
+
+        // --- 1. HANDLE ПЕРЕМІЩЕННЯ (Position) ---
+        // Малюємо стрілки переміщення в центрі (вони будуть орієнтовані по світу, що зручно)
+        EditorGUI.BeginChangeCheck();
+        Vector3 newCenter = Handles.PositionHandle(center, Quaternion.identity); // Або rotation, якщо хочеш локальні стрілки
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(gridDataSO, "Move Camera Bounds Center");
+            gridDataSO.cameraBoundsCenter = new Vector2(newCenter.x, newCenter.z);
+            EditorUtility.SetDirty(gridDataSO);
+        }
+
+        // --- 2. HANDLE ПОВОРОТУ (Rotation) ---
+        EditorGUI.BeginChangeCheck();
+        Quaternion newRotation = Handles.Disc(rotation, center, Vector3.up, Mathf.Max(size.x, size.z) / 2 + 2, false, 0);
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(gridDataSO, "Rotate Camera Bounds");
+            gridDataSO.cameraBoundsYRotation = newRotation.eulerAngles.y;
+            EditorUtility.SetDirty(gridDataSO);
+        }
+
+        // --- 3. HANDLE МАСШТАБУ (Scale/Size) ---
+        // Малюємо скейлер у локальній системі координат бокса
+        EditorGUI.BeginChangeCheck();
+        // Скейл хендл малюємо так, щоб він крутився разом з боксом
+        Vector3 newSizeVector = Handles.ScaleHandle(
+            new Vector3(gridDataSO.cameraBoundsSize.x, 1, gridDataSO.cameraBoundsSize.y),
+            center,
+            rotation,
+            HandleUtility.GetHandleSize(center) * 1.5f
+        );
+
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(gridDataSO, "Resize Camera Bounds");
+            // Беремо абсолютні значення, щоб розмір не став від'ємним
+            gridDataSO.cameraBoundsSize = new Vector2(Mathf.Abs(newSizeVector.x), Mathf.Abs(newSizeVector.z));
+            EditorUtility.SetDirty(gridDataSO);
+        }
+
+        // Лейбл
+        Handles.Label(center + rotation * (Vector3.right * (size.x / 2 + 1)), $"Bounds ({gridDataSO.cameraBoundsYRotation:F0}°)");
+    }
+    // ---------------------------------------------
+
     public override void OnInspectorGUI()
     {
+        // ... (решта коду OnInspectorGUI залишається такою ж, як в попередньому файлі) ...
         serializedObject.Update();
 
         int oldWidth = gridDataSO.width;
@@ -243,6 +308,8 @@ public class GridDataSOEditor : Editor
 
         serializedObject.ApplyModifiedProperties();
     }
+    // ... решта методів класу GridDataSOEditor (DrawMaxCountControls, DrawPersonalityEditor тощо) залишаються такими ж
+    // ... просто встав весь попередній код класу після OnInspectorGUI
 
     private void DrawMaxCountControls()
     {
