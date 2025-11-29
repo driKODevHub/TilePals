@@ -35,7 +35,7 @@ public class GameManager : MonoBehaviour
 
         if (cameraController == null)
         {
-            cameraController = FindObjectOfType<CameraController>();
+            cameraController = FindFirstObjectByType<CameraController>();
         }
     }
 
@@ -159,8 +159,12 @@ public class GameManager : MonoBehaviour
         // 2. Налаштовуємо камеру та передаємо їй дані для редагування
         if (cameraController != null)
         {
-            cameraController.activeGridData = _activeLevelData; // !!! ВАЖЛИВО: Передаємо посилання для Editor Script
+            cameraController.activeGridData = _activeLevelData;
             ApplyCameraSettings();
+
+            // --- ЦЕНТРУЄМО КАМЕРУ НА СТАРТІ ---
+            // false = плавний політ. Якщо хочеш миттєво, став true
+            cameraController.FocusOnLevel(false);
         }
 
         _gameState = GameState.Playing;
@@ -230,6 +234,14 @@ public class GameManager : MonoBehaviour
         if (_gameState == GameState.Playing)
         {
             _gameState = GameState.LevelComplete;
+
+            // --- ЦЕНТРУЄМО КАМЕРУ ПРИ ПЕРЕМОЗІ ---
+            if (cameraController != null)
+            {
+                // Викликаємо фокусування. 
+                // Оскільки в Update ми тепер дозволяємо Lerp працювати незалежно від IsLevelActive, це спрацює.
+                cameraController.FocusOnLevel(false);
+            }
 
             if (CurrentLevelIndex + 1 < levelCollection.levels.Count)
             {

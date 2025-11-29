@@ -13,18 +13,25 @@ public class CameraController : MonoBehaviour
     [SerializeField] float moveSpeed = 10f;
     [SerializeField] float rotationSpeed = 100f;
 
+    [Header("Zoom Settings")]
+    [Tooltip("Зум (висота камери), який встановлюється на початку рівня.")]
+    [SerializeField] float defaultZoom = 20f;
+
     [Header("Drag Pan Settings")]
     [Tooltip("Множник швидкості перетягування. 1.0 = 1:1 рух мишки до землі.")]
     [SerializeField] float dragSensitivity = 1.0f;
     [Tooltip("Чим вище значення, тим швидше камера зупиняється. Низьке значення = більше інерції (плавніше).")]
     [SerializeField] float movementSmoothing = 10f;
 
+    [Header("Focus Settings")]
+    [Tooltip("Швидкість (згладжування) руху камери при автоматичному фокусуванні (старт/перемога). Менше = плавніше.")]
+    [SerializeField] float focusSmoothing = 5f;
+
     [Header("Bounds Settings")]
     [Tooltip("Вмикає обмеження руху камери.")]
     [SerializeField] private bool enableBounds = true;
 
     // --- ПУБЛІЧНЕ ПОЛЕ ДЛЯ EDITOR SCRIPT ---
-    // Це посилання дозволить нам редагувати дані рівня прямо через цей об'єкт
     [HideInInspector] public GridDataSO activeGridData;
 
     // Приватні параметри меж (кешовані)
@@ -38,6 +45,7 @@ public class CameraController : MonoBehaviour
     private Vector3 targetFollowOffset;
 
     private bool isDragPanning = false;
+    private bool _isFocusing = false; // Чи перебуваємо ми в режимі автоматичного польоту до цілі
     private Vector3 _targetPosition;
 
     private Plane _groundPlane = new Plane(Vector3.up, Vector3.zero);
@@ -69,32 +77,70 @@ public class CameraController : MonoBehaviour
         _boundsRotationY = rotationY;
     }
 
+    // --- НОВИЙ МЕТОД: ЦЕНТРУВАННЯ КАМЕРИ ---
+    public void FocusOnLevel(bool immediate)
+    {
+        // 1. Встановлюємо ціль у центр баунд-бокса.
+        _targetPosition = new Vector3(_boundsCenter.x, transform.position.y, _boundsCenter.y);
+
+        // 2. Скидаємо зум до дефолтного
+        targetFollowOffset.y = defaultZoom;
+
+        // 3. Логіка переміщення
+        if (immediate)
+        {
+            transform.position = _targetPosition;
+            cinemachineFollow.FollowOffset = targetFollowOffset;
+            _isFocusing = false;
+        }
+        else
+        {
+            _isFocusing = true; // Вмикаємо режим фокусування (використовує focusSmoothing)
+        }
+    }
+
     private void Update()
     {
+        // --- 1. ПЕРЕВІРКА ПАУЗИ ---
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
-        if (GameManager.Instance != null && !GameManager.Instance.IsLevelActive) return;
 
-        HandleDragPan();
-        HandleMovement();
+        // --- 2. ОБРОБКА ІНПУТУ ---
+        if (GameManager.Instance != null && GameManager.Instance.IsLevelActive)
+        {
+            HandleDragPan();
+            HandleMovement();
+            HandleRotation();
+            HandleZoom();
+        }
+        else
+        {
+            isDragPanning = false;
+        }
 
-        // --- ЗАСТОСУВАННЯ ОБМЕЖЕНЬ (OBB Clamping) ---
+        // --- 3. ФІЗИКА КАМЕРИ (Працює ЗАВЖДИ) ---
+
+        // Застосування обмежень
         if (enableBounds)
         {
             _targetPosition = ClampPositionToOBB(_targetPosition, _boundsCenter, _boundsSize, _boundsRotationY);
         }
 
-        // --- ЗАСТОСУВАННЯ ЗГЛАДЖУВАННЯ ---
+        // Вибір згладжування: якщо фокусуємось - використовуємо окрему швидкість, інакше - звичайну
+        float currentSmoothing = _isFocusing ? focusSmoothing : movementSmoothing;
+
+        // Плавний рух (Smoothing)
         if (Vector3.Distance(transform.position, _targetPosition) > 0.001f)
         {
-            transform.position = Vector3.Lerp(transform.position, _targetPosition, Time.deltaTime * movementSmoothing);
+            transform.position = Vector3.Lerp(transform.position, _targetPosition, Time.deltaTime * currentSmoothing);
         }
         else
         {
             transform.position = _targetPosition;
+            _isFocusing = false; // Долетіли - вимикаємо режим
         }
 
-        HandleRotation();
-        HandleZoom();
+        // Плавний зум
+        cinemachineFollow.FollowOffset = Vector3.Lerp(cinemachineFollow.FollowOffset, targetFollowOffset, 5f * Time.deltaTime);
     }
 
     // --- Магія обмеження в повернутому боксі ---
@@ -125,6 +171,7 @@ public class CameraController : MonoBehaviour
         if (IsMiddleMouseButtonHeld())
         {
             isDragPanning = true;
+            _isFocusing = false; // Гравець перехопив керування
 
             Vector2 mousePos = GetMousePosition();
             Vector2 mouseDelta = GetMouseDelta();
@@ -154,9 +201,15 @@ public class CameraController : MonoBehaviour
     private void HandleMovement()
     {
         inputMoveDirection = GetMoveInputCameraDirections();
-        Vector3 moveVector = transform.forward * inputMoveDirection.z + transform.right * inputMoveDirection.x;
-        moveVector.y = 0;
-        _targetPosition += moveVector.normalized * moveSpeed * Time.deltaTime;
+
+        if (inputMoveDirection != Vector3.zero)
+        {
+            _isFocusing = false; // Гравець перехопив керування
+
+            Vector3 moveVector = transform.forward * inputMoveDirection.z + transform.right * inputMoveDirection.x;
+            moveVector.y = 0;
+            _targetPosition += moveVector.normalized * moveSpeed * Time.deltaTime;
+        }
     }
 
     private void HandleRotation()
@@ -169,11 +222,15 @@ public class CameraController : MonoBehaviour
     {
         if (isDragPanning) return;
 
-        float zoomIncreaseAmount = 1f;
-        targetFollowOffset.y += GetCameraZoomAmount() * zoomIncreaseAmount;
-        targetFollowOffset.y = Mathf.Clamp(targetFollowOffset.y, MIN_FOLLOW_Y_OFFSET, MAX_FOLLOW_Y_OFFSET);
-        float zoomSpeed = 5f;
-        cinemachineFollow.FollowOffset = Vector3.Lerp(cinemachineFollow.FollowOffset, targetFollowOffset, zoomSpeed * Time.deltaTime);
+        float zoomAmount = GetCameraZoomAmount();
+        if (Mathf.Abs(zoomAmount) > 0.01f)
+        {
+            _isFocusing = false; // Гравець зумить - теж вважаємо це перехопленням (опціонально)
+
+            float zoomIncreaseAmount = 1f;
+            targetFollowOffset.y += zoomAmount * zoomIncreaseAmount;
+            targetFollowOffset.y = Mathf.Clamp(targetFollowOffset.y, MIN_FOLLOW_Y_OFFSET, MAX_FOLLOW_Y_OFFSET);
+        }
     }
 
     // --- HELPER METHODS ---

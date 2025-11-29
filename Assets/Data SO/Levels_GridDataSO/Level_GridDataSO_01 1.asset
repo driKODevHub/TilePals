@@ -32,8 +32,8 @@ MonoBehaviour:
   - {x: 3, y: 1}
   - {x: 3, y: 2}
   - {x: 3, y: 3}
-  cameraBoundsCenter: {x: 3.2906642, y: 9.093308}
-  cameraBoundsSize: {x: 2.9190042, y: 3.455008}
+  cameraBoundsCenter: {x: 3.2906642, y: 8.8282385}
+  cameraBoundsSize: {x: 2.9190042, y: 2.924864}
   cameraBoundsYRotation: 0
   boardToSpawnPadding: 1
   pieceToPiecePadding: 1

@@ -1356,6 +1356,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelCollection: {fileID: 11400000, guid: 922f6d2db4ab94a4fbe4f06bf5b9c74c, type: 2}
   levelLoader: {fileID: 1463119169}
+  cameraController: {fileID: 0}
   levelCompleteScreen: {fileID: 31567854}
 --- !u!4 &631878973
 Transform:
@@ -2249,6 +2250,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d1d7abec0c690364583b165b4ee4c2f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lockPiecesOnLevelComplete: 1
+  smoothMovementOffGrid: 1
   pieceFollowSpeed: 20
   pieceHeightWhenHeld: 0.5
   shakenVelocityThreshold: 15
@@ -2619,8 +2622,11 @@ MonoBehaviour:
   cinemachineCamera: {fileID: 8434513683717558060}
   moveSpeed: 15
   rotationSpeed: 120
+  defaultZoom: 15
   dragSensitivity: 3
   movementSmoothing: 10
+  enableBounds: 1
+  activeGridData: {fileID: 0}
 --- !u!4 &1353730456
 Transform:
   m_ObjectHideFlags: 0
