@@ -33,10 +33,10 @@ MonoBehaviour:
   alphaCutoutTexture: {fileID: 0}
   alphaCutoutThreshold: 0.5
   alphaCutoutUVTransform: {x: 0, y: 0, z: 0, w: 0}
-  gpuInstancing: 0
+  gpuInstancing: 1
   vertexAnimation: 0
   color: {r: 1, g: 1, b: 1, a: 1}
-  width: 20
+  width: 38
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -58,10 +58,10 @@ MonoBehaviour:
   widthControl: 0
   sharedWidth: 10
   gap: 0
-  blendMode: 0
+  blendMode: 1
   customDepthBuffer: 0
   silhouetteBufferFormat: 0
-  occludedColor: {r: 1, g: 0, b: 0, a: 1}
+  occludedColor: {r: 0.9010617, g: 1, b: 0.33018857, a: 1}
   clearStencil: 0
   scaleWithResolution: 0
   referenceResolution: 2
