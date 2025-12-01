@@ -204,9 +204,54 @@ MonoBehaviour:
   m_ForceModule: {fileID: 0}
   m_ForceScale: 1
   m_SimulateSpace: {fileID: 0}
+--- !u!137 &2265056354739280396 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 1060394155592859804, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
+  m_PrefabInstance: {fileID: 1285881173242452624}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &2287269229339555246 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 1037619172719046462, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
+  m_PrefabInstance: {fileID: 1285881173242452624}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &2856211318039793709 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3925752471121349309, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
+  m_PrefabInstance: {fileID: 1285881173242452624}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &5211443333728190160 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 6452138762352239680, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
+  m_PrefabInstance: {fileID: 1285881173242452624}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &5392500903260256380 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -2662087950330338580, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
+  m_PrefabInstance: {fileID: 1285881173242452624}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &6029223085139295048 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -4434844491144928808, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
+  m_PrefabInstance: {fileID: 1285881173242452624}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &6621499793253032725 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5349173443727325573, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
+  m_PrefabInstance: {fileID: 1285881173242452624}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &6746705031824986940 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5510508625459562924, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
+  m_PrefabInstance: {fileID: 1285881173242452624}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6792336206369662170 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3487079309363200438, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
+  m_PrefabInstance: {fileID: 1285881173242452624}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &8125867335974777527 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -2225693734660249561, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
   m_PrefabInstance: {fileID: 1285881173242452624}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8980564368416025821
@@ -249,6 +294,46 @@ PrefabInstance:
       propertyPath: pieceTypeSO
       value: 
       objectReference: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: outlineSkinnedMeshRenderers.Array.size
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: 'outlineSkinnedMeshRenderers.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2287269229339555246}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: 'outlineSkinnedMeshRenderers.Array.data[1]'
+      value: 
+      objectReference: {fileID: 6746705031824986940}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: 'outlineSkinnedMeshRenderers.Array.data[2]'
+      value: 
+      objectReference: {fileID: 2265056354739280396}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: 'outlineSkinnedMeshRenderers.Array.data[3]'
+      value: 
+      objectReference: {fileID: 2856211318039793709}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: 'outlineSkinnedMeshRenderers.Array.data[4]'
+      value: 
+      objectReference: {fileID: 6029223085139295048}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: 'outlineSkinnedMeshRenderers.Array.data[5]'
+      value: 
+      objectReference: {fileID: 6621499793253032725}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: 'outlineSkinnedMeshRenderers.Array.data[6]'
+      value: 
+      objectReference: {fileID: 5392500903260256380}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: 'outlineSkinnedMeshRenderers.Array.data[7]'
+      value: 
+      objectReference: {fileID: 8125867335974777527}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: 'outlineSkinnedMeshRenderers.Array.data[8]'
+      value: 
+      objectReference: {fileID: 5211443333728190160}
     - target: {fileID: 4558718944081910837, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a
       value: 0

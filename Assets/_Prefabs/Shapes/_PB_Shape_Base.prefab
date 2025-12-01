@@ -723,6 +723,11 @@ MonoBehaviour:
   pieceTypeSO: {fileID: 0}
   meshesToColor:
   - {fileID: 6136950015140971657}
+  outlineLayerMask:
+    serializedVersion: 2
+    m_Bits: 512
+  outlineMeshRenderers: []
+  outlineSkinnedMeshRenderers: []
   rotationSpeed: 720
   facialController: {fileID: 8371808012640910952}
 --- !u!114 &4053038559910145283

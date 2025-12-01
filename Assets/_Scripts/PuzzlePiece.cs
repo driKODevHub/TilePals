@@ -7,11 +7,19 @@ public class PuzzlePiece : MonoBehaviour
     [Header("Налаштування фігури")]
     [SerializeField] private PlacedObjectTypeSO pieceTypeSO;
 
-    [Header("Налаштування візуалу")]
+    [Header("Налаштування візуалу (Колір/Темперамент)")]
     [SerializeField] private List<MeshRenderer> meshesToColor;
 
+    [Header("Налаштування Аутлайну (Linework)")]
+    [Tooltip("Виберіть шар, на якому працює ефект аутлайну.")]
+    [SerializeField] private LayerMask outlineLayerMask;
+    [Tooltip("Звичайні MeshRenderers, які мають підсвічуватись.")]
+    [SerializeField] private List<MeshRenderer> outlineMeshRenderers;
+    [Tooltip("SkinnedMeshRenderers (хвости, вуха), які мають підсвічуватись.")]
+    [SerializeField] private List<SkinnedMeshRenderer> outlineSkinnedMeshRenderers;
+
     [Header("Налаштування обертання")]
-    [SerializeField] private float rotationSpeed = 360f; // Трохи пришвидшимо для кращого відчуття
+    [SerializeField] private float rotationSpeed = 360f;
 
     [Header("Посилання на компоненти особистості")]
     [SerializeField] private FacialExpressionController facialController;
@@ -28,6 +36,13 @@ public class PuzzlePiece : MonoBehaviour
     // Зміщення відносної клітинки (на яку клікнули) до точки прив'язки фігури (0,0)
     public Vector2Int ClickOffset { get; set; }
 
+    // --- ЗМІННІ ДЛЯ АУТЛАЙНУ ---
+    private int _outlineLayerIndex;
+    private Dictionary<Renderer, int> _originalLayers = new Dictionary<Renderer, int>();
+    private bool _isOutlineActive = false;
+    private bool _isOutlineLocked = false;
+    // ----------------------------
+
     private Coroutine _rotationCoroutine;
     private Dictionary<MeshRenderer, Material[]> _originalMaterials;
     private bool _isInvalidMaterialApplied = false;
@@ -35,6 +50,8 @@ public class PuzzlePiece : MonoBehaviour
     private void Awake()
     {
         CacheOriginalMaterials();
+        InitializeOutlineData();
+
         if (facialController == null)
         {
             facialController = GetComponentInChildren<FacialExpressionController>();
@@ -54,6 +71,111 @@ public class PuzzlePiece : MonoBehaviour
             }
         }
     }
+
+    // --- ЛОГІКА АУТЛАЙНУ ---
+    private void InitializeOutlineData()
+    {
+        // Перетворюємо бітову маску в індекс шару (0-31)
+        // Беремо перший знайдений біт у масці
+        int maskValue = outlineLayerMask.value;
+        if (maskValue > 0)
+        {
+            _outlineLayerIndex = 0;
+            while ((maskValue & 1) == 0)
+            {
+                maskValue >>= 1;
+                _outlineLayerIndex++;
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Outline Layer Mask is not set for {name}. Defaulting to layer 0.");
+            _outlineLayerIndex = 0;
+        }
+
+        // Кешуємо початкові шари для всіх рендерерів аутлайну
+        CacheRendererLayers(outlineMeshRenderers);
+        CacheRendererLayers(outlineSkinnedMeshRenderers);
+    }
+
+    private void CacheRendererLayers<T>(List<T> renderers) where T : Renderer
+    {
+        if (renderers == null) return;
+        foreach (var r in renderers)
+        {
+            if (r != null && !_originalLayers.ContainsKey(r))
+            {
+                _originalLayers[r] = r.gameObject.layer;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Вмикає або вимикає аутлайн. Якщо заблоковано (_isOutlineLocked), вимкнення ігнорується, поки не зніметься блок.
+    /// </summary>
+    public void SetOutline(bool isActive)
+    {
+        // Якщо система заблокована (фігуру тримають), ми не дозволяємо вимкнути аутлайн через ховер
+        if (_isOutlineLocked && !isActive) return;
+
+        // Оптимізація: не робимо зайвих дій, якщо стан не змінюється
+        if (_isOutlineActive == isActive) return;
+
+        _isOutlineActive = isActive;
+        ApplyLayerState(isActive);
+    }
+
+    /// <summary>
+    /// Блокує стан аутлайну (наприклад, коли ми взяли фігуру).
+    /// При value = true, аутлайн вмикається і не реагує на SetOutline(false).
+    /// При value = false, аутлайн вимикається.
+    /// </summary>
+    public void SetOutlineLocked(bool isLocked)
+    {
+        _isOutlineLocked = isLocked;
+
+        if (isLocked)
+        {
+            // Автоматично вмикаємо аутлайн при блокуванні
+            SetOutline(true);
+        }
+        else
+        {
+            // При розблокуванні вимикаємо (PuzzleManager потім сам увімкне ховер, якщо мишка все ще там)
+            _isOutlineActive = false;
+            ApplyLayerState(false);
+        }
+    }
+
+    private void ApplyLayerState(bool isOutlineOn)
+    {
+        SetRenderersLayer(outlineMeshRenderers, isOutlineOn);
+        SetRenderersLayer(outlineSkinnedMeshRenderers, isOutlineOn);
+    }
+
+    private void SetRenderersLayer<T>(List<T> renderers, bool isOutlineOn) where T : Renderer
+    {
+        if (renderers == null) return;
+
+        foreach (var r in renderers)
+        {
+            if (r == null) continue;
+
+            if (isOutlineOn)
+            {
+                r.gameObject.layer = _outlineLayerIndex;
+            }
+            else
+            {
+                // Повертаємо на той шар, який був при ініціалізації
+                if (_originalLayers.TryGetValue(r, out int originalLayer))
+                {
+                    r.gameObject.layer = originalLayer;
+                }
+            }
+        }
+    }
+    // -----------------------
 
     public void SetTemperamentMaterial(Material temperamentMaterial)
     {
@@ -129,35 +251,27 @@ public class PuzzlePiece : MonoBehaviour
         _rotationCoroutine = StartCoroutine(SmoothRotationCoroutine());
     }
 
-    // --- ОНОВЛЕНИЙ МЕТОД ОБЕРТАННЯ ---
     private IEnumerator SmoothRotationCoroutine()
     {
         IsRotating = true;
 
-        // 1. Отримуємо параметри сітки
         float cellSize = 1f;
         if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
         {
             cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
         }
 
-        // 2. Обчислюємо поточну точку 0,0 (Grid Origin) у світових координатах
-        // transform.position = GridOrigin + VisualOffset
         Vector2Int currentRotationOffset = pieceTypeSO.GetRotationOffset(CurrentDirection);
         Vector3 currentVisualOffset = new Vector3(currentRotationOffset.x, 0, currentRotationOffset.y) * cellSize;
 
-        // Коригуємо Y, щоб не втратити висоту підйому фігури
         Vector3 currentGridOrigin = transform.position;
         currentGridOrigin.x -= currentVisualOffset.x;
         currentGridOrigin.z -= currentVisualOffset.z;
 
-        // 3. Обчислюємо точку півота (Центр клітинки, за яку тримаємо)
-        // Pivot = GridOrigin + ClickOffset * CellSize + HalfCellSize
         Vector3 clickOffsetVector = new Vector3(ClickOffset.x, 0, ClickOffset.y) * cellSize;
         Vector3 halfCellVector = new Vector3(cellSize * 0.5f, 0, cellSize * 0.5f);
         Vector3 pivotPoint = currentGridOrigin + clickOffsetVector + halfCellVector;
 
-        // 4. Налаштування обертання
         PlacedObjectTypeSO.Dir nextDirection = PlacedObjectTypeSO.GetNextDirencion(CurrentDirection);
         float targetAngle = pieceTypeSO.GetRotationAngle(nextDirection);
         Quaternion targetRotation = Quaternion.Euler(0, targetAngle, 0);
@@ -170,33 +284,24 @@ public class PuzzlePiece : MonoBehaviour
             float rotationAmount = Time.deltaTime * rotationSpeed;
             rotationAmount = Mathf.Min(rotationAmount, angleToRotate - totalRotation);
 
-            // Обертаємо трансформ довкола нашої точки півота (клітинки під мишкою)
             transform.RotateAround(pivotPoint, Vector3.up, rotationAmount);
 
             totalRotation += rotationAmount;
             yield return null;
         }
 
-        // 5. Фіналізація
         transform.rotation = targetRotation;
         CurrentDirection = nextDirection;
-
-        // 6. Перерахунок ClickOffset
-        // Після повороту фігура змістилася, але півот залишився на місці.
-        // Нам треба знайти, які тепер координати (x, z) у цього півота відносно НОВОГО Origin фігури.
 
         Vector2Int newRotationOffset = pieceTypeSO.GetRotationOffset(CurrentDirection);
         Vector3 newVisualOffset = new Vector3(newRotationOffset.x, 0, newRotationOffset.y) * cellSize;
 
-        // Знаходимо де тепер теоретичний Origin
         Vector3 newGridOrigin = transform.position;
         newGridOrigin.x -= newVisualOffset.x;
         newGridOrigin.z -= newVisualOffset.z;
 
-        // Вектор від Origin до Pivot
         Vector3 newOffsetVector = pivotPoint - newGridOrigin - halfCellVector;
 
-        // Конвертуємо назад у координати сітки
         ClickOffset = new Vector2Int(
             Mathf.RoundToInt(newOffsetVector.x / cellSize),
             Mathf.RoundToInt(newOffsetVector.z / cellSize)

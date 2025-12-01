@@ -34,6 +34,9 @@ public class PuzzleManager : MonoBehaviour
     private PuzzlePiece _pieceUnderMouse;
     private PuzzlePiece _pieceBeingPetted;
 
+    // ƒл€ в≥дстеженн€ аутлайну
+    private PuzzlePiece _lastHoveredPiece;
+
     // «м≥нн≥ дл€ лог≥ки
     private Vector3 _initialPiecePosition;
     private Quaternion _initialPieceRotation;
@@ -63,6 +66,11 @@ public class PuzzleManager : MonoBehaviour
         _heldPiece = null;
         _pieceUnderMouse = null;
         _pieceBeingPetted = null;
+        if (_lastHoveredPiece != null)
+        {
+            _lastHoveredPiece.SetOutline(false);
+            _lastHoveredPiece = null;
+        }
         _isLevelComplete = false;
         _piecesBeingFlownOver.Clear();
 
@@ -99,6 +107,21 @@ public class PuzzleManager : MonoBehaviour
         _lastMousePosition = Input.mousePosition;
 
         _pieceUnderMouse = null;
+
+        // --- Ћќ√≤ ј ј”“Ћј…Ќ” “ј ’ќ¬≈–” ---
+
+        // 1. якщо ми щось тримаЇмо, ми Ќ≈ скануЇмо ≥нш≥ ф≥гури на ховер (блок аутлайну дл€ ≥нших)
+        if (_heldPiece != null)
+        {
+            if (_lastHoveredPiece != null && _lastHoveredPiece != _heldPiece)
+            {
+                _lastHoveredPiece.SetOutline(false);
+                _lastHoveredPiece = null;
+            }
+            return;
+        }
+
+        // 2. —тандартний рейкаст дл€ пошуку ф≥гур
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
         {
@@ -106,6 +129,29 @@ public class PuzzleManager : MonoBehaviour
             if (piece != null)
             {
                 _pieceUnderMouse = piece;
+
+                // якщо навели на нову ф≥гуру або ту саму
+                if (_lastHoveredPiece != piece)
+                {
+                    // ¬имикаЇмо стару
+                    if (_lastHoveredPiece != null)
+                    {
+                        _lastHoveredPiece.SetOutline(false);
+                    }
+
+                    // ¬микаЇмо нову
+                    piece.SetOutline(true);
+                    _lastHoveredPiece = piece;
+                }
+            }
+        }
+        else
+        {
+            // якщо мишка н≥ на чому - вимикаЇмо останн≥й аутлайн
+            if (_lastHoveredPiece != null)
+            {
+                _lastHoveredPiece.SetOutline(false);
+                _lastHoveredPiece = null;
             }
         }
     }
@@ -184,6 +230,13 @@ public class PuzzleManager : MonoBehaviour
         if (_heldPiece != null) return;
 
         _heldPiece = piece;
+
+        // --- ЅЋќ ”¬јЌЌя ј”“Ћј…Ќ” ---
+        // ЋокаЇмо аутлайн, щоб в≥н не зник, €кщо мишка з≥сковзне, 
+        // ≥ щоб не можна було п≥дсв≥тити ≥нш≥ ф≥гури
+        _heldPiece.SetOutlineLocked(true);
+        // ----------------------------
+
         _initialPiecePosition = piece.transform.position;
         _initialPieceRotation = piece.transform.rotation;
         _lastHeldPiecePosition = piece.transform.position;
@@ -191,7 +244,8 @@ public class PuzzleManager : MonoBehaviour
 
         // --- Ћќ√≤ ј ќЅ„»—Ћ≈ЌЌя «ћ≤ў≈ЌЌя  Ћ≤ ” ---
         float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
-        Vector3 pieceOriginWorld = piece.transform.position - new Vector3(piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection).x, 0, piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection).y) * cellSize;
+        Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection);
+        Vector3 pieceOriginWorld = piece.transform.position - new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
 
         GridBuildingSystem.Instance.GetGrid().GetXZ(hitPoint, out int clickX, out int clickZ);
         GridBuildingSystem.Instance.GetGrid().GetXZ(pieceOriginWorld, out int originX, out int originZ);
@@ -370,6 +424,11 @@ public class PuzzleManager : MonoBehaviour
         {
             PuzzlePiece placedPiece = _heldPiece;
             _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
+
+            // --- –ќ«ЅЋќ ”¬јЌЌя ј”“Ћј…Ќ” ---
+            _heldPiece.SetOutlineLocked(false);
+            // ------------------------------
+
             CommandHistory.AddCommand(placeCommand);
 
             OnPieceDropped?.Invoke(placedPiece);
@@ -389,6 +448,11 @@ public class PuzzleManager : MonoBehaviour
         {
             PuzzlePiece placedPiece = _heldPiece;
             _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
+
+            // --- –ќ«ЅЋќ ”¬јЌЌя ј”“Ћј…Ќ” ---
+            _heldPiece.SetOutlineLocked(false);
+            // ------------------------------
+
             CommandHistory.AddCommand(placeCommand);
 
             OnPieceDropped?.Invoke(placedPiece);

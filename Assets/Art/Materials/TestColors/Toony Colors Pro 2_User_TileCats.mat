@@ -72,7 +72,7 @@ Material:
     - _SketchTexture_OffsetSpeed: 121.19
     - _SpecularRoughnessPBR: 0.707
     - _SpecularShadowAttenuation: 4.25
-    - _SpecularSmoothness: 0.16
+    - _SpecularSmoothness: 0.24
     - _SpecularToonBands: 1.36
     - _SpecularToonSize: 0.033
     - _SpecularToonSmoothness: 0.001
@@ -91,6 +91,6 @@ Material:
     - _RimColor: {r: 0.1293745, g: 0.07865586, b: 0.2578616, a: 0.5}
     - _SColor: {r: 0.3207547, g: 0.3207547, b: 0.3207547, a: 1}
     - _ShadowLineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _SpecularColor: {r: 0.15723258, g: 0.15723258, b: 0.15723258, a: 1}
+    - _SpecularColor: {r: 0.07, g: 0.07, b: 0.07, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
