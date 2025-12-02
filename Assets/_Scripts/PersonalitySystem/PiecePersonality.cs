@@ -29,7 +29,7 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private float tickleSpeedThreshold = 800f;
 
     [Header("Налаштування погляду")]
-    [Tooltip("Висота площини очей над землею. Налаштуйте так, щоб курсор на носі кота давав коректний погляд.")]
+    [Tooltip("Висота площини очей над землею. ВАЖЛИВО: Налаштуйте це значення, щоб воно співпадало з реальною висотою очей кота (Блакитний квадрат у Gizmos), інакше він буде дивитись вгору.")]
     [SerializeField] private float lookPlaneHeight = 0.5f;
 
     [SerializeField] private float idleLookIntervalMin = 1.5f;
@@ -48,6 +48,10 @@ public class PiecePersonality : MonoBehaviour
     private PuzzlePiece _puzzlePiece;
     private EmotionProfileSO _lastPettingEmotion;
     private bool _isLookingRandomly = false;
+
+    // Змінні для дебагу візуалізації погляду
+    private Vector3 _debugLookTarget;
+    private bool _debugHasTarget;
 
     private enum IdleGazeState { LookAtRandom, LookAtNeighbor, LookAtPlayer, Wait }
 
@@ -168,9 +172,17 @@ public class PiecePersonality : MonoBehaviour
 
     private void Update()
     {
-        if (!_isHeld && !_isSleeping && !_isBeingPetted && !_isLookingRandomly && facialController != null)
+        if (!_isHeld && !_isSleeping && !_isBeingPetted && facialController != null)
         {
-            LookAtCursor();
+            if (_isLookingRandomly)
+            {
+                // Якщо ми в режимі випадкового погляду, логіка в корутині
+            }
+            else
+            {
+                // Інакше дивимось на курсор
+                LookAtCursor();
+            }
         }
     }
 
@@ -384,20 +396,26 @@ public class PiecePersonality : MonoBehaviour
     // --- ОНОВЛЕНИЙ МЕТОД ДЛЯ РЕЙКАСТУ ---
     private void LookAtCursor()
     {
-        // 1. Створюємо промінь від камери через позицію миші
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-        // 2. Створюємо віртуальну площину на висоті очей цього конкретного кота
-        // (transform.up - це нормаль площини, transform.position - точка на площині)
-        // ДОДАНО: lookPlaneHeight, щоб підняти площину перетину вище підлоги
+        // Створюємо площину на висоті lookPlaneHeight
+        // Використовуємо world position по Y + lookPlaneHeight, або просто фіксовану висоту,
+        // якщо кіт стоїть на землі.
+        // Оскільки фігури рухаються, краще брати позицію фігури + зміщення.
         Vector3 planePoint = transform.position + Vector3.up * lookPlaneHeight;
         Plane plane = new Plane(Vector3.up, planePoint);
 
-        // 3. Знаходимо, де промінь перетинає цю площину
         if (plane.Raycast(ray, out float distance))
         {
             Vector3 targetPoint = ray.GetPoint(distance);
+            _debugLookTarget = targetPoint;
+            _debugHasTarget = true;
+
             if (facialController != null) facialController.LookAt(targetPoint);
+        }
+        else
+        {
+            _debugHasTarget = false;
         }
     }
 
@@ -426,6 +444,7 @@ public class PiecePersonality : MonoBehaviour
                         Vector3 randomDirection = Random.insideUnitSphere * idleLookRadius;
                         randomDirection.y = 0;
                         Vector3 lookTarget = transform.position + randomDirection;
+                        _debugLookTarget = lookTarget; _debugHasTarget = true;
                         facialController.LookAt(lookTarget);
                         break;
 
@@ -433,12 +452,14 @@ public class PiecePersonality : MonoBehaviour
                         if (hasNeighbors)
                         {
                             PiecePersonality targetPiece = allPieces[Random.Range(0, allPieces.Count)];
+                            _debugLookTarget = targetPiece.transform.position; _debugHasTarget = true;
                             facialController.LookAt(targetPiece.transform.position);
                         }
                         break;
 
                     case IdleGazeState.LookAtPlayer:
                         facialController.ResetPupilPosition();
+                        _debugHasTarget = false;
                         break;
 
                     case IdleGazeState.Wait:
@@ -449,6 +470,29 @@ public class PiecePersonality : MonoBehaviour
             yield return new WaitForSeconds(Random.Range(idleLookDurationMin, idleLookDurationMax));
 
             _isLookingRandomly = false;
+        }
+    }
+
+    // --- ВІЗУАЛІЗАЦІЯ ПЛОЩИНИ ПОГЛЯДУ ---
+    private void OnDrawGizmosSelected()
+    {
+        // 1. Малюємо площину погляду (Блакитна)
+        Gizmos.color = new Color(0, 1, 1, 0.2f);
+        Vector3 planeCenter = transform.position + Vector3.up * lookPlaneHeight;
+        Gizmos.DrawCube(planeCenter, new Vector3(5, 0.01f, 5));
+
+        // Малюємо рамку
+        Gizmos.color = new Color(0, 1, 1, 0.5f);
+        Gizmos.DrawWireCube(planeCenter, new Vector3(5, 0.01f, 5));
+
+        // 2. Малюємо лінію погляду (Жовта)
+        if (Application.isPlaying && _debugHasTarget)
+        {
+            Gizmos.color = Color.yellow;
+            // Малюємо лінію від центру очей (приблизно) до цілі
+            Vector3 eyeApproxPos = transform.position + Vector3.up * lookPlaneHeight;
+            Gizmos.DrawLine(eyeApproxPos, _debugLookTarget);
+            Gizmos.DrawWireSphere(_debugLookTarget, 0.2f);
         }
     }
 }
