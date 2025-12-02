@@ -1,18 +1,15 @@
 using UnityEngine;
 
 /// <summary>
-/// ScriptableObject, що описує один конкретний стан очей (напр., "Щасливі", "Сонні").
-/// Тепер використовує спрайти та підтримує маску для зіниці.
+/// Заглушка для майбутньої системи 3D емоцій.
+/// Поки що використовується для збереження сумісності з EmotionProfileSO.
 /// </summary>
 [CreateAssetMenu(fileName = "EyeState_", menuName = "Puzzle/Personality/Eye State")]
 public class EyeStateSO : ScriptableObject
 {
-    [Tooltip("Спрайт для форми ока (білок, повіки).")]
-    public Sprite eyeShapeSprite;
+    [Header("3D Emotion Settings")]
+    [Tooltip("Наприклад, ім'я blendshape для очей або посилання на меш.")]
+    public string shapeName;
 
-    [Tooltip("Спрайт для зіниці.")]
-    public Sprite pupilSprite;
-
-    [Tooltip("Спрайт, що буде використовуватися як маска для зіниці. Зазвичай такий самий, як і форма ока.")]
-    public Sprite eyeMaskSprite;
+    // Тут пізніше будуть додаткові параметри для емоцій (Blendshapes, Material offsets тощо)
 }

@@ -2,183 +2,186 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-/// <summary>
-/// Керує візуальним відображенням емоцій за допомогою SpriteRenderer,
-/// включаючи моргання, рух зіниць, порядок сортування та маскування.
-/// </summary>
 public class FacialExpressionController : MonoBehaviour
 {
     [System.Serializable]
-    public struct FeatureRenderer
+    public class EyeRig
     {
-        public FeatureStateSO.FeatureType featureType;
-        public SpriteRenderer featureRenderer;
+        [Header("References")]
+        [Tooltip("Важливо: Z - вперед, Y - вгору.")]
+        public Transform referencePivot;
+
+        [Tooltip("Кістка зіниці.")]
+        public Transform eyeBone;
+
+        [Tooltip("Об'єкт повіки.")]
+        public GameObject blinkObject;
+
+        [Header("Limits & Settings")]
+        [Tooltip("Зменш це значення, щоб обмежити фізичний радіус руху кістки.")]
+        public float scaleMultiplier = 0.1f;
+
+        public bool useEllipticalClamp = true;
+
+        [Tooltip("Межі (0..1), де 1 = 90 градусів повороту.")]
+        public float limitLeft = 0.5f;
+        public float limitRight = 0.5f;
+        public float limitUp = 0.5f;
+        public float limitDown = 0.5f;
+
+        [Header("Resting State")]
+        [Tooltip("Позиція зіниці, коли кіт нікуди не дивиться (Reset). X=Hor, Y=Vert. Спробуй Y=-0.2 щоб трохи опустити.")]
+        public Vector2 restPosition = Vector2.zero;
+
+        // Внутрішній стан: поточний "віртуальний" поворот ока у світовому просторі
+        [HideInInspector] public Quaternion currentWorldRotation;
     }
 
-    [System.Serializable]
-    public struct EyeRenderers
-    {
-        public SpriteRenderer leftEyeShape;
-        public SpriteRenderer leftPupil;
-        public SpriteMask leftEyeMask;
-        [Space]
-        public SpriteRenderer rightEyeShape;
-        public SpriteRenderer rightPupil;
-        public SpriteMask rightEyeMask;
-    }
+    [Header("3D Eye Configuration")]
+    [Tooltip("Чутливість. 1.0 = 1:1 слідування. Більше = око рухається швидше за ціль.")]
+    [SerializeField] private float lookSensitivity = 1.0f;
+    [SerializeField] private EyeRig leftEye;
+    [SerializeField] private EyeRig rightEye;
 
-    [Header("Налаштування Рис Обличчя")]
-    [SerializeField] private EyeRenderers eyes;
-    [SerializeField] private List<FeatureRenderer> otherFeatures;
+    [Header("Smoothing (FEEL Style)")]
+    [Tooltip("Швидкість повороту (градуси/сек). Як в FEEL.")]
+    [SerializeField] private float rotationSpeed = 30f;
+    [Tooltip("Додаткова інерція (0 = немає, 1 = дуже повільно).")]
+    [Range(0f, 1f)][SerializeField] private float damping = 0.1f;
 
-    [Header("Налаштування Поведінки Очей")]
+    [Header("Blinking")]
     [SerializeField] private float blinkIntervalMin = 3f;
     [SerializeField] private float blinkIntervalMax = 7f;
-    [SerializeField] private float blinkDuration = 0.1f;
-    [SerializeField] private float pupilMovementRadius = 0.15f;
-    [Tooltip("Швидкість, з якою зіниці плавно рухаються до цілі.")]
-    [SerializeField] private float pupilLookSpeed = 8f;
+    [SerializeField] private float blinkDuration = 0.15f;
+    [SerializeField] private bool hideObjectOnBlink = true;
 
+    [Header("Axis Configuration")]
+    [SerializeField] private bool yAxisIsUp = true;
 
-    [Header("Налаштування Сортування")]
-    [SerializeField] private int sortingOrderIdle = 5;
-    [SerializeField] private int sortingOrderHeld = 15;
+    [Header("Debug")]
+    [SerializeField] private bool showGizmos = true;
+    [SerializeField] private float gizmoSphereSize = 0.005f;
 
-    private Dictionary<FeatureStateSO.FeatureType, SpriteRenderer> _rendererMap;
-    private Vector3 _leftPupilOrigin, _rightPupilOrigin;
-
-    private Vector3 _leftPupilTargetLocalPos;
-    private Vector3 _rightPupilTargetLocalPos;
     private Coroutine _blinkingCoroutine;
-    private bool _areEyesVisible = true;
-
-
-    private void Awake()
-    {
-        _rendererMap = new Dictionary<FeatureStateSO.FeatureType, SpriteRenderer>();
-        foreach (var feature in otherFeatures)
-        {
-            if (feature.featureRenderer != null)
-                _rendererMap[feature.featureType] = feature.featureRenderer;
-        }
-
-        if (eyes.leftPupil)
-        {
-            _leftPupilOrigin = eyes.leftPupil.transform.localPosition;
-            _leftPupilTargetLocalPos = _leftPupilOrigin;
-        }
-        if (eyes.rightPupil)
-        {
-            _rightPupilOrigin = eyes.rightPupil.transform.localPosition;
-            _rightPupilTargetLocalPos = _rightPupilOrigin;
-        }
-
-        UpdateSortingOrder(false);
-    }
+    private Vector3 _currentWorldLookTarget;
+    private bool _isLookingAtSomething = false;
 
     private void Start()
     {
+        InitializeEyeRotation(leftEye);
+        InitializeEyeRotation(rightEye);
+
         if (_blinkingCoroutine != null) StopCoroutine(_blinkingCoroutine);
         _blinkingCoroutine = StartCoroutine(BlinkRoutine());
     }
 
-    private void Update()
+    private void InitializeEyeRotation(EyeRig rig)
     {
-        if (eyes.leftPupil)
+        if (rig.referencePivot != null)
         {
-            eyes.leftPupil.transform.localPosition = Vector3.Lerp(eyes.leftPupil.transform.localPosition, _leftPupilTargetLocalPos, Time.deltaTime * pupilLookSpeed);
-        }
-        if (eyes.rightPupil)
-        {
-            eyes.rightPupil.transform.localPosition = Vector3.Lerp(eyes.rightPupil.transform.localPosition, _rightPupilTargetLocalPos, Time.deltaTime * pupilLookSpeed);
+            // На старті око дивиться туди ж, куди й півот (плюс офсет спокою)
+            rig.currentWorldRotation = GetRestingRotation(rig);
         }
     }
 
-    public void UpdateSortingOrder(bool isHeld)
+    private void LateUpdate()
     {
-        int baseOrder = isHeld ? sortingOrderHeld : sortingOrderIdle;
-
-        if (eyes.leftEyeShape) eyes.leftEyeShape.sortingOrder = baseOrder;
-        if (eyes.rightEyeShape) eyes.rightEyeShape.sortingOrder = baseOrder;
-
-        if (eyes.leftPupil) eyes.leftPupil.sortingOrder = baseOrder + 1;
-        if (eyes.rightPupil) eyes.rightPupil.sortingOrder = baseOrder + 1;
-
-        foreach (var rendererPair in _rendererMap)
-        {
-            rendererPair.Value.sortingOrder = baseOrder;
-        }
-    }
-
-    public void ApplyEmotion(EmotionProfileSO emotionProfile)
-    {
-        if (emotionProfile == null)
-        {
-            SetAllFeaturesActive(false);
-            return;
-        }
-
-        // --- ВИПРАВЛЕННЯ: Спочатку вмикаємо очі, якщо вони мають бути в емоції ---
-        ApplyEyeState(emotionProfile.eyeState);
-
-        foreach (var rendererPair in _rendererMap)
-        {
-            rendererPair.Value.enabled = false;
-        }
-
-        foreach (var featureState in emotionProfile.featureStates)
-        {
-            if (featureState == null) continue;
-
-            if (_rendererMap.TryGetValue(featureState.feature, out SpriteRenderer renderer))
-            {
-                renderer.sprite = featureState.expressionSprite;
-                renderer.enabled = featureState.expressionSprite != null;
-            }
-        }
+        UpdateEye(leftEye);
+        UpdateEye(rightEye);
     }
 
     public void LookAt(Vector3 worldPosition)
     {
-        if (eyes.leftPupil)
-        {
-            Vector3 localTarget = eyes.leftPupil.transform.parent.InverseTransformPoint(worldPosition);
-            Vector3 direction = localTarget - _leftPupilOrigin;
-            direction.z = 0;
-            _leftPupilTargetLocalPos = _leftPupilOrigin + Vector3.ClampMagnitude(direction, pupilMovementRadius);
-        }
-        if (eyes.rightPupil)
-        {
-            Vector3 localTarget = eyes.rightPupil.transform.parent.InverseTransformPoint(worldPosition);
-            Vector3 direction = localTarget - _rightPupilOrigin;
-            direction.z = 0;
-            _rightPupilTargetLocalPos = _rightPupilOrigin + Vector3.ClampMagnitude(direction, pupilMovementRadius);
-        }
+        _currentWorldLookTarget = worldPosition;
+        _isLookingAtSomething = true;
     }
 
     public void ResetPupilPosition()
     {
-        _leftPupilTargetLocalPos = _leftPupilOrigin;
-        _rightPupilTargetLocalPos = _rightPupilOrigin;
+        _isLookingAtSomething = false;
     }
 
-
-    private void ApplyEyeState(EyeStateSO eyeState)
+    private Quaternion GetRestingRotation(EyeRig rig)
     {
-        if (eyeState == null)
+        // Конвертуємо RestPosition (2D зміщення) у Поворот відносно півота
+        // Якщо Y is Up: X - Yaw, Y - Pitch (навпаки до координат миші)
+        // rest.x -> поворот навколо Y (вправо/вліво)
+        // rest.y -> поворот навколо X (вверх/вниз, мінус бо X inverted для очей)
+
+        float yaw = rig.restPosition.x * 45f; // Приблизне маппінг: 1.0 = 45 градусів
+        float pitch = -rig.restPosition.y * 45f;
+
+        return rig.referencePivot.rotation * Quaternion.Euler(pitch, yaw, 0);
+    }
+
+    private void UpdateEye(EyeRig rig)
+    {
+        if (rig.eyeBone == null || rig.referencePivot == null) return;
+
+        Quaternion targetRotation;
+
+        if (_isLookingAtSomething)
         {
-            SetEyesActive(false);
-            return;
+            Vector3 directionToTarget = _currentWorldLookTarget - rig.referencePivot.position;
+            if (directionToTarget != Vector3.zero)
+            {
+                targetRotation = Quaternion.LookRotation(directionToTarget, rig.referencePivot.up);
+            }
+            else
+            {
+                targetRotation = GetRestingRotation(rig);
+            }
+        }
+        else
+        {
+            // Якщо нікуди не дивимось - повертаємось в позицію спокою
+            targetRotation = GetRestingRotation(rig);
         }
 
-        SetEyesActive(true);
-        if (eyes.leftEyeShape) eyes.leftEyeShape.sprite = eyeState.eyeShapeSprite;
-        if (eyes.rightEyeShape) eyes.rightEyeShape.sprite = eyeState.eyeShapeSprite;
-        if (eyes.leftPupil) eyes.leftPupil.sprite = eyeState.pupilSprite;
-        if (eyes.rightPupil) eyes.rightPupil.sprite = eyeState.pupilSprite;
+        // 2. Плавно обертаємо "віртуальне око" (Slerp)
+        float step = rotationSpeed * Time.deltaTime * (1f - damping);
+        rig.currentWorldRotation = Quaternion.Slerp(rig.currentWorldRotation, targetRotation, step);
 
-        if (eyes.leftEyeMask) eyes.leftEyeMask.sprite = eyeState.eyeMaskSprite;
-        if (eyes.rightEyeMask) eyes.rightEyeMask.sprite = eyeState.eyeMaskSprite;
+        // 3. Конвертація "Світовий Поворот" -> "Локальне Зміщення 2D"
+        Vector3 stabilizedLookDir = rig.currentWorldRotation * Vector3.forward;
+        Vector3 localDir = rig.referencePivot.InverseTransformDirection(stabilizedLookDir);
+
+        // 4. Проекція на площину (X/Y)
+        float x, y;
+        if (yAxisIsUp) { x = localDir.x; y = localDir.y; }
+        else { x = localDir.x; y = localDir.z; }
+
+        x *= lookSensitivity;
+        y *= lookSensitivity;
+
+        // 5. Обмеження (Clamping)
+        float lLeft = rig.limitLeft * rig.scaleMultiplier;
+        float lRight = rig.limitRight * rig.scaleMultiplier;
+        float lUp = rig.limitUp * rig.scaleMultiplier;
+        float lDown = rig.limitDown * rig.scaleMultiplier;
+
+        if (rig.useEllipticalClamp)
+        {
+            float normX = x > 0 ? (x / lRight) : (x / lLeft);
+            float normY = y > 0 ? (y / lUp) : (y / lDown);
+            Vector2 v = new Vector2(normX, normY);
+            if (v.sqrMagnitude > 1) v = v.normalized;
+            x = v.x > 0 ? v.x * lRight : v.x * lLeft;
+            y = v.y > 0 ? v.y * lUp : v.y * lDown;
+        }
+        else
+        {
+            x = Mathf.Clamp(x, -lLeft, lRight);
+            y = Mathf.Clamp(y, -lDown, lUp);
+        }
+
+        // 6. Застосування до кістки
+        Vector3 finalLocalPos;
+        if (yAxisIsUp) finalLocalPos = new Vector3(x, y, 0);
+        else finalLocalPos = new Vector3(x, 0, y);
+
+        rig.eyeBone.position = rig.referencePivot.TransformPoint(finalLocalPos);
+        rig.eyeBone.rotation = rig.referencePivot.rotation;
     }
 
     private IEnumerator BlinkRoutine()
@@ -186,42 +189,69 @@ public class FacialExpressionController : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(Random.Range(blinkIntervalMin, blinkIntervalMax));
-
-            // --- ВИПРАВЛЕННЯ: Кліпаємо, тільки якщо очі зараз видимі ---
-            if (_areEyesVisible)
-            {
-                SetEyesRenderersActive(false);
-                yield return new WaitForSeconds(blinkDuration);
-                SetEyesRenderersActive(true);
-            }
+            SetBlinkState(true);
+            yield return new WaitForSeconds(blinkDuration);
+            SetBlinkState(false);
         }
     }
 
-    private void SetEyesActive(bool isActive)
+    private void SetBlinkState(bool isBlinking)
     {
-        _areEyesVisible = isActive;
-        SetEyesRenderersActive(isActive);
+        bool shouldBeActive = hideObjectOnBlink ? !isBlinking : isBlinking;
+        if (leftEye.blinkObject) leftEye.blinkObject.SetActive(shouldBeActive);
+        if (rightEye.blinkObject) rightEye.blinkObject.SetActive(shouldBeActive);
     }
 
-    // --- НОВИЙ ДОПОМІЖНИЙ МЕТОД ---
-    // Цей метод просто вмикає/вимикає рендери, не змінюючи стан _areEyesVisible
-    private void SetEyesRenderersActive(bool isActive)
-    {
-        if (eyes.leftEyeShape) eyes.leftEyeShape.enabled = isActive;
-        if (eyes.rightEyeShape) eyes.rightEyeShape.enabled = isActive;
-        if (eyes.leftPupil) eyes.leftPupil.enabled = isActive;
-        if (eyes.rightPupil) eyes.rightPupil.enabled = isActive;
-        if (eyes.leftEyeMask) eyes.leftEyeMask.enabled = isActive;
-        if (eyes.rightEyeMask) eyes.rightEyeMask.enabled = isActive;
-    }
+    public void ApplyEmotion(EmotionProfileSO emotionProfile) { }
+    public void UpdateSortingOrder(bool isHeld) { }
 
-    private void SetAllFeaturesActive(bool isActive)
+    // --- GIZMOS ---
+    private void OnDrawGizmos()
     {
-        SetEyesActive(isActive);
-        foreach (var rendererPair in _rendererMap)
+        if (!showGizmos) return;
+        DrawEyeGizmos(leftEye);
+        DrawEyeGizmos(rightEye);
+
+        if (_isLookingAtSomething)
         {
-            rendererPair.Value.enabled = isActive;
+            Gizmos.color = Color.magenta;
+            if (leftEye.referencePivot) Gizmos.DrawLine(leftEye.referencePivot.position, _currentWorldLookTarget);
+        }
+    }
+
+    private void DrawEyeGizmos(EyeRig rig)
+    {
+        if (rig.referencePivot == null) return;
+
+        Gizmos.matrix = rig.referencePivot.localToWorldMatrix;
+
+        float lLeft = rig.limitLeft * rig.scaleMultiplier;
+        float lRight = rig.limitRight * rig.scaleMultiplier;
+        float lUp = rig.limitUp * rig.scaleMultiplier;
+        float lDown = rig.limitDown * rig.scaleMultiplier;
+
+        Gizmos.color = new Color(0, 1, 1, 0.3f);
+
+        Vector3 tl, tr, br, bl;
+        if (yAxisIsUp)
+        {
+            tl = new Vector3(-lLeft, lUp, 0); tr = new Vector3(lRight, lUp, 0);
+            br = new Vector3(lRight, -lDown, 0); bl = new Vector3(-lLeft, -lDown, 0);
+        }
+        else
+        {
+            tl = new Vector3(-lLeft, 0, lUp); tr = new Vector3(lRight, 0, lUp);
+            br = new Vector3(lRight, 0, -lDown); bl = new Vector3(-lLeft, 0, -lDown);
+        }
+
+        Gizmos.DrawLine(tl, tr); Gizmos.DrawLine(tr, br);
+        Gizmos.DrawLine(br, bl); Gizmos.DrawLine(bl, tl);
+
+        if (rig.eyeBone != null)
+        {
+            Gizmos.matrix = Matrix4x4.identity;
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(rig.eyeBone.position, gizmoSphereSize);
         }
     }
 }
-

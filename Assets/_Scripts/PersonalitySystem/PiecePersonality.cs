@@ -20,27 +20,24 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private EmotionProfileSO curiousEmotion;
 
     [Header("Налаштування Поведінки")]
-    [Tooltip("Мінімальний та максимальний час в секундах до засинання.")]
     [SerializeField] private float timeToSleepMin = 15f;
     [SerializeField] private float timeToSleepMax = 30f;
-    [Tooltip("Мінімальний та максимальний час в секундах до самостійного пробудження.")]
     [SerializeField] private float timeToWakeMin = 10f;
     [SerializeField] private float timeToWakeMax = 20f;
     [SerializeField] private float shakenEmotionDuration = 1.0f;
-    [Tooltip("Швидкість миші, до якої рух вважається 'ніжним гладженням'.")]
     [SerializeField] private float gentlePettingSpeedThreshold = 200f;
-    [Tooltip("Швидкість миші, вище якої рух вважається 'лоскотом'.")]
     [SerializeField] private float tickleSpeedThreshold = 800f;
 
     [Header("Налаштування погляду")]
+    [Tooltip("Висота площини очей над землею. Налаштуйте так, щоб курсор на носі кота давав коректний погляд.")]
+    [SerializeField] private float lookPlaneHeight = 0.5f;
+
     [SerializeField] private float idleLookIntervalMin = 1.5f;
     [SerializeField] private float idleLookIntervalMax = 4f;
     [SerializeField] private float idleLookDurationMin = 1f;
     [SerializeField] private float idleLookDurationMax = 2.5f;
     [SerializeField] private float idleLookRadius = 3f;
-    [Tooltip("Радіус в 'юнітах', в якому фігура реагує на іншу фігуру, що пролітає над нею.")]
     [SerializeField] private float flyOverReactionRadius = 2.5f;
-
 
     [Header("Посилання на Компоненти")]
     [SerializeField] private FacialExpressionController facialController;
@@ -93,7 +90,6 @@ public class PiecePersonality : MonoBehaviour
         if (_temperament == null)
         {
             Debug.LogError("Спроба ініціалізувати фігуру без темпераменту!", this);
-            // Залишаємо enabled = true, але логіка всередині методів має перевіряти _temperament
             return;
         }
 
@@ -133,7 +129,6 @@ public class PiecePersonality : MonoBehaviour
     private void HandlePettingUpdate(PuzzlePiece piece, float mouseSpeed)
     {
         if (piece != _puzzlePiece || !_isBeingPetted) return;
-        // --- ВИПРАВЛЕННЯ NRE: Перевірка на темперамент ---
         if (_temperament == null) return;
 
         EmotionProfileSO targetEmotion = null;
@@ -219,7 +214,6 @@ public class PiecePersonality : MonoBehaviour
     private void HandlePieceShaken(PuzzlePiece piece, float velocity)
     {
         if (piece != _puzzlePiece || _isSleeping) return;
-        // --- ВИПРАВЛЕННЯ NRE: Перевірка на темперамент ---
         if (_temperament == null) return;
 
         float irritationGain = 0.05f * _temperament.irritationModifier;
@@ -264,7 +258,6 @@ public class PiecePersonality : MonoBehaviour
 
     private void CheckForNeighborReaction(PuzzlePiece newNeighbor)
     {
-        // --- ВИПРАВЛЕННЯ NRE: Перевірка на темперамент поточної фігури ---
         if (_temperament == null) return;
 
         List<PuzzlePiece> neighborsToCheck = new List<PuzzlePiece>();
@@ -276,7 +269,6 @@ public class PiecePersonality : MonoBehaviour
             if (neighbor == null) continue;
             var neighborPersonality = neighbor.GetComponent<PiecePersonality>();
 
-            // --- ВИПРАВЛЕННЯ NRE: Перевірка на темперамент сусіда ---
             if (neighborPersonality == null || neighborPersonality._temperament == null) continue;
 
             foreach (var rule in _temperament.synergyRules)
@@ -389,10 +381,19 @@ public class PiecePersonality : MonoBehaviour
         }
     }
 
+    // --- ОНОВЛЕНИЙ МЕТОД ДЛЯ РЕЙКАСТУ ---
     private void LookAtCursor()
     {
+        // 1. Створюємо промінь від камери через позицію миші
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        Plane plane = new Plane(Vector3.up, transform.position);
+
+        // 2. Створюємо віртуальну площину на висоті очей цього конкретного кота
+        // (transform.up - це нормаль площини, transform.position - точка на площині)
+        // ДОДАНО: lookPlaneHeight, щоб підняти площину перетину вище підлоги
+        Vector3 planePoint = transform.position + Vector3.up * lookPlaneHeight;
+        Plane plane = new Plane(Vector3.up, planePoint);
+
+        // 3. Знаходимо, де промінь перетинає цю площину
         if (plane.Raycast(ray, out float distance))
         {
             Vector3 targetPoint = ray.GetPoint(distance);
@@ -409,8 +410,8 @@ public class PiecePersonality : MonoBehaviour
 
             _isLookingRandomly = true;
 
-            // --- ОНОВЛЕНО: Використання сучасного методу FindObjectsByType ---
-            var allPieces = FindObjectsByType<PiecePersonality>(FindObjectsSortMode.None).Where(p => p != this && p.gameObject.activeInHierarchy).ToList();
+            var allPieces = FindObjectsByType<PiecePersonality>(FindObjectsSortMode.None)
+                            .Where(p => p != this && p.gameObject.activeInHierarchy).ToList();
             bool hasNeighbors = allPieces.Any();
 
             IdleGazeState nextAction = hasNeighbors

@@ -759,6 +759,7 @@ MonoBehaviour:
   shakenEmotionDuration: 1
   gentlePettingSpeedThreshold: 200
   tickleSpeedThreshold: 800
+  lookPlaneHeight: 1
   idleLookIntervalMin: 1.5
   idleLookIntervalMax: 4
   idleLookDurationMin: 1
@@ -837,7 +838,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Method: 0
-  TargetGameObject: {fileID: 0}
+  TargetGameObject: {fileID: 7296068872233567880}
   TargetRenderer: {fileID: 0}
   MaterialIndex: 0
   ShaderPropertyName: 
@@ -941,23 +942,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42c527ec26e9df14ba7878b42ea842f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  eyes:
-    leftEyeShape: {fileID: 3647591016452806247}
-    leftPupil: {fileID: 1160898227202336784}
-    leftEyeMask: {fileID: 4587537699352744246}
-    rightEyeShape: {fileID: 4558718944081910837}
-    rightPupil: {fileID: 8872298653794588414}
-    rightEyeMask: {fileID: 5449141153367560818}
-  otherFeatures:
-  - featureType: 0
-    featureRenderer: {fileID: 827681673405451530}
+  lookSensitivity: 1
+  leftEye:
+    referencePivot: {fileID: 0}
+    eyeBone: {fileID: 0}
+    blinkObject: {fileID: 0}
+    scaleMultiplier: 0.1
+    useEllipticalClamp: 1
+    limitLeft: 0.5
+    limitRight: 0.5
+    limitUp: 0.5
+    limitDown: 0.5
+    restPosition: {x: 0, y: 0}
+    currentWorldRotation: {x: 0, y: 0, z: 0, w: 0}
+  rightEye:
+    referencePivot: {fileID: 0}
+    eyeBone: {fileID: 0}
+    blinkObject: {fileID: 0}
+    scaleMultiplier: 0.1
+    useEllipticalClamp: 1
+    limitLeft: 0.5
+    limitRight: 0.5
+    limitUp: 0.5
+    limitDown: 0.5
+    restPosition: {x: 0, y: 0}
+    currentWorldRotation: {x: 0, y: 0, z: 0, w: 0}
+  rotationSpeed: 30
+  damping: 0.1
   blinkIntervalMin: 4
   blinkIntervalMax: 12
   blinkDuration: 0.1
-  pupilMovementRadius: 0.5
-  pupilLookSpeed: 8
-  sortingOrderIdle: 5
-  sortingOrderHeld: 15
+  hideObjectOnBlink: 1
+  yAxisIsUp: 1
+  showGizmos: 1
+  gizmoSphereSize: 0.005
 --- !u!1 &8730349104430904190
 GameObject:
   m_ObjectHideFlags: 0
