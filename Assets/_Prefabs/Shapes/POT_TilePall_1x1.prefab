@@ -363,6 +363,10 @@ PrefabInstance:
       propertyPath: 'outlineSkinnedMeshRenderers.Array.data[6]'
       value: 
       objectReference: {fileID: 6615185821467416789}
+    - target: {fileID: 4053038559910145283, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4558718944081910837, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a
       value: 0
@@ -432,6 +436,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: gizmoScaleRest
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: facingDirection
       value: 1
       objectReference: {fileID: 0}
@@ -450,6 +458,10 @@ PrefabInstance:
     - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: rightEye.limitUp
       value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: gizmoScaleCurrent
+      value: 0.03
       objectReference: {fileID: 0}
     - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: leftEye.limitDown

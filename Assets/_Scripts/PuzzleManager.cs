@@ -110,6 +110,17 @@ public class PuzzleManager : MonoBehaviour
 
         // --- Ћќ√≤ ј ј”“Ћј…Ќ” “ј ’ќ¬≈–” ---
 
+        // 0. ¬»ѕ–ј¬Ћ≈ЌЌя: якщо р≥вень пройдено - вимикаЇмо аутлайн ≥ не реагуЇмо на ховер
+        if (_isLevelComplete)
+        {
+            if (_lastHoveredPiece != null)
+            {
+                _lastHoveredPiece.SetOutline(false);
+                _lastHoveredPiece = null;
+            }
+            return;
+        }
+
         // 1. якщо ми щось тримаЇмо, ми Ќ≈ скануЇмо ≥нш≥ ф≥гури на ховер (блок аутлайну дл€ ≥нших)
         if (_heldPiece != null)
         {
@@ -160,6 +171,9 @@ public class PuzzleManager : MonoBehaviour
     {
         // ƒодаткова перев≥рка на паузу (хоча Update вже блокуЇ, це дл€ безпеки)
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
+
+        // якщо р≥вень завершено, блокуЇмо ≥нпут
+        if (_isLevelComplete) return;
 
         if (Input.GetMouseButtonDown(0))
         {
