@@ -9,6 +9,10 @@ public class CameraController : MonoBehaviour
 
     [SerializeField] CinemachineCamera cinemachineCamera;
 
+    [Header("Feature Toggle")]
+    [Tooltip("Вмикає або вимикає можливість обертати камеру.")]
+    [SerializeField] private bool enableRotation = true;
+
     [Header("Movement Settings")]
     [SerializeField] float moveSpeed = 10f;
     [SerializeField] float rotationSpeed = 100f;
@@ -214,6 +218,8 @@ public class CameraController : MonoBehaviour
 
     private void HandleRotation()
     {
+        if (!enableRotation) return;
+
         inputRorateDirection.y = GetCameraRotateAmount();
         transform.eulerAngles += inputRorateDirection * rotationSpeed * Time.deltaTime;
     }
@@ -282,14 +288,24 @@ public class CameraController : MonoBehaviour
 
     public float GetCameraRotateAmount()
     {
-#if ENABLE_INPUT_SYSTEM
-        return playerInputActions.Player.CameraRotate.ReadValue<float>();
-#else
+        // Оскільки Action Map використовує старі біндинги, ми тут перевіряємо
+        // напряму клавіші для Legacy-стилю, щоб звільнити Q/E для PuzzleManager.
+        // Це працює паралельно з New Input System, якщо ми використовуємо Keyboard.current
+
         float rotateAmount = 0f;
-        if (Input.GetKey(KeyCode.Q)) rotateAmount = -1f;
-        else if (Input.GetKey(KeyCode.E)) rotateAmount = 1f;
-        return rotateAmount;
+
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.leftBracketKey.isPressed) rotateAmount = -1f;
+            else if (Keyboard.current.rightBracketKey.isPressed) rotateAmount = 1f;
+        }
+#else
+        if (Input.GetKey(KeyCode.LeftBracket)) rotateAmount = -1f;
+        else if (Input.GetKey(KeyCode.RightBracket)) rotateAmount = 1f;
 #endif
+
+        return rotateAmount;
     }
 
     public float GetCameraZoomAmount()

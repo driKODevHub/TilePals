@@ -74,7 +74,6 @@ public class PuzzleManager : MonoBehaviour
         _isLevelComplete = false;
         _piecesBeingFlownOver.Clear();
 
-        // --- ОНОВЛЕНО: Використання сучасного методу FindObjectsByType ---
         _allPersonalities = FindObjectsByType<PiecePersonality>(FindObjectsSortMode.None).ToList();
     }
 
@@ -85,7 +84,6 @@ public class PuzzleManager : MonoBehaviour
 
     private void Update()
     {
-        // --- БЛОКУВАННЯ ВВОДУ ПРИ ПАУЗІ ---
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
 
         UpdateMouseState();
@@ -108,9 +106,6 @@ public class PuzzleManager : MonoBehaviour
 
         _pieceUnderMouse = null;
 
-        // --- ЛОГІКА АУТЛАЙНУ ТА ХОВЕРУ ---
-
-        // 0. ВИПРАВЛЕННЯ: Якщо рівень пройдено - вимикаємо аутлайн і не реагуємо на ховер
         if (_isLevelComplete)
         {
             if (_lastHoveredPiece != null)
@@ -121,7 +116,6 @@ public class PuzzleManager : MonoBehaviour
             return;
         }
 
-        // 1. Якщо ми щось тримаємо, ми НЕ скануємо інші фігури на ховер (блок аутлайну для інших)
         if (_heldPiece != null)
         {
             if (_lastHoveredPiece != null && _lastHoveredPiece != _heldPiece)
@@ -132,7 +126,6 @@ public class PuzzleManager : MonoBehaviour
             return;
         }
 
-        // 2. Стандартний рейкаст для пошуку фігур
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
         {
@@ -141,16 +134,13 @@ public class PuzzleManager : MonoBehaviour
             {
                 _pieceUnderMouse = piece;
 
-                // Якщо навели на нову фігуру або ту саму
                 if (_lastHoveredPiece != piece)
                 {
-                    // Вимикаємо стару
                     if (_lastHoveredPiece != null)
                     {
                         _lastHoveredPiece.SetOutline(false);
                     }
 
-                    // Вмикаємо нову
                     piece.SetOutline(true);
                     _lastHoveredPiece = piece;
                 }
@@ -158,7 +148,6 @@ public class PuzzleManager : MonoBehaviour
         }
         else
         {
-            // Якщо мишка ні на чому - вимикаємо останній аутлайн
             if (_lastHoveredPiece != null)
             {
                 _lastHoveredPiece.SetOutline(false);
@@ -169,10 +158,7 @@ public class PuzzleManager : MonoBehaviour
 
     private void HandleIdleInput()
     {
-        // Додаткова перевірка на паузу (хоча Update вже блокує, це для безпеки)
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
-
-        // Якщо рівень завершено, блокуємо інпут
         if (_isLevelComplete) return;
 
         if (Input.GetMouseButtonDown(0))
@@ -234,29 +220,21 @@ public class PuzzleManager : MonoBehaviour
 
     private void PickUpPiece(PuzzlePiece piece, Vector3 hitPoint)
     {
-        // --- ПЕРЕВІРКА НА БЛОКУВАННЯ ПІСЛЯ ЗАВЕРШЕННЯ РІВНЯ ---
         if (lockPiecesOnLevelComplete && _isLevelComplete && piece.IsPlaced)
         {
             return;
         }
-        // -----------------------------------------------------
 
         if (_heldPiece != null) return;
 
         _heldPiece = piece;
-
-        // --- БЛОКУВАННЯ АУТЛАЙНУ ---
-        // Локаємо аутлайн, щоб він не зник, якщо мишка зісковзне, 
-        // і щоб не можна було підсвітити інші фігури
         _heldPiece.SetOutlineLocked(true);
-        // ----------------------------
 
         _initialPiecePosition = piece.transform.position;
         _initialPieceRotation = piece.transform.rotation;
         _lastHeldPiecePosition = piece.transform.position;
         _heldPieceVelocity = 0f;
 
-        // --- ЛОГІКА ОБЧИСЛЕННЯ ЗМІЩЕННЯ КЛІКУ ---
         float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
         Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection);
         Vector3 pieceOriginWorld = piece.transform.position - new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
@@ -264,9 +242,7 @@ public class PuzzleManager : MonoBehaviour
         GridBuildingSystem.Instance.GetGrid().GetXZ(hitPoint, out int clickX, out int clickZ);
         GridBuildingSystem.Instance.GetGrid().GetXZ(pieceOriginWorld, out int originX, out int originZ);
 
-        // Зберігаємо зміщення ПРЯМО у фігуру
         piece.ClickOffset = new Vector2Int(clickX - originX, clickZ - originZ);
-        // ----------------------------------------
 
         if (piece.IsPlaced)
         {
@@ -292,9 +268,24 @@ public class PuzzleManager : MonoBehaviour
             TryToPlaceOrDropPiece();
         }
 
+        // --- НОВЕ КЕРУВАННЯ ОБЕРТАННЯМ ---
+        
+        // 1. Пробіл та ПКМ: Обертання за годинниковою (Standard)
         if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(1)) && !_heldPiece.IsRotating)
         {
-            _heldPiece.StartSmoothRotation();
+            _heldPiece.StartSmoothRotation(true); // true = Clockwise
+        }
+
+        // 2. Q: Обертання проти годинникової (Left)
+        if (Input.GetKeyDown(KeyCode.Q) && !_heldPiece.IsRotating)
+        {
+            _heldPiece.StartSmoothRotation(false); // false = Counter-Clockwise
+        }
+
+        // 3. E: Обертання за годинниковою (Right)
+        if (Input.GetKeyDown(KeyCode.E) && !_heldPiece.IsRotating)
+        {
+            _heldPiece.StartSmoothRotation(true); // true = Clockwise
         }
     }
 
@@ -310,52 +301,36 @@ public class PuzzleManager : MonoBehaviour
 
             grid.GetXZ(hit.point, out int cursorX, out int cursorZ);
 
-            // 1. Обчислюємо ЛОГІЧНУ позицію (Origin) для перевірок валідності. Вона завжди дискретна.
             Vector2Int logicalOrigin = new Vector2Int(cursorX, cursorZ) - _heldPiece.ClickOffset;
-
-            // 2. Обчислюємо ВІЗУАЛЬНУ позицію.
             Vector3 targetPosition;
 
-            // Перевіряємо, чи мишка знаходиться над ігровим полем
             bool isMouseOverGrid = GridBuildingSystem.Instance.IsValidGridPosition(cursorX, cursorZ);
 
-            // Розрахунок зміщення від повороту фігури
             Vector2Int rotationOffset = _heldPiece.PieceTypeSO.GetRotationOffset(_heldPiece.CurrentDirection);
             Vector3 rotationVisualOffset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
 
-            // --- УМОВА ПЕРЕМИКАННЯ РЕЖИМІВ РУХУ ---
             if (isMouseOverGrid || !smoothMovementOffGrid)
             {
-                // Режим SNAPPING (працює якщо ми на гріду АБО якщо плавний рух вимкнено)
-                // Використовуємо жорстку прив'язку до клітинок
                 Vector3 snappedGridPos = grid.GetWorldPosition(logicalOrigin.x, logicalOrigin.y);
                 targetPosition = snappedGridPos + rotationVisualOffset;
             }
             else
             {
-                // Режим SMOOTH MOVEMENT (працює тільки поза грідом і якщо увімкнено)
-
-                // Позиція миші у площині Y=0
                 Vector3 mouseWorldPos = hit.point;
                 mouseWorldPos.y = 0;
 
-                // Вектор від Origin фігури до центру клітинки, за яку ми тримаємо
                 Vector3 clickOffsetVector = new Vector3(_heldPiece.ClickOffset.x, 0, _heldPiece.ClickOffset.y) * cellSize;
                 Vector3 centerOfCellOffset = new Vector3(cellSize * 0.5f, 0, cellSize * 0.5f);
 
-                // Origin = MousePos - (OffsetToClickedCellCenter)
                 Vector3 smoothOrigin = mouseWorldPos - clickOffsetVector - centerOfCellOffset;
 
                 targetPosition = smoothOrigin + rotationVisualOffset;
             }
 
-            // Додаємо висоту підйому
             targetPosition.y = pieceHeightWhenHeld;
 
-            // Рухаємо фігуру
             _heldPiece.transform.position = Vector3.Lerp(_heldPiece.transform.position, targetPosition, Time.deltaTime * pieceFollowSpeed);
 
-            // Розрахунок швидкості для ефекту трусіння
             _heldPieceVelocity = (_heldPiece.transform.position - _lastHeldPiecePosition).magnitude / Time.deltaTime;
             _lastHeldPiecePosition = _heldPiece.transform.position;
 
@@ -366,7 +341,6 @@ public class PuzzleManager : MonoBehaviour
 
             CheckForFlyOver();
 
-            // Перевірка валідності (використовуємо ЛОГІЧНИЙ Origin, навіть якщо візуал плавний)
             bool canPlaceOnGrid, canPlaceOffGrid;
             CanPlaceHeldPiece(logicalOrigin, out canPlaceOnGrid, out canPlaceOffGrid);
 
@@ -410,9 +384,7 @@ public class PuzzleManager : MonoBehaviour
         var grid = GridBuildingSystem.Instance.GetGrid();
         grid.GetXZ(hit.point, out int cursorX, out int cursorZ);
 
-        // --- ВИКОРИСТОВУЄМО ЗМІЩЕННЯ З ФІГУРИ ---
         Vector2Int origin = new Vector2Int(cursorX, cursorZ) - _heldPiece.ClickOffset;
-        // ----------------------------------------
 
         bool canPlaceOnGrid, canPlaceOffGrid;
         CanPlaceHeldPiece(origin, out canPlaceOnGrid, out canPlaceOffGrid);
@@ -438,10 +410,7 @@ public class PuzzleManager : MonoBehaviour
         {
             PuzzlePiece placedPiece = _heldPiece;
             _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
-
-            // --- РОЗБЛОКУВАННЯ АУТЛАЙНУ ---
             _heldPiece.SetOutlineLocked(false);
-            // ------------------------------
 
             CommandHistory.AddCommand(placeCommand);
 
@@ -462,10 +431,7 @@ public class PuzzleManager : MonoBehaviour
         {
             PuzzlePiece placedPiece = _heldPiece;
             _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
-
-            // --- РОЗБЛОКУВАННЯ АУТЛАЙНУ ---
             _heldPiece.SetOutlineLocked(false);
-            // ------------------------------
 
             CommandHistory.AddCommand(placeCommand);
 

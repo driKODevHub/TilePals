@@ -18,6 +18,20 @@ public class PlacedObjectTypeSO : ScriptableObject
         };
     }
 
+    // --- ÍÎÂÈÉ ÌÅÒÎÄ ÄËß ÎÁÅÐÒÀÍÍß ÂË²ÂÎ ---
+    public static Dir GetPreviousDir(Dir dir)
+    {
+        return dir switch
+        {
+            Dir.Down => Dir.Right,
+            Dir.Right => Dir.Up,
+            Dir.Up => Dir.Left,
+            Dir.Left => Dir.Down,
+            _ => throw new ArgumentOutOfRangeException(nameof(dir), dir, null)
+        };
+    }
+    // ---------------------------------------
+
     public enum Dir
     {
         Down,

@@ -76,7 +76,6 @@ public class PuzzlePiece : MonoBehaviour
     private void InitializeOutlineData()
     {
         // Перетворюємо бітову маску в індекс шару (0-31)
-        // Беремо перший знайдений біт у масці
         int maskValue = outlineLayerMask.value;
         if (maskValue > 0)
         {
@@ -93,7 +92,6 @@ public class PuzzlePiece : MonoBehaviour
             _outlineLayerIndex = 0;
         }
 
-        // Кешуємо початкові шари для всіх рендерерів аутлайну
         CacheRendererLayers(outlineMeshRenderers);
         CacheRendererLayers(outlineSkinnedMeshRenderers);
     }
@@ -110,38 +108,25 @@ public class PuzzlePiece : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Вмикає або вимикає аутлайн. Якщо заблоковано (_isOutlineLocked), вимкнення ігнорується, поки не зніметься блок.
-    /// </summary>
     public void SetOutline(bool isActive)
     {
-        // Якщо система заблокована (фігуру тримають), ми не дозволяємо вимкнути аутлайн через ховер
         if (_isOutlineLocked && !isActive) return;
-
-        // Оптимізація: не робимо зайвих дій, якщо стан не змінюється
         if (_isOutlineActive == isActive) return;
 
         _isOutlineActive = isActive;
         ApplyLayerState(isActive);
     }
 
-    /// <summary>
-    /// Блокує стан аутлайну (наприклад, коли ми взяли фігуру).
-    /// При value = true, аутлайн вмикається і не реагує на SetOutline(false).
-    /// При value = false, аутлайн вимикається.
-    /// </summary>
     public void SetOutlineLocked(bool isLocked)
     {
         _isOutlineLocked = isLocked;
 
         if (isLocked)
         {
-            // Автоматично вмикаємо аутлайн при блокуванні
             SetOutline(true);
         }
         else
         {
-            // При розблокуванні вимикаємо (PuzzleManager потім сам увімкне ховер, якщо мишка все ще там)
             _isOutlineActive = false;
             ApplyLayerState(false);
         }
@@ -167,7 +152,6 @@ public class PuzzlePiece : MonoBehaviour
             }
             else
             {
-                // Повертаємо на той шар, який був при ініціалізації
                 if (_originalLayers.TryGetValue(r, out int originalLayer))
                 {
                     r.gameObject.layer = originalLayer;
@@ -240,7 +224,8 @@ public class PuzzlePiece : MonoBehaviour
         }
     }
 
-    public void StartSmoothRotation()
+    // --- ОНОВЛЕНО ДЛЯ ПІДТРИМКИ НАПРЯМКУ ОБЕРТАННЯ ---
+    public void StartSmoothRotation(bool isClockwise = true)
     {
         if (IsRotating) return;
 
@@ -248,10 +233,10 @@ public class PuzzlePiece : MonoBehaviour
         {
             StopCoroutine(_rotationCoroutine);
         }
-        _rotationCoroutine = StartCoroutine(SmoothRotationCoroutine());
+        _rotationCoroutine = StartCoroutine(SmoothRotationCoroutine(isClockwise));
     }
 
-    private IEnumerator SmoothRotationCoroutine()
+    private IEnumerator SmoothRotationCoroutine(bool isClockwise)
     {
         IsRotating = true;
 
@@ -272,27 +257,44 @@ public class PuzzlePiece : MonoBehaviour
         Vector3 halfCellVector = new Vector3(cellSize * 0.5f, 0, cellSize * 0.5f);
         Vector3 pivotPoint = currentGridOrigin + clickOffsetVector + halfCellVector;
 
-        PlacedObjectTypeSO.Dir nextDirection = PlacedObjectTypeSO.GetNextDirencion(CurrentDirection);
+        // Визначаємо наступний напрямок та кут
+        PlacedObjectTypeSO.Dir nextDirection;
+        float angleToRotate;
+
+        if (isClockwise)
+        {
+            nextDirection = PlacedObjectTypeSO.GetNextDirencion(CurrentDirection);
+            angleToRotate = 90f;
+        }
+        else
+        {
+            nextDirection = PlacedObjectTypeSO.GetPreviousDir(CurrentDirection);
+            angleToRotate = -90f;
+        }
+
         float targetAngle = pieceTypeSO.GetRotationAngle(nextDirection);
         Quaternion targetRotation = Quaternion.Euler(0, targetAngle, 0);
 
-        float angleToRotate = 90f;
         float totalRotation = 0f;
+        float absAngleToRotate = Mathf.Abs(angleToRotate);
 
-        while (totalRotation < angleToRotate)
+        while (totalRotation < absAngleToRotate)
         {
-            float rotationAmount = Time.deltaTime * rotationSpeed;
-            rotationAmount = Mathf.Min(rotationAmount, angleToRotate - totalRotation);
+            float rotationStep = Time.deltaTime * rotationSpeed;
+            rotationStep = Mathf.Min(rotationStep, absAngleToRotate - totalRotation);
 
-            transform.RotateAround(pivotPoint, Vector3.up, rotationAmount);
+            // Обертаємо навколо півота
+            transform.RotateAround(pivotPoint, Vector3.up, isClockwise ? rotationStep : -rotationStep);
 
-            totalRotation += rotationAmount;
+            totalRotation += rotationStep;
             yield return null;
         }
 
+        // Жорстко ставимо фінальну ротацію
         transform.rotation = targetRotation;
         CurrentDirection = nextDirection;
 
+        // Перераховуємо зміщення
         Vector2Int newRotationOffset = pieceTypeSO.GetRotationOffset(CurrentDirection);
         Vector3 newVisualOffset = new Vector3(newRotationOffset.x, 0, newRotationOffset.y) * cellSize;
 
