@@ -220,13 +220,11 @@ namespace Linework.EdgeDetection
         Custom
     }
 
-    public enum SectionMapFormat
+    public enum SectionMapPrecision
     {
-        [InspectorName("R8")]
-        R8,
-        [InspectorName("R16")]
-        R16,
-        [InspectorName("RGBA8")]
-        RGBA8,
+        [InspectorName("8-bit")]
+        Bits8,
+        [InspectorName("16-bit")]
+        Bits16
     }
 }

@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Headers should be listed in this order: Added, Changed, Deprecated, Removed, Fixed, Security -->
 
+## [1.5.2] - 2025-12-02
+
+### Fixed
+
+- Edge Detection: Fixed issue with edge break-up not showing up in several cases
+
 ## [1.5.1] - 2025-11-27
 
 ### Added
 
 - Edge Detection: Added option to set render queue for section map
-- - TODO: make sure RG section map is generated when using breakup!!
 
 ### Fixed
 

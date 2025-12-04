@@ -51,7 +51,8 @@ namespace Linework.EdgeDetection
         public UVSet sectionTextureUvSet;
         public Channel sectionTextureChannel;
         public Channel vertexColorChannel;
-        public SectionMapFormat sectionMapFormat = SectionMapFormat.R16;
+        [FormerlySerializedAs("sectionMapFormat")]
+        public SectionMapPrecision sectionMapPrecision = SectionMapPrecision.Bits16;
         [Range(0, 256)] public int sectionMapClearValue = 1;
         public OutlineRenderQueue sectionRenderQueue = OutlineRenderQueue.Opaque;
         public List<SectionPass> additionalSectionPasses = new();

@@ -96,7 +96,7 @@ namespace Linework.Editor.EdgeDetection
             debugPerceptualSections = serializedObject.FindProperty(nameof(EdgeDetectionSettings.debugPerceptualSections));
 
             // Section map.
-            sectionMapFormat = serializedObject.FindProperty(nameof(EdgeDetectionSettings.sectionMapFormat));
+            sectionMapFormat = serializedObject.FindProperty(nameof(EdgeDetectionSettings.sectionMapPrecision));
             sectionMapClearValue = serializedObject.FindProperty(nameof(EdgeDetectionSettings.sectionMapClearValue));
             sectionRenderingLayer = serializedObject.FindProperty(nameof(EdgeDetectionSettings.SectionRenderingLayer));
             maskRenderingLayer = serializedObject.FindProperty(nameof(EdgeDetectionSettings.SectionMaskRenderingLayer));

@@ -142,7 +142,7 @@ namespace Linework.Editor.Common.Windows
                     paddingLeft = 2
                 }
             };
-            var versionLabel = new Label("1.5.1 • November 2025")
+            var versionLabel = new Label("1.5.2 • December 2025")
             {
                 style =
                 {

@@ -321,9 +321,11 @@ namespace Linework.EdgeDetection
             {
                 var resourceData = frameData.Get<UniversalResourceData>();
 
-                CreateRenderGraphTextures(renderGraph, resourceData, out var sectionHandle, settings.sectionMapFormat, settings.sectionMapClearValue);
+                // NOTE: When breaking up the edges, the G channel is needed.
+                CreateRenderGraphTextures(renderGraph, resourceData, out var sectionHandle, settings.sectionMapPrecision, settings.breakUpEdges, settings.sectionMapClearValue);
 
-                if (settings.discontinuityInput.HasFlag(DiscontinuityInput.Sections) || settings.SectionMaskRenderingLayer != 0)
+                // NOTE: Only render the section map if it is used as a discontinuity source, or as a mask, or for breaking up the edges.
+                if (settings.discontinuityInput.HasFlag(DiscontinuityInput.Sections) || settings.SectionMaskRenderingLayer != 0 || settings.breakUpEdges)
                 {
                     // 1. Section.
                     // -> Render section map.
@@ -408,7 +410,7 @@ namespace Linework.EdgeDetection
                 var lightData = frameData.Get<UniversalLightData>();
 
                 var sortingCriteria = cameraData.defaultOpaqueSortFlags;
-                
+
                 var drawingSettings = RenderingUtils.CreateDrawingSettings(RenderUtils.DefaultShaderTagIds, universalRenderingData, cameraData, lightData, sortingCriteria);
 
                 var renderQueueRange = settings.sectionRenderQueue switch
@@ -418,7 +420,7 @@ namespace Linework.EdgeDetection
                     OutlineRenderQueue.OpaqueAndTransparent => RenderQueueRange.all,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-                
+
                 var filteringSettings = new FilteringSettings(renderQueueRange, -1, settings.SectionRenderingLayer);
                 var renderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
 
@@ -454,7 +456,7 @@ namespace Linework.EdgeDetection
                 }
             }
 
-            private void CreateRenderGraphTextures(RenderGraph renderGraph, UniversalResourceData resourceData, out TextureHandle sectionHandle, SectionMapFormat format,
+            private void CreateRenderGraphTextures(RenderGraph renderGraph, UniversalResourceData resourceData, out TextureHandle sectionHandle, SectionMapPrecision precision, bool multicolor,
                 int clearValue)
             {
                 var cameraDescriptor = resourceData.activeColorTexture.GetDescriptor(renderGraph);
@@ -473,7 +475,7 @@ namespace Linework.EdgeDetection
 
                 // Section buffer.
                 baseDescriptor.name = Buffer.Section;
-                baseDescriptor.colorFormat = GetSectionBufferFormat(format); // TODO: Changed to format somewhere in Unity 6 cycle?
+                baseDescriptor.colorFormat = GetSectionBufferFormat(precision, multicolor); // TODO: Changed to format somewhere in Unity 6 cycle?
                 baseDescriptor.depthBufferBits = (int) DepthBits.None;
                 baseDescriptor.clearColor = new Color((float) clearValue / 256, 0.0f, 0.0f, 0.0f);
                 baseDescriptor.wrapMode = TextureWrapMode.Clamp;
@@ -500,27 +502,26 @@ namespace Linework.EdgeDetection
             {
                 // Section buffer.
                 var sectionBufferDescriptor = renderingData.cameraData.cameraTargetDescriptor;
-                sectionBufferDescriptor.graphicsFormat = GetSectionBufferFormat(settings.sectionMapFormat);
+                sectionBufferDescriptor.graphicsFormat = GetSectionBufferFormat(settings.sectionMapPrecision, settings.breakUpEdges);
                 sectionBufferDescriptor.depthBufferBits = (int) DepthBits.None;
                 sectionBufferDescriptor.msaaSamples = 1;
                 RenderingUtils.ReAllocateIfNeeded(ref sectionRTHandle, sectionBufferDescriptor, FilterMode.Point, TextureWrapMode.Clamp, name: Buffer.Section);
             }
 
-            private static GraphicsFormat GetSectionBufferFormat(SectionMapFormat format)
+            private static GraphicsFormat GetSectionBufferFormat(SectionMapPrecision precision, bool multicolor)
             {
-                switch (format)
+                switch (precision)
                 {
-                    case SectionMapFormat.R8:
-                        return GraphicsFormat.R8_UNorm;
-                    case SectionMapFormat.R16:
+                    case SectionMapPrecision.Bits8:
+                        return multicolor ? GraphicsFormat.R8G8B8A8_UNorm : GraphicsFormat.R8_UNorm;
+                    case SectionMapPrecision.Bits16:
 #if UNITY_2023_2_OR_NEWER
                         // WebGPU does not support R16_UNorm.
-                        return SystemInfo.graphicsDeviceType == GraphicsDeviceType.WebGPU ? GraphicsFormat.R32_SFloat : GraphicsFormat.R16_UNorm;
+                        return SystemInfo.graphicsDeviceType == GraphicsDeviceType.WebGPU ? multicolor ? GraphicsFormat.R32G32B32A32_SFloat : GraphicsFormat.R32_SFloat :
+                            multicolor ? GraphicsFormat.R16G16B16A16_UNorm : GraphicsFormat.R16_UNorm;
 #else
-                        return GraphicsFormat.R16_UNorm;
+                        return multicolor ? GraphicsFormat.R16G16B16A16_UNorm : GraphicsFormat.R16_UNorm;
 #endif
-                    case SectionMapFormat.RGBA8:
-                        return GraphicsFormat.R8G8B8A8_UNorm;
                     default:
                         throw new NotImplementedException();
                 }

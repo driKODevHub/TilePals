@@ -441,10 +441,10 @@
                 #endif
 
                 #if defined(SECTIONS)
-                edge_section = section_center.g == 1 ? 0 : edge_section > 0 ? 1 : 0;
+                edge_section = edge_section > 0 ? 1 : 0;
                 #endif
 
-                float edge = max(edge_depth, max(edge_normal, max(edge_luminance, edge_section)));
+                float edge = section_center.g == 1 ? 0 : max(edge_depth, max(edge_normal, max(edge_luminance, edge_section)));
                 
                 ///
                 /// DEBUG VIEWS
