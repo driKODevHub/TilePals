@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEditor;
-using System.Linq; // Потрібно для LINQ-запитів
-using System.IO;   // Потрібно для Path.GetFileNameWithoutExtension
+using System.Linq;
+using System.IO;
+using System.Collections.Generic;
 
 [CustomEditor(typeof(PuzzlePiece))]
 public class PuzzlePieceEditor : Editor
@@ -14,6 +15,17 @@ public class PuzzlePieceEditor : Editor
 
         PuzzlePiece puzzlePiece = (PuzzlePiece)target;
 
+        // Перевіряємо наявність необхідних компонентів для нової архітектури
+        if (puzzlePiece.GetComponent<PieceVisuals>() == null || puzzlePiece.GetComponent<PieceMovement>() == null)
+        {
+            EditorGUILayout.HelpBox("Missing required components (PieceVisuals or PieceMovement)!", MessageType.Error);
+            if (GUILayout.Button("Fix Components"))
+            {
+                if (puzzlePiece.GetComponent<PieceVisuals>() == null) puzzlePiece.gameObject.AddComponent<PieceVisuals>();
+                if (puzzlePiece.GetComponent<PieceMovement>() == null) puzzlePiece.gameObject.AddComponent<PieceMovement>();
+            }
+        }
+
         if (puzzlePiece.PieceTypeSO != null)
         {
             EditorGUILayout.Space(10);
@@ -23,8 +35,7 @@ public class PuzzlePieceEditor : Editor
                 AssignPrefabToSO(puzzlePiece);
             }
 
-            // --- НОВА КНОПКА ---
-            if (GUILayout.Button(new GUIContent("Find and Assign Mesh from Name", "Шукає меш в 'AllShapeBlocks.fbx' за назвою префабу та призначає його.")))
+            if (GUILayout.Button(new GUIContent("Find and Assign Mesh from Name", "Шукає меш в 'AllShapeBlocks.fbx' за назвою префабу та призначає його в PieceVisuals.")))
             {
                 FindAndAssignMesh(puzzlePiece);
             }
@@ -41,10 +52,7 @@ public class PuzzlePieceEditor : Editor
 
             EditorGUILayout.BeginVertical(GUI.skin.box);
             EditorGUILayout.LabelField($"Editing '{puzzlePiece.PieceTypeSO.name}'", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Зміни, внесені тут, будуть збережені безпосередньо в ScriptableObject.", MessageType.Info);
-
             cachedShapeEditor.OnInspectorGUI();
-
             EditorGUILayout.EndVertical();
         }
     }
@@ -52,11 +60,9 @@ public class PuzzlePieceEditor : Editor
     private void AssignPrefabToSO(PuzzlePiece puzzlePiece)
     {
         GameObject prefabAsset = null;
-
         if (PrefabUtility.IsPartOfAnyPrefab(puzzlePiece.gameObject))
         {
             string path = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(puzzlePiece.gameObject);
-
             if (!string.IsNullOrEmpty(path))
             {
                 prefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
@@ -67,97 +73,78 @@ public class PuzzlePieceEditor : Editor
         {
             puzzlePiece.PieceTypeSO.prefab = prefabAsset.transform;
             puzzlePiece.PieceTypeSO.visual = prefabAsset.transform;
-
             EditorUtility.SetDirty(puzzlePiece.PieceTypeSO);
-
-            Debug.Log($"<color=green>Успішно призначено префаб-варіант</color> <b>'{prefabAsset.name}'</b> <color=green>до SO</color> <b>'{puzzlePiece.PieceTypeSO.name}'</b>.", puzzlePiece.PieceTypeSO);
+            Debug.Log($"<color=green>Assigned prefab</color> <b>'{prefabAsset.name}'</b> <color=green>to SO</color>.");
         }
         else
         {
-            Debug.LogWarning("Не вдалося знайти асет префабу.", puzzlePiece);
+            Debug.LogWarning("Could not find prefab asset.", puzzlePiece);
         }
     }
 
-    // --- НОВИЙ, ВИПРАВЛЕНИЙ МЕТОД ---
     private void FindAndAssignMesh(PuzzlePiece puzzlePiece)
     {
-        // 1. Отримуємо шлях до префабу, який інспектуємо. Це надійно працює з варіантами.
         string prefabPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(puzzlePiece.gameObject);
         if (string.IsNullOrEmpty(prefabPath))
         {
-            Debug.LogError("Не вдалося отримати шлях до префабу. Переконайтеся, що ви працюєте з префабом.", puzzlePiece);
+            Debug.LogError("Not a prefab.", puzzlePiece);
             return;
         }
 
-        // 2. Отримуємо ім'я файлу зі шляху. Це гарантує, що ми отримаємо ім'я варіанта, а не бази.
         string prefabName = Path.GetFileNameWithoutExtension(prefabPath);
         string identifier = prefabName.Replace("POT_TilePall_", "");
 
-        // 3. Перевіряємо, чи вдалося витягти ідентифікатор
         if (string.IsNullOrEmpty(identifier) || prefabName.Equals(identifier))
         {
-            Debug.LogError($"Не вдалося витягти ідентифікатор з назви префабу: '{prefabName}'. Переконайтеся, що назва відповідає формату 'POT_TilePall_...'", puzzlePiece);
+            Debug.LogError($"Invalid prefab name format: '{prefabName}'. Expected 'POT_TilePall_...'", puzzlePiece);
             return;
         }
 
         string targetMeshName = "Tile_" + identifier;
-
-        // 4. Шукаємо FBX файл 'AllShapeBlocks'
         string[] fbxGuids = AssetDatabase.FindAssets("AllShapeBlocks t:Model");
-        if (fbxGuids.Length == 0)
-        {
-            Debug.LogError("Не знайдено FBX файл з назвою 'AllShapeBlocks' у проекті.");
-            return;
-        }
-        string fbxPath = AssetDatabase.GUIDToAssetPath(fbxGuids[0]);
+        if (fbxGuids.Length == 0) return;
 
-        // 5. Завантажуємо всі асети (включно з мешами) з цього FBX
+        string fbxPath = AssetDatabase.GUIDToAssetPath(fbxGuids[0]);
         Object[] allAssets = AssetDatabase.LoadAllAssetsAtPath(fbxPath);
         Mesh foundMesh = allAssets.OfType<Mesh>().FirstOrDefault(m => m.name == targetMeshName);
 
         if (foundMesh == null)
         {
-            Debug.LogError($"Не знайдено меш з назвою '{targetMeshName}' всередині '{fbxPath}'.", puzzlePiece);
+            Debug.LogError($"Mesh '{targetMeshName}' not found in '{fbxPath}'.", puzzlePiece);
             return;
         }
 
-        // 6. Завантажуємо вміст префабу для редагування
         GameObject prefabRoot = PrefabUtility.LoadPrefabContents(prefabPath);
-        PuzzlePiece pieceInPrefab = prefabRoot.GetComponent<PuzzlePiece>();
 
-        // 7. Знаходимо MeshFilter та MeshRenderer в дочірніх об'єктах
-        MeshFilter meshFilter = pieceInPrefab.GetComponentInChildren<MeshFilter>(true);
-        MeshRenderer meshRenderer = pieceInPrefab.GetComponentInChildren<MeshRenderer>(true);
+        // --- UPDATED LOGIC FOR NEW ARCHITECTURE ---
+        PieceVisuals visuals = prefabRoot.GetComponent<PieceVisuals>();
+        if (visuals == null) visuals = prefabRoot.AddComponent<PieceVisuals>();
 
-        if (meshFilter == null || meshRenderer == null)
+        MeshFilter meshFilter = prefabRoot.GetComponentInChildren<MeshFilter>(true);
+        MeshRenderer meshRenderer = prefabRoot.GetComponentInChildren<MeshRenderer>(true);
+
+        if (meshFilter != null && meshRenderer != null)
         {
-            Debug.LogError("У дочірніх об'єктах префабу не знайдено MeshFilter або MeshRenderer. Перевірте структуру префабу.", prefabRoot);
-            PrefabUtility.UnloadPrefabContents(prefabRoot);
-            return;
+            meshFilter.sharedMesh = foundMesh;
+
+            // Встановлюємо список meshesToColor в новому компоненті PieceVisuals
+            // Використовуємо Reflection або Public Method, якщо поле приватне. 
+            // Тут ми додали публічний метод SetMeshesToColorFromEditor в PieceVisuals
+            visuals.SetMeshesToColorFromEditor(new List<MeshRenderer> { meshRenderer });
+
+            Debug.Log($"<color=green>Assigned mesh '{targetMeshName}' to PieceVisuals on '{prefabName}'.</color>");
+        }
+        else
+        {
+            Debug.LogError("No MeshFilter/Renderer found in children.", prefabRoot);
         }
 
-        // 8. Призначаємо меш та оновлюємо список рендерерів
-        meshFilter.sharedMesh = foundMesh;
-
-        var meshesToColorProp = new SerializedObject(pieceInPrefab).FindProperty("meshesToColor");
-        meshesToColorProp.ClearArray();
-        meshesToColorProp.InsertArrayElementAtIndex(0);
-        meshesToColorProp.GetArrayElementAtIndex(0).objectReferenceValue = meshRenderer;
-        meshesToColorProp.serializedObject.ApplyModifiedProperties();
-
-        // 9. Зберігаємо зміни
         PrefabUtility.SaveAsPrefabAsset(prefabRoot, prefabPath);
         PrefabUtility.UnloadPrefabContents(prefabRoot);
-
-        Debug.Log($"<color=green>Успішно призначено меш</color> <b>'{targetMeshName}'</b> <color=green>до префабу</color> <b>'{prefabName}'</b>.", puzzlePiece);
     }
-
 
     private void OnDisable()
     {
-        if (cachedShapeEditor != null)
-        {
-            DestroyImmediate(cachedShapeEditor);
-        }
+        if (cachedShapeEditor != null) DestroyImmediate(cachedShapeEditor);
     }
 }

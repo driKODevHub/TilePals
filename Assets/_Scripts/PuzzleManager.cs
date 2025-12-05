@@ -1,57 +1,57 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using System;
 using System.Linq;
 
-/// <summary>
-/// Об'єднаний клас, що керує всією ігровою логікою та взаємодією.
-/// </summary>
 public class PuzzleManager : MonoBehaviour
 {
     public static PuzzleManager Instance { get; private set; }
 
-    [Header("Game Flow Settings")]
-    [Tooltip("Якщо істина, гравці не зможуть піднімати фігури з сітки після завершення рівня.")]
-    [SerializeField] private bool lockPiecesOnLevelComplete = true;
+    [Header("Dependencies")]
+    [SerializeField] private InputReader inputReader;
 
-    [Tooltip("Якщо істина, рух фігури за межами ігрового поля буде плавним. Якщо хиба - фігура буде 'стрибати' по невидимій сітці.")]
+    [Header("Game Flow Settings")]
+    [SerializeField] private bool lockPiecesOnLevelComplete = true;
     [SerializeField] private bool smoothMovementOffGrid = true;
 
-    [Header("Налаштування руху фігур")]
-    [SerializeField] private float pieceFollowSpeed = 25f;
+    [Header("Placement Settings")]
     [SerializeField] private float pieceHeightWhenHeld = 1.0f;
     [SerializeField] private float shakenVelocityThreshold = 15f;
-
-    [Header("Налаштування візуалу")]
     [SerializeField] private Material invalidPlacementMaterial;
 
-    [Header("Налаштування шарів (Layers)")]
+    [Header("Interaction Settings")]
+    [Tooltip("Мінімальна відстань (у пікселях), яку треба пройти мишкою з затиснутою кнопкою, щоб це вважалося Петінгом.")]
+    [SerializeField] private float dragThreshold = 20f;
+
+    [Tooltip("Максимальний час (у секундах) для швидкого кліку. Якщо відпустити кнопку швидше, це буде вважатися 'Підняттям', навіть якщо мишка трохи рухалась.")]
+    [SerializeField] private float clickTimeThreshold = 0.25f;
+
+    [Header("Layers")]
     [SerializeField] private LayerMask pieceLayer;
     [SerializeField] private LayerMask offGridPlaneLayer;
 
-    // Ігрові стани
+    // State
     private PuzzlePiece _heldPiece;
-    private PuzzlePiece _pieceUnderMouse;
-    private PuzzlePiece _pieceBeingPetted;
+    private PuzzlePiece _hoveredPiece;
 
-    // Для відстеження аутлайну
-    private PuzzlePiece _lastHoveredPiece;
+    // Interaction State
+    private PuzzlePiece _potentialInteractionPiece;
+    private Vector2 _clickStartPos;
+    private float _clickStartTime;
+    private bool _isPettingActive;
 
-    // Змінні для логіки
+    // Logic Variables
     private Vector3 _initialPiecePosition;
     private Quaternion _initialPieceRotation;
-    private Vector3 _lastMousePosition;
-    private float _mouseSpeed;
-    private Vector3 _lastHeldPiecePosition;
-    private float _heldPieceVelocity;
     private bool _isLevelComplete = false;
-    private bool _justPlacedPiece = false;
-
     private List<PuzzlePiece> _piecesBeingFlownOver = new List<PuzzlePiece>();
     private List<PiecePersonality> _allPersonalities = new List<PiecePersonality>();
 
+    // Mouse Velocity Calculation
+    private Vector2 _lastMousePos;
+    private float _currentMouseSpeed;
 
-    // Події для старої логіки (GridVisualManager)
     public event Action<PuzzlePiece> OnPiecePickedUp;
     public event Action<PuzzlePiece> OnPieceDropped;
 
@@ -59,182 +59,256 @@ public class PuzzleManager : MonoBehaviour
     {
         if (Instance != null) { Destroy(gameObject); return; }
         Instance = this;
+
+        if (inputReader == null)
+            inputReader = FindFirstObjectByType<InputReader>();
+    }
+
+    private void Start()
+    {
+        if (inputReader != null)
+        {
+            inputReader.OnClickStarted += HandleClickStart;
+            inputReader.OnClickCanceled += HandleClickEnd;
+
+            inputReader.OnRotatePieceLeft += () => TryRotateHeldPiece(false);
+            inputReader.OnRotatePieceRight += () => TryRotateHeldPiece(true);
+            inputReader.OnAlternateRotate += () => TryRotateHeldPiece(true);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (inputReader != null)
+        {
+            inputReader.OnClickStarted -= HandleClickStart;
+            inputReader.OnClickCanceled -= HandleClickEnd;
+        }
     }
 
     public void ResetState()
     {
         _heldPiece = null;
-        _pieceUnderMouse = null;
-        _pieceBeingPetted = null;
-        if (_lastHoveredPiece != null)
+        if (_hoveredPiece != null)
         {
-            _lastHoveredPiece.SetOutline(false);
-            _lastHoveredPiece = null;
+            _hoveredPiece.SetOutline(false);
+            _hoveredPiece = null;
         }
+        _potentialInteractionPiece = null;
+        _isPettingActive = false;
+
         _isLevelComplete = false;
         _piecesBeingFlownOver.Clear();
-
         _allPersonalities = FindObjectsByType<PiecePersonality>(FindObjectsSortMode.None).ToList();
-    }
-
-    private void LateUpdate()
-    {
-        _justPlacedPiece = false;
     }
 
     private void Update()
     {
-        if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
+        CalculateMouseSpeed();
 
-        UpdateMouseState();
-
-        if (_heldPiece != null)
+        // 1. Якщо ми нічого не несемо - обробляємо логіку наведення та інтеракції (петінг/клік)
+        if (_heldPiece == null)
         {
-            HandleHeldPieceInput();
+            HandleHoverLogic();
+            HandleInteractionLogic();
         }
         else
         {
-            HandleIdleInput();
-            if (_piecesBeingFlownOver.Count > 0) _piecesBeingFlownOver.Clear();
+            // 2. Якщо несемо - рухаємо
+            UpdateHeldPiecePosition();
+            CheckForFlyOver();
         }
     }
 
-    private void UpdateMouseState()
+    private void CalculateMouseSpeed()
     {
-        _mouseSpeed = (Input.mousePosition - _lastMousePosition).magnitude / Time.deltaTime;
-        _lastMousePosition = Input.mousePosition;
-
-        _pieceUnderMouse = null;
-
-        if (_isLevelComplete)
-        {
-            if (_lastHoveredPiece != null)
-            {
-                _lastHoveredPiece.SetOutline(false);
-                _lastHoveredPiece = null;
-            }
-            return;
-        }
-
-        if (_heldPiece != null)
-        {
-            if (_lastHoveredPiece != null && _lastHoveredPiece != _heldPiece)
-            {
-                _lastHoveredPiece.SetOutline(false);
-                _lastHoveredPiece = null;
-            }
-            return;
-        }
-
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
-        {
-            PuzzlePiece piece = hit.collider.GetComponentInParent<PuzzlePiece>();
-            if (piece != null)
-            {
-                _pieceUnderMouse = piece;
-
-                if (_lastHoveredPiece != piece)
-                {
-                    if (_lastHoveredPiece != null)
-                    {
-                        _lastHoveredPiece.SetOutline(false);
-                    }
-
-                    piece.SetOutline(true);
-                    _lastHoveredPiece = piece;
-                }
-            }
-        }
-        else
-        {
-            if (_lastHoveredPiece != null)
-            {
-                _lastHoveredPiece.SetOutline(false);
-                _lastHoveredPiece = null;
-            }
-        }
+        if (inputReader == null) return;
+        Vector2 currentPos = inputReader.MousePosition;
+        float dist = (currentPos - _lastMousePos).magnitude;
+        _currentMouseSpeed = dist / Time.deltaTime;
+        _lastMousePos = currentPos;
     }
 
-    private void HandleIdleInput()
+    #region Input Handlers & Interaction Logic
+
+    private void HandleHoverLogic()
     {
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
         if (_isLevelComplete) return;
 
-        if (Input.GetMouseButtonDown(0))
+        // Якщо ми вже в активній фазі взаємодії (гладимо), то не змінюємо hover об'єкт,
+        // щоб не губити фокус, якщо мишка трохи зіслизнула.
+        if (_potentialInteractionPiece != null) return;
+
+        Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
         {
-            if (_pieceUnderMouse != null && !_justPlacedPiece)
+            PuzzlePiece piece = hit.collider.GetComponentInParent<PuzzlePiece>();
+            if (piece != _hoveredPiece)
             {
-                _pieceBeingPetted = _pieceUnderMouse;
-                if (!_pieceUnderMouse.IsPlaced)
-                {
-                    PersonalityEventManager.RaisePettingStart(_pieceBeingPetted);
-                }
+                if (_hoveredPiece != null) _hoveredPiece.SetOutline(false);
+                _hoveredPiece = piece;
+                if (_hoveredPiece != null) _hoveredPiece.SetOutline(true);
             }
         }
-
-        if (Input.GetMouseButton(0))
+        else
         {
-            if (_pieceBeingPetted != null && !_pieceBeingPetted.IsPlaced)
+            if (_hoveredPiece != null)
             {
-                if (_pieceUnderMouse == _pieceBeingPetted)
-                {
-                    PersonalityEventManager.RaisePettingUpdate(_pieceBeingPetted, _mouseSpeed);
-                }
-                else
-                {
-                    PersonalityEventManager.RaisePettingEnd(_pieceBeingPetted);
-                    _pieceBeingPetted = null;
-                }
+                _hoveredPiece.SetOutline(false);
+                _hoveredPiece = null;
             }
-        }
-
-        if (Input.GetMouseButtonUp(0))
-        {
-            if (_pieceBeingPetted != null)
-            {
-                if (_pieceUnderMouse == _pieceBeingPetted)
-                {
-                    if (!_pieceBeingPetted.IsPlaced)
-                    {
-                        PersonalityEventManager.RaisePettingEnd(_pieceBeingPetted);
-                    }
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                    if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
-                    {
-                        PickUpPiece(_pieceBeingPetted, hit.point);
-                    }
-                    else
-                    {
-                        PickUpPiece(_pieceBeingPetted, _pieceBeingPetted.transform.position); // Fallback
-                    }
-                }
-                else if (!_pieceBeingPetted.IsPlaced)
-                {
-                    PersonalityEventManager.RaisePettingEnd(_pieceBeingPetted);
-                }
-            }
-            _pieceBeingPetted = null;
         }
     }
 
-    private void PickUpPiece(PuzzlePiece piece, Vector3 hitPoint)
+    // Обробка натискання (Mouse Down)
+    private void HandleClickStart()
     {
-        if (lockPiecesOnLevelComplete && _isLevelComplete && piece.IsPlaced)
+        if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
+        if (_isLevelComplete) return;
+
+        // Ігноруємо, якщо натиснуто Alt (для дебагу)
+        if (Keyboard.current != null && Keyboard.current.altKey.isPressed) return;
+
+        // Якщо ми нічого не тримаємо і навели на фігуру -> готуємось до взаємодії
+        if (_heldPiece == null && _hoveredPiece != null)
         {
+            _potentialInteractionPiece = _hoveredPiece;
+            _clickStartPos = inputReader.MousePosition;
+            _clickStartTime = Time.time;
+            _isPettingActive = false;
+        }
+    }
+
+    // Логіка, що виконується поки кнопка затиснута (Update)
+    private void HandleInteractionLogic()
+    {
+        if (_potentialInteractionPiece == null) return;
+
+        // Перевіряємо, чи ми посунули мишку достатньо далеко для початку петінгу
+        if (!_isPettingActive)
+        {
+            float dragDistance = Vector2.Distance(inputReader.MousePosition, _clickStartPos);
+            // Починаємо гладити тільки якщо пройшли дистанцію
+            if (dragDistance > dragThreshold)
+            {
+                StartPetting();
+            }
+        }
+
+        // Якщо петінг активний - оновлюємо його
+        if (_isPettingActive)
+        {
+            PersonalityEventManager.RaisePettingUpdate(_potentialInteractionPiece, _currentMouseSpeed);
+        }
+    }
+
+    // Обробка відпускання (Mouse Up)
+    private void HandleClickEnd()
+    {
+        // 1. Якщо несемо фігуру -> Ставимо (Drop/Place)
+        if (_heldPiece != null && !_heldPiece.IsRotating)
+        {
+            TryToPlaceOrDropPiece();
             return;
         }
 
-        if (_heldPiece != null) return;
+        // 2. Якщо ми взаємодіяли з фігурою на землі
+        if (_potentialInteractionPiece != null)
+        {
+            float pressDuration = Time.time - _clickStartTime;
+
+            // Це швидкий клік? (навіть якщо ми трохи посунули мишку і почали гладити, 
+            // але відпустили дуже швидко - це має бути пікап)
+            bool isFastClick = pressDuration <= clickTimeThreshold;
+
+            if (isFastClick)
+            {
+                // Якщо це швидкий клік -> Примусово зупиняємо петінг (якщо він встиг початись) і беремо фігуру
+                if (_isPettingActive) StopPetting();
+
+                // Перевіряємо, чи ми все ще над тією ж фігурою
+                if (_hoveredPiece == _potentialInteractionPiece)
+                {
+                    PickUpPiece(_potentialInteractionPiece);
+                }
+            }
+            else
+            {
+                // Це був довгий натиск.
+                if (_isPettingActive)
+                {
+                    // Якщо ми гладили -> просто закінчуємо гладити
+                    StopPetting();
+                }
+                else
+                {
+                    // Ми довго тримали, але не рухали мишкою (пікап після паузи)
+                    if (_hoveredPiece == _potentialInteractionPiece)
+                    {
+                        PickUpPiece(_potentialInteractionPiece);
+                    }
+                }
+            }
+
+            // Скидаємо стан взаємодії
+            _potentialInteractionPiece = null;
+            _isPettingActive = false;
+        }
+    }
+
+    private void StartPetting()
+    {
+        if (!_potentialInteractionPiece.IsPlaced)
+        {
+            _isPettingActive = true;
+            PersonalityEventManager.RaisePettingStart(_potentialInteractionPiece);
+        }
+    }
+
+    private void StopPetting()
+    {
+        if (_potentialInteractionPiece != null)
+        {
+            PersonalityEventManager.RaisePettingEnd(_potentialInteractionPiece);
+        }
+        _isPettingActive = false;
+    }
+
+    #endregion
+
+    #region Game Logic (PickUp, Drop, Move)
+
+    private void PickUpPiece(PuzzlePiece piece)
+    {
+        // Перераховуємо точку кліку
+        Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
+        Vector3 hitPoint;
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer)) hitPoint = hit.point;
+        else hitPoint = piece.transform.position;
+
+        DoPickUpLogic(piece, hitPoint);
+    }
+
+    private void DoPickUpLogic(PuzzlePiece piece, Vector3 hitPoint)
+    {
+        if (piece == null) return;
+        if (lockPiecesOnLevelComplete && _isLevelComplete && piece.IsPlaced) return;
+
+        if (GridBuildingSystem.Instance == null || GridBuildingSystem.Instance.GetGrid() == null)
+        {
+            Debug.LogError("Grid not initialized!");
+            return;
+        }
 
         _heldPiece = piece;
         _heldPiece.SetOutlineLocked(true);
+        if (_heldPiece.Visuals != null) _heldPiece.Visuals.OnPickupFeedback?.Invoke();
 
         _initialPiecePosition = piece.transform.position;
         _initialPieceRotation = piece.transform.rotation;
-        _lastHeldPiecePosition = piece.transform.position;
-        _heldPieceVelocity = 0f;
 
+        // Calculate Offset
         float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
         Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection);
         Vector3 pieceOriginWorld = piece.transform.position - new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
@@ -244,6 +318,7 @@ public class PuzzleManager : MonoBehaviour
 
         piece.ClickOffset = new Vector2Int(clickX - originX, clickZ - originZ);
 
+        // Remove from logic grids
         if (piece.IsPlaced)
         {
             GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
@@ -259,53 +334,25 @@ public class PuzzleManager : MonoBehaviour
         PersonalityEventManager.RaisePiecePickedUp(piece);
     }
 
-    private void HandleHeldPieceInput()
-    {
-        HandlePieceMovement();
-
-        if (Input.GetMouseButtonDown(0) && !_heldPiece.IsRotating)
-        {
-            TryToPlaceOrDropPiece();
-        }
-
-        // --- НОВЕ КЕРУВАННЯ ОБЕРТАННЯМ ---
-        
-        // 1. Пробіл та ПКМ: Обертання за годинниковою (Standard)
-        if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(1)) && !_heldPiece.IsRotating)
-        {
-            _heldPiece.StartSmoothRotation(true); // true = Clockwise
-        }
-
-        // 2. Q: Обертання проти годинникової (Left)
-        if (Input.GetKeyDown(KeyCode.Q) && !_heldPiece.IsRotating)
-        {
-            _heldPiece.StartSmoothRotation(false); // false = Counter-Clockwise
-        }
-
-        // 3. E: Обертання за годинниковою (Right)
-        if (Input.GetKeyDown(KeyCode.E) && !_heldPiece.IsRotating)
-        {
-            _heldPiece.StartSmoothRotation(true); // true = Clockwise
-        }
-    }
-
-    private void HandlePieceMovement()
+    private void UpdateHeldPiecePosition()
     {
         if (_heldPiece == null || _heldPiece.IsRotating) return;
 
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
         {
-            var grid = GridBuildingSystem.Instance.GetGrid();
-            float cellSize = grid.GetCellSize();
+            if (GridBuildingSystem.Instance == null) return;
 
+            var grid = GridBuildingSystem.Instance.GetGrid();
+            if (grid == null) return;
+
+            float cellSize = grid.GetCellSize();
             grid.GetXZ(hit.point, out int cursorX, out int cursorZ);
 
             Vector2Int logicalOrigin = new Vector2Int(cursorX, cursorZ) - _heldPiece.ClickOffset;
             Vector3 targetPosition;
 
             bool isMouseOverGrid = GridBuildingSystem.Instance.IsValidGridPosition(cursorX, cursorZ);
-
             Vector2Int rotationOffset = _heldPiece.PieceTypeSO.GetRotationOffset(_heldPiece.CurrentDirection);
             Vector3 rotationVisualOffset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
 
@@ -318,67 +365,36 @@ public class PuzzleManager : MonoBehaviour
             {
                 Vector3 mouseWorldPos = hit.point;
                 mouseWorldPos.y = 0;
-
                 Vector3 clickOffsetVector = new Vector3(_heldPiece.ClickOffset.x, 0, _heldPiece.ClickOffset.y) * cellSize;
                 Vector3 centerOfCellOffset = new Vector3(cellSize * 0.5f, 0, cellSize * 0.5f);
-
                 Vector3 smoothOrigin = mouseWorldPos - clickOffsetVector - centerOfCellOffset;
-
                 targetPosition = smoothOrigin + rotationVisualOffset;
             }
 
             targetPosition.y = pieceHeightWhenHeld;
 
-            _heldPiece.transform.position = Vector3.Lerp(_heldPiece.transform.position, targetPosition, Time.deltaTime * pieceFollowSpeed);
-
-            _heldPieceVelocity = (_heldPiece.transform.position - _lastHeldPiecePosition).magnitude / Time.deltaTime;
-            _lastHeldPiecePosition = _heldPiece.transform.position;
-
-            if (_heldPieceVelocity > shakenVelocityThreshold)
+            if (_heldPiece.Movement != null)
             {
-                PersonalityEventManager.RaisePieceShaken(_heldPiece, _heldPieceVelocity);
-            }
+                _heldPiece.Movement.SetTargetPosition(targetPosition);
 
-            CheckForFlyOver();
-
-            bool canPlaceOnGrid, canPlaceOffGrid;
-            CanPlaceHeldPiece(logicalOrigin, out canPlaceOnGrid, out canPlaceOffGrid);
-
-            _heldPiece.UpdatePlacementVisual(canPlaceOnGrid || canPlaceOffGrid, invalidPlacementMaterial);
-        }
-    }
-
-    private void CheckForFlyOver()
-    {
-        var currentlyOver = new List<PuzzlePiece>();
-
-        foreach (var personality in _allPersonalities)
-        {
-            if (personality == null || personality.GetComponent<PuzzlePiece>() == _heldPiece) continue;
-
-            float flyOverRadius = personality.GetFlyOverRadius();
-            Vector3 heldPiecePosition = _heldPiece.transform.position;
-            Vector3 stationaryPiecePosition = personality.transform.position;
-
-            heldPiecePosition.y = 0;
-            stationaryPiecePosition.y = 0;
-
-            if (Vector3.Distance(heldPiecePosition, stationaryPiecePosition) < flyOverRadius)
-            {
-                PuzzlePiece stationaryPiece = personality.GetComponent<PuzzlePiece>();
-                currentlyOver.Add(stationaryPiece);
-                if (!_piecesBeingFlownOver.Contains(stationaryPiece))
+                if (_heldPiece.Movement.CurrentVelocity > shakenVelocityThreshold)
                 {
-                    PersonalityEventManager.RaisePieceFlyOver(stationaryPiece);
+                    PersonalityEventManager.RaisePieceShaken(_heldPiece, _heldPiece.Movement.CurrentVelocity);
                 }
             }
+            else
+            {
+                _heldPiece.transform.position = Vector3.Lerp(_heldPiece.transform.position, targetPosition, Time.deltaTime * 25f);
+            }
+
+            CanPlaceHeldPiece(logicalOrigin, out bool canOnGrid, out bool canOffGrid);
+            _heldPiece.UpdatePlacementVisual(canOnGrid || canOffGrid, invalidPlacementMaterial);
         }
-        _piecesBeingFlownOver = currentlyOver;
     }
 
     private void TryToPlaceOrDropPiece()
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
         if (!Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer)) return;
 
         var grid = GridBuildingSystem.Instance.GetGrid();
@@ -386,73 +402,65 @@ public class PuzzleManager : MonoBehaviour
 
         Vector2Int origin = new Vector2Int(cursorX, cursorZ) - _heldPiece.ClickOffset;
 
-        bool canPlaceOnGrid, canPlaceOffGrid;
-        CanPlaceHeldPiece(origin, out canPlaceOnGrid, out canPlaceOffGrid);
+        CanPlaceHeldPiece(origin, out bool canOnGrid, out bool canOffGrid);
 
-        if (canPlaceOnGrid)
+        if (canOnGrid)
         {
-            TryPlaceOnGrid(origin);
+            ICommand cmd = new PlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
+            if (cmd.Execute())
+            {
+                FinalizeDrop(cmd);
+                CheckForWin();
+            }
         }
-        else if (canPlaceOffGrid)
+        else if (canOffGrid)
         {
-            TryPlaceOffGrid(origin);
+            ICommand cmd = new OffGridPlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
+
+            // --- ВИПРАВЛЕННЯ: Кешуємо змінну перед тим як вона стане null ---
+            PuzzlePiece droppedPiece = _heldPiece;
+
+            if (cmd.Execute())
+            {
+                FinalizeDrop(cmd); // Це очищує _heldPiece
+
+                // Використовуємо кешовану змінну, щоб відправити подію
+                PersonalityEventManager.RaisePieceDropped(droppedPiece);
+            }
         }
         else
         {
-            UnityEngine.Debug.Log("<color=red>Неможливо розмістити фігуру тут!</color>");
+            Debug.Log("Invalid placement position.");
         }
     }
 
-    private void TryPlaceOnGrid(Vector2Int origin)
+    private void FinalizeDrop(ICommand command)
     {
-        ICommand placeCommand = new PlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
-        if (placeCommand.Execute())
+        _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
+        _heldPiece.SetOutlineLocked(false);
+        CommandHistory.AddCommand(command);
+        OnPieceDropped?.Invoke(_heldPiece);
+
+        _heldPiece = null;
+        GameManager.Instance.SaveCurrentProgress();
+    }
+
+    private void TryRotateHeldPiece(bool clockwise)
+    {
+        if (_heldPiece != null && !_heldPiece.IsRotating)
         {
-            PuzzlePiece placedPiece = _heldPiece;
-            _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
-            _heldPiece.SetOutlineLocked(false);
-
-            CommandHistory.AddCommand(placeCommand);
-
-            OnPieceDropped?.Invoke(placedPiece);
-
-            _heldPiece = null;
-            _justPlacedPiece = true;
-            CheckForWin();
-            GameManager.Instance.SaveCurrentProgress();
+            float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
+            _heldPiece.RotatePiece(clockwise, cellSize);
         }
     }
 
-    private void TryPlaceOffGrid(Vector2Int offGridOrigin)
+    private void CanPlaceHeldPiece(Vector2Int origin, out bool canOnGrid, out bool canOffGrid)
     {
-        ICommand placeCommand = new OffGridPlaceCommand(_heldPiece, offGridOrigin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
-
-        if (placeCommand.Execute())
-        {
-            PuzzlePiece placedPiece = _heldPiece;
-            _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
-            _heldPiece.SetOutlineLocked(false);
-
-            CommandHistory.AddCommand(placeCommand);
-
-            OnPieceDropped?.Invoke(placedPiece);
-            PersonalityEventManager.RaisePieceDropped(placedPiece);
-
-            _heldPiece = null;
-            _justPlacedPiece = true;
-            GameManager.Instance.SaveCurrentProgress();
-        }
-    }
-
-    private void CanPlaceHeldPiece(Vector2Int origin, out bool canPlaceOnGrid, out bool canPlaceOffGrid)
-    {
-        canPlaceOnGrid = false;
-        canPlaceOffGrid = false;
-
+        canOnGrid = false;
+        canOffGrid = false;
         if (_heldPiece == null) return;
 
         var grid = GridBuildingSystem.Instance.GetGrid();
-
         List<Vector2Int> pieceCells = _heldPiece.PieceTypeSO.GetGridPositionsList(origin, _heldPiece.CurrentDirection);
 
         bool allOnGrid = pieceCells.All(cell => grid.GetGridObject(cell.x, cell.y) != null);
@@ -460,39 +468,59 @@ public class PuzzleManager : MonoBehaviour
 
         if (allOnGrid)
         {
-            canPlaceOnGrid = GridBuildingSystem.Instance.CanPlacePiece(_heldPiece, origin, _heldPiece.CurrentDirection);
+            canOnGrid = GridBuildingSystem.Instance.CanPlacePiece(_heldPiece, origin, _heldPiece.CurrentDirection);
         }
         else if (allOffGrid)
         {
-            canPlaceOffGrid = OffGridManager.CanPlacePiece(_heldPiece, origin);
+            canOffGrid = OffGridManager.CanPlacePiece(_heldPiece, origin);
         }
         else
         {
-            bool occupiesAnyBuildableCell = pieceCells.Any(cell => {
-                GridObject gridObj = grid.GetGridObject(cell.x, cell.y);
-                return gridObj != null && gridObj.IsBuildable();
+            bool occupiesBuildable = pieceCells.Any(cell => {
+                GridObject go = grid.GetGridObject(cell.x, cell.y);
+                return go != null && go.IsBuildable();
             });
+            if (!occupiesBuildable) canOffGrid = OffGridManager.CanPlacePiece(_heldPiece, origin);
+        }
+    }
 
-            if (occupiesAnyBuildableCell)
+    private void CheckForFlyOver()
+    {
+        if (_allPersonalities.Count == 0) return;
+
+        var currentOver = new List<PuzzlePiece>();
+        Vector3 heldPos = _heldPiece.transform.position; heldPos.y = 0;
+
+        foreach (var p in _allPersonalities)
+        {
+            if (p == null) continue;
+            PuzzlePiece piece = p.GetComponent<PuzzlePiece>();
+            if (piece == _heldPiece) continue;
+
+            Vector3 otherPos = piece.transform.position; otherPos.y = 0;
+            if (Vector3.Distance(heldPos, otherPos) < p.GetFlyOverRadius())
             {
-                canPlaceOnGrid = false;
-                canPlaceOffGrid = false;
-            }
-            else
-            {
-                canPlaceOffGrid = OffGridManager.CanPlacePiece(_heldPiece, origin);
+                currentOver.Add(piece);
+                if (!_piecesBeingFlownOver.Contains(piece))
+                {
+                    PersonalityEventManager.RaisePieceFlyOver(piece);
+                }
             }
         }
+        _piecesBeingFlownOver = currentOver;
     }
 
     private void CheckForWin()
     {
-        if (_isLevelComplete) return;
-        float fillPercentage = GridBuildingSystem.Instance.CalculateGridFillPercentage();
-        if (Mathf.Approximately(fillPercentage, 100f))
+        if (!_isLevelComplete && GridBuildingSystem.Instance.CalculateGridFillPercentage() > 99.9f)
         {
             _isLevelComplete = true;
             GameManager.Instance.OnLevelComplete();
         }
     }
+
+    #endregion
+
+    public void SaveCurrentProgress() => GameManager.Instance.SaveCurrentProgress();
+    public void OnLevelComplete() => GameManager.Instance.OnLevelComplete();
 }

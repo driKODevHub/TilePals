@@ -29,7 +29,7 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private float tickleSpeedThreshold = 800f;
 
     [Header("Налаштування погляду")]
-    [Tooltip("Висота площини очей над землею. ВАЖЛИВО: Налаштуйте це значення, щоб воно співпадало з реальною висотою очей кота (Блакитний квадрат у Gizmos), інакше він буде дивитись вгору.")]
+    [Tooltip("Висота площини очей над землею.")]
     [SerializeField] private float lookPlaneHeight = 0.5f;
 
     [SerializeField] private float idleLookIntervalMin = 1.5f;
@@ -93,11 +93,7 @@ public class PiecePersonality : MonoBehaviour
     public void Setup(TemperamentSO newTemperament)
     {
         _temperament = newTemperament;
-        if (_temperament == null)
-        {
-            Debug.LogError("Спроба ініціалізувати фігуру без темпераменту!", this);
-            return;
-        }
+        if (_temperament == null) return;
 
         if (_puzzlePiece != null)
         {
@@ -120,7 +116,6 @@ public class PiecePersonality : MonoBehaviour
         if (_reactionCoroutine != null) StopCoroutine(_reactionCoroutine);
     }
 
-    // --- DEBUG LOGIC ---
     private void Update()
     {
         HandleDebugInput();
@@ -138,57 +133,34 @@ public class PiecePersonality : MonoBehaviour
         }
     }
 
+    // ... Debug methods ...
     private void HandleDebugInput()
     {
-        // Перевірка на Alt + Left Click
         if (Input.GetMouseButtonDown(0) && (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                // Перевіряємо, чи клікнули ми по цьому об'єкту або його дітям
-                if (hit.transform == transform || hit.transform.IsChildOf(transform))
-                {
-                    ToggleDebug();
-                }
+                if (hit.transform == transform || hit.transform.IsChildOf(transform)) ToggleDebug();
             }
         }
     }
-
     private void ToggleDebug()
     {
         _isDebugActive = !_isDebugActive;
-        Debug.Log($"<color=orange>[{name}] DEBUG: {(_isDebugActive ? "ON" : "OFF")}</color>");
-
-        if (_isDebugActive)
-        {
-            if (_debugStatsCoroutine == null) _debugStatsCoroutine = StartCoroutine(DebugStatsRoutine());
-        }
-        else
-        {
-            if (_debugStatsCoroutine != null) StopCoroutine(_debugStatsCoroutine);
-            _debugStatsCoroutine = null;
-        }
+        if (_isDebugActive) { if (_debugStatsCoroutine == null) _debugStatsCoroutine = StartCoroutine(DebugStatsRoutine()); }
+        else { if (_debugStatsCoroutine != null) StopCoroutine(_debugStatsCoroutine); _debugStatsCoroutine = null; }
     }
-
-    private void LogDebug(string message)
-    {
-        if (_isDebugActive)
-        {
-            Debug.Log($"<color=cyan>[{name}]</color> {message}");
-        }
-    }
-
+    private void LogDebug(string message) { if (_isDebugActive) Debug.Log($"<color=cyan>[{name}]</color> {message}"); }
     private IEnumerator DebugStatsRoutine()
     {
         while (_isDebugActive)
         {
             string state = _isSleeping ? "Sleeping" : (_isHeld ? "Held" : (_isBeingPetted ? "Being Petted" : "Idle"));
-            LogDebug($"Stats -> Fatigue: {_currentFatigue:F2}, Irritation: {_currentIrritation:F2}, Trust: {_currentTrust:F2} | State: {state}");
+            Debug.Log($"<color=cyan>[{name}]</color> Stats -> Fatigue: {_currentFatigue:F2}, Irritation: {_currentIrritation:F2}, Trust: {_currentTrust:F2} | State: {state}");
             yield return new WaitForSeconds(1.0f);
         }
     }
-    // -------------------
 
     private void HandlePettingStart(PuzzlePiece piece)
     {
@@ -224,7 +196,6 @@ public class PiecePersonality : MonoBehaviour
 
         if (targetEmotion != null && targetEmotion != _lastPettingEmotion)
         {
-            LogDebug($"Petting Emotion Switch: {targetEmotion.name}");
             SetEmotion(targetEmotion);
             _lastPettingEmotion = targetEmotion;
         }
@@ -237,6 +208,9 @@ public class PiecePersonality : MonoBehaviour
         LogDebug("Petting Ended");
         _isBeingPetted = false;
         _lastPettingEmotion = null;
+        
+        // Важливо: повертаємося до нейтрального стану, щоб погляд запрацював знову
+        ReturnToNeutralState();
     }
 
     public void TriggerExternalReaction(EmotionProfileSO reactionEmotion, float duration)
@@ -249,9 +223,6 @@ public class PiecePersonality : MonoBehaviour
     {
         if (facialController != null && emotion != null)
         {
-            // Логуємо зміну емоції, тільки якщо це нова емоція (опціонально можна перевіряти попередню)
-            // Але для дебагу корисно бачити всі виклики
-            // LogDebug($"Set Emotion: {emotion.emotionName}"); 
             facialController.ApplyEmotion(emotion);
         }
     }
@@ -279,8 +250,8 @@ public class PiecePersonality : MonoBehaviour
     {
         if (piece != _puzzlePiece) return;
 
-        LogDebug("Dropped");
-        _isHeld = false;
+        LogDebug("Dropped (Off Grid)");
+        _isHeld = false; 
         SetEmotion(droppedEmotion);
         if (facialController != null) facialController.UpdateSortingOrder(false);
 
@@ -294,44 +265,41 @@ public class PiecePersonality : MonoBehaviour
 
         float irritationGain = 0.05f * _temperament.irritationModifier;
         _currentIrritation = Mathf.Clamp01(_currentIrritation + irritationGain);
-        LogDebug($"Shaken! Velocity: {velocity:F1}, Irritation +{irritationGain:F3}");
 
         if (_shakenCoroutine != null) StopCoroutine(_shakenCoroutine);
         _shakenCoroutine = StartCoroutine(ShowShakenEmotion());
     }
 
+    private void HandlePiecePlaced(PuzzlePiece placedPiece)
+    {
+        if (placedPiece == _puzzlePiece)
+        {
+            LogDebug("Placed (On Grid)");
+            _isHeld = false;
+            
+            if (facialController != null) facialController.UpdateSortingOrder(false);
+            
+            CheckForNeighborReaction(null);
+            StartCoroutine(ReturnToNeutralAfterDelay(0.5f));
+        }
+        else if (!_isHeld && !_isSleeping)
+        {
+            CheckForNeighborReaction(placedPiece);
+        }
+    }
+
     private void HandlePieceFlyOver(PuzzlePiece stationaryPiece)
     {
         if (stationaryPiece != _puzzlePiece || _isHeld) return;
-
-        bool wasSleeping = _isSleeping;
         if (_isSleeping)
         {
-            LogDebug("Woke up by FlyOver!");
             StopAllBehaviorCoroutines();
             _isSleeping = false;
-        }
-
-        if (wasSleeping)
-        {
             StartCoroutine(ShowReactionEmotion(curiousEmotion, 2.0f));
         }
         else if (!_isLookingRandomly)
         {
-            LogDebug("Curious about FlyOver");
             StartCoroutine(ShowReactionEmotion(curiousEmotion, 2.0f));
-        }
-    }
-
-    private void HandlePiecePlaced(PuzzlePiece placedPiece)
-    {
-        if (placedPiece != _puzzlePiece && !_isHeld && !_isSleeping)
-        {
-            CheckForNeighborReaction(placedPiece);
-        }
-        else if (placedPiece == _puzzlePiece)
-        {
-            CheckForNeighborReaction(null);
         }
     }
 
@@ -354,7 +322,6 @@ public class PiecePersonality : MonoBehaviour
             {
                 if (rule.neighborTemperament == neighborPersonality._temperament)
                 {
-                    LogDebug($"Neighbor Synergy Triggered with {neighbor.name}!");
                     this.TriggerExternalReaction(rule.myReaction, rule.reactionDuration);
                     neighborPersonality.TriggerExternalReaction(rule.neighborReaction, rule.reactionDuration);
                     break;
@@ -362,7 +329,7 @@ public class PiecePersonality : MonoBehaviour
             }
         }
     }
-
+    
     private List<PuzzlePiece> FindAllNeighbors()
     {
         List<PuzzlePiece> neighbors = new List<PuzzlePiece>();
@@ -397,63 +364,48 @@ public class PiecePersonality : MonoBehaviour
     private IEnumerator ShowReactionEmotion(EmotionProfileSO reactionEmotion, float duration)
     {
         if (_isHeld || _isBeingPetted) yield break;
-
         StopAllBehaviorCoroutines();
         _isLookingRandomly = true;
-
         SetEmotion(reactionEmotion);
         yield return new WaitForSeconds(duration);
-
         if (!_isHeld) ReturnToNeutralState();
     }
 
     private void ReturnToNeutralState()
     {
-        LogDebug("Returning to Neutral State");
+        LogDebug("Neutral State");
         StopAllBehaviorCoroutines();
         _isSleeping = false;
-        _isLookingRandomly = false;
+        _isLookingRandomly = false; // Важливо для LookAtCursor в Update!
 
         SetEmotion(neutralEmotion);
 
         float sleepTime = Random.Range(timeToSleepMin, timeToSleepMax);
-        LogDebug($"Will sleep in {sleepTime:F1}s");
         _sleepCoroutine = StartCoroutine(SleepTimer(sleepTime));
-
         _idleLookCoroutine = StartCoroutine(IdleLookRoutine());
     }
 
     private IEnumerator ReturnToNeutralAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-        if (!_isHeld)
-        {
-            ReturnToNeutralState();
-        }
+        if (!_isHeld) ReturnToNeutralState();
     }
 
     private IEnumerator SleepTimer(float time)
     {
         yield return new WaitForSeconds(time);
         if (_isBeingPetted || _isHeld) yield break;
-
-        LogDebug("Fell Asleep Zzz...");
         StopAllBehaviorCoroutines();
         _isLookingRandomly = false;
         _isSleeping = true;
         SetEmotion(sleepingEmotion);
-
-        float wakeTime = Random.Range(timeToWakeMin, timeToWakeMax);
-        LogDebug($"Will wake up in {wakeTime:F1}s");
-        _wakeUpCoroutine = StartCoroutine(WakeUpTimer(wakeTime));
+        _wakeUpCoroutine = StartCoroutine(WakeUpTimer(Random.Range(timeToWakeMin, timeToWakeMax)));
     }
 
     private IEnumerator WakeUpTimer(float time)
     {
         yield return new WaitForSeconds(time);
         if (_isHeld) yield break;
-
-        LogDebug("Woke Up Naturally");
         ReturnToNeutralState();
     }
 
@@ -461,34 +413,21 @@ public class PiecePersonality : MonoBehaviour
     {
         StopAllBehaviorCoroutines();
         _isLookingRandomly = false;
-
         SetEmotion(shakenEmotion);
         yield return new WaitForSeconds(shakenEmotionDuration);
-
-        if (_isHeld)
-        {
-            SetEmotion(pickedUpEmotion);
-        }
+        if (_isHeld) SetEmotion(pickedUpEmotion);
     }
 
     private void LookAtCursor()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        Vector3 planePoint = new Vector3(0, lookPlaneHeight, 0); // Фіксована висота площини
+        Vector3 planePoint = new Vector3(0, lookPlaneHeight, 0); 
         Plane plane = new Plane(Vector3.up, planePoint);
 
         if (plane.Raycast(ray, out float distance))
         {
             Vector3 targetPoint = ray.GetPoint(distance);
-
-            _debugLookTarget = targetPoint;
-            _debugHasTarget = true;
-
             if (facialController != null) facialController.LookAt(targetPoint);
-        }
-        else
-        {
-            _debugHasTarget = false;
         }
     }
 
@@ -499,7 +438,7 @@ public class PiecePersonality : MonoBehaviour
             yield return new WaitForSeconds(Random.Range(idleLookIntervalMin, idleLookIntervalMax));
             if (_isHeld || _isSleeping || _isBeingPetted) continue;
 
-            _isLookingRandomly = true;
+            _isLookingRandomly = true; // Вимикаємо LookAtCursor в Update
 
             var allPieces = FindObjectsByType<PiecePersonality>(FindObjectsSortMode.None)
                             .Where(p => p != this && p.gameObject.activeInHierarchy).ToList();
@@ -516,23 +455,19 @@ public class PiecePersonality : MonoBehaviour
                     case IdleGazeState.LookAtRandom:
                         Vector3 randomDirection = Random.insideUnitSphere * idleLookRadius;
                         randomDirection.y = 0;
-                        Vector3 lookTarget = transform.position + randomDirection;
-                        _debugLookTarget = lookTarget; _debugHasTarget = true;
-                        facialController.LookAt(lookTarget);
+                        facialController.LookAt(transform.position + randomDirection);
                         break;
 
                     case IdleGazeState.LookAtNeighbor:
                         if (hasNeighbors)
                         {
                             PiecePersonality targetPiece = allPieces[Random.Range(0, allPieces.Count)];
-                            _debugLookTarget = targetPiece.transform.position; _debugHasTarget = true;
                             facialController.LookAt(targetPiece.transform.position);
                         }
                         break;
 
                     case IdleGazeState.LookAtPlayer:
                         facialController.ResetPupilPosition();
-                        _debugHasTarget = false;
                         break;
 
                     case IdleGazeState.Wait:
@@ -542,21 +477,17 @@ public class PiecePersonality : MonoBehaviour
 
             yield return new WaitForSeconds(Random.Range(idleLookDurationMin, idleLookDurationMax));
 
-            _isLookingRandomly = false;
+            _isLookingRandomly = false; // Вмикаємо LookAtCursor назад!
         }
     }
-
+    
     private void OnDrawGizmosSelected()
     {
-        // 1. Площина погляду
         Gizmos.color = new Color(0, 1, 1, 0.2f);
         Vector3 planeCenter = new Vector3(transform.position.x, lookPlaneHeight, transform.position.z);
         Gizmos.DrawCube(planeCenter, new Vector3(5, 0.01f, 5));
-
         Gizmos.color = new Color(0, 1, 1, 0.5f);
         Gizmos.DrawWireCube(planeCenter, new Vector3(5, 0.01f, 5));
-
-        // 2. Лінія погляду
         if (Application.isPlaying && _debugHasTarget)
         {
             Gizmos.color = Color.yellow;
