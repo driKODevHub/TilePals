@@ -1636,6 +1636,62 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 280561840918811427, guid: 5569a6a5e6586394fb69a5ab38d3babf, type: 3}
   m_PrefabInstance: {fileID: 764787883}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &802268844
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 802268845}
+  - component: {fileID: 802268846}
+  m_Layer: 0
+  m_Name: '[VisualFeedbackManager]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &802268845
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 802268844}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1223563755}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &802268846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 802268844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78481808b35a9634fbb441abd15ff260, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VisualFeedbackManager
+  rendererData: {fileID: 11400000, guid: f288ae1f4751b564a96ac7587541f7a2, type: 2}
+  featuresToSwap:
+  - featureName: WideOutline
+    settingsFieldName: settings
+    normalSettings: {fileID: 11400000, guid: 9df51dc2f742b6e4ea9b5e59f955ccb4, type: 2}
+    invalidSettings: {fileID: 11400000, guid: 9cbbe5bef5f2a154f8fbcab1c429ce95, type: 2}
+    cachedFeature: {fileID: 0}
+  - featureName: SurfaceFill
+    settingsFieldName: settings
+    normalSettings: {fileID: 11400000, guid: caef5b534630fc045b156f75f2adc6a3, type: 2}
+    invalidSettings: {fileID: 11400000, guid: eea914188dadbb94ab6297739bd3c626, type: 2}
+    cachedFeature: {fileID: 0}
 --- !u!1001 &934257752
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2394,6 +2450,7 @@ Transform:
   - {fileID: 1512633537}
   - {fileID: 478029334}
   - {fileID: 613732367}
+  - {fileID: 802268845}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1270847246

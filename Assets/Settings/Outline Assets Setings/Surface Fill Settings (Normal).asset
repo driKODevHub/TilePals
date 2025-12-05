@@ -59,7 +59,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bde5f93f258b40fd8d875a3300bd357a, type: 3}
-  m_Name: Surface Fill Settings
+  m_Name: Surface Fill Settings (Normal)
   m_EditorClassIdentifier: Linework::Linework.SurfaceFill.SurfaceFillSettings
   injectionPoint: 600
   showInSceneView: 1
