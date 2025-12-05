@@ -261,6 +261,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PieceMovement
   followSpeed: 25
   rotationSpeed: 900
+  useInertia: 1
+  minOvershootAngle: 15
+  maxOvershootAngle: 30
+  minReturnSpeedMultiplier: 0.5
+  maxReturnSpeedMultiplier: 0.6
 --- !u!114 &1617365217083788688
 MonoBehaviour:
   m_ObjectHideFlags: 0
