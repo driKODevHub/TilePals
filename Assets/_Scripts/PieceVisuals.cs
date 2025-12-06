@@ -3,14 +3,27 @@ using System.Collections.Generic;
 using UnityEngine.Events;
 
 /// <summary>
-/// Відповідає виключно за ВІЗУАЛ: матеріали, аутлайн, партикли.
-/// ОНОВЛЕНО: Тепер використовує VisualFeedbackManager для зміни глобальних ефектів замість зміни матеріалів.
+/// Відповідає виключно за ВІЗУАЛ: аутлайн, та запуск фідбеків (звуки/ефекти).
 /// </summary>
 public class PieceVisuals : MonoBehaviour
 {
-    [Header("Visual Components (Legacy / Optional)")]
-    [Tooltip("Список мешів. У новій системі використовується для аутлайну, але не для зміни кольору валідації.")]
-    [SerializeField] private List<MeshRenderer> meshesToColor;
+    [System.Serializable]
+    public class FeedbackCollection
+    {
+        [Header("Interaction (Mouse)")]
+        public UnityEvent OnPickup;
+        public UnityEvent OnDrop;      // Кидок в "молоко" (OffGrid) або просто відпускання
+        public UnityEvent OnHoverStart;
+        public UnityEvent OnHoverEnd;
+
+        [Header("Action (Gameplay)")]
+        public UnityEvent OnRotate;
+        public UnityEvent OnPlaceSuccess; // Успішно поставили на сітку
+        public UnityEvent OnPlaceFailed;  // Спроба поставити на зайняте місце (Error)
+
+        [Header("Movement (Passive)")]
+        public UnityEvent OnGridSnap;     // Фігура "знайшла" валідне місце під час перетягування
+    }
 
     [Header("Outline Settings (Hover)")]
     [Tooltip("Виберіть шар, на якому працює ефект аутлайну (Hover).")]
@@ -18,20 +31,14 @@ public class PieceVisuals : MonoBehaviour
     [SerializeField] private List<MeshRenderer> outlineMeshRenderers;
     [SerializeField] private List<SkinnedMeshRenderer> outlineSkinnedMeshRenderers;
 
-    [Header("Feedback Events (Connect Feel Here)")]
-    public UnityEvent OnPickupFeedback;
-    public UnityEvent OnDropFeedback;
-    public UnityEvent OnPlaceValidFeedback;
-    public UnityEvent OnPlaceInvalidFeedback;
-    public UnityEvent OnHoverStartFeedback;
-    public UnityEvent OnHoverEndFeedback;
+    [Header("Feedbacks")]
+    [Tooltip("Список всіх подій для Feel. Можна згортати.")]
+    public FeedbackCollection feedbacks;
 
-    // Внутрішні змінні для аутлайну
+    // Внутрішні змінні
     private int _outlineLayerIndex;
     private Dictionary<Renderer, int> _originalLayers = new Dictionary<Renderer, int>();
     private bool _isOutlineLocked = false;
-
-    // Стан валідності
     private bool _isCurrentStateInvalid = false;
 
     private void Awake()
@@ -41,61 +48,49 @@ public class PieceVisuals : MonoBehaviour
 
     private void OnDestroy()
     {
-        // При знищенні переконуємось, що ми не залишили гру в стані "помилки"
         if (_isCurrentStateInvalid && VisualFeedbackManager.Instance != null)
         {
             VisualFeedbackManager.Instance.SetInvalidState(false);
         }
     }
 
-    #region Visual State Management (New Logic)
+    #region Trigger Methods (Викликаються з PuzzleManager)
+
+    public void PlayPickup() => feedbacks.OnPickup?.Invoke();
+    public void PlayDrop() => feedbacks.OnDrop?.Invoke();
+    public void PlayPlaceSuccess() => feedbacks.OnPlaceSuccess?.Invoke();
+
+    // Новий метод для "помилки"
+    public void PlayPlaceFailed()
+    {
+        feedbacks.OnPlaceFailed?.Invoke();
+        // Можна тут додатково форсувати червоний аутлайн на долю секунди, якщо треба
+    }
+
+    public void PlayRotate() => feedbacks.OnRotate?.Invoke();
+    public void PlayGridSnap() => feedbacks.OnGridSnap?.Invoke();
+
+    #endregion
+
+    #region Visual State Management
 
     /// <summary>
-    /// Основний метод, який викликається з PuzzleManager/PuzzlePiece для відображення валідності.
+    /// Оновлює тільки ГРАФІЧНИЙ стан (червоний/синій аутлайн).
+    /// Більше не викликає звукові фідбеки сам по собі.
     /// </summary>
-    public void SetInvalidPlacementVisual(bool isInvalid, Material invalidMat_Ignored = null)
+    public void SetInvalidPlacementVisual(bool isInvalid)
     {
-        // Викликаємо події для MMFeedbacks (Feel)
-        if (isInvalid && !_isCurrentStateInvalid)
-        {
-            OnPlaceInvalidFeedback?.Invoke();
-        }
-        else if (!isInvalid && _isCurrentStateInvalid)
-        {
-            OnPlaceValidFeedback?.Invoke();
-        }
-
+        // Оновлюємо стан, але не граємо фідбек (фідбек тепер в PlayPlaceFailed / PlayGridSnap)
         _isCurrentStateInvalid = isInvalid;
 
-        // --- НОВА ЛОГІКА: Делегуємо зміну візуалу глобальному менеджеру ---
         if (VisualFeedbackManager.Instance != null)
         {
             VisualFeedbackManager.Instance.SetInvalidState(isInvalid);
         }
-
-        // Стара логіка зміни матеріалів видалена за запитом.
-        // Якщо потрібно буде повернути - додай сюди код зміни матеріалів з meshesToColor.
     }
 
-    // Заглушка для сумісності з іншими скриптами (наприклад, Personality), якщо вони викликають цей метод
-    public void SetTemperamentMaterial(Material mat)
-    {
-        // У новій системі з Render Features темперамент, можливо, не впливає на матеріал так прямо,
-        // або ти захочеш змінювати Base Map.
-        // Поки що залишаємо стандартну зміну матеріалу, якщо вона не конфліктує з фічами.
-        if (mat == null || meshesToColor == null) return;
-        foreach (var r in meshesToColor)
-        {
-            if (r != null)
-            {
-                // Просто замінюємо матеріал, як і раніше. 
-                // Це не впливає на "червоний" режим, бо він тепер через Overlay/RenderFeature.
-                var mats = new Material[r.materials.Length];
-                for (int i = 0; i < mats.Length; i++) mats[i] = mat;
-                r.materials = mats;
-            }
-        }
-    }
+    // Заглушка сумісності
+    public void SetTemperamentMaterial(Material mat) { }
 
     #endregion
 
@@ -110,7 +105,7 @@ public class PieceVisuals : MonoBehaviour
         }
         else
         {
-            _outlineLayerIndex = 0; // Default
+            _outlineLayerIndex = 0;
         }
 
         CacheRendererLayers(outlineMeshRenderers);
@@ -131,8 +126,8 @@ public class PieceVisuals : MonoBehaviour
     {
         if (_isOutlineLocked && !isActive) return;
 
-        if (isActive) OnHoverStartFeedback?.Invoke();
-        else OnHoverEndFeedback?.Invoke();
+        if (isActive) feedbacks.OnHoverStart?.Invoke();
+        else feedbacks.OnHoverEnd?.Invoke();
 
         SetRenderersLayer(outlineMeshRenderers, isActive);
         SetRenderersLayer(outlineSkinnedMeshRenderers, isActive);
@@ -141,7 +136,6 @@ public class PieceVisuals : MonoBehaviour
     public void SetOutlineLocked(bool isLocked)
     {
         _isOutlineLocked = isLocked;
-        // Якщо ми заблокували аутлайн (взяли фігуру), ми його вмикаємо
         SetOutline(isLocked);
     }
 
@@ -151,15 +145,13 @@ public class PieceVisuals : MonoBehaviour
         foreach (var r in renderers)
         {
             if (r == null) continue;
-            // Перемикаємо шар об'єкта на шар аутлайну або повертаємо назад
             r.gameObject.layer = active ? _outlineLayerIndex : _originalLayers.GetValueOrDefault(r, 0);
         }
     }
     #endregion
 
-    // --- ДЛЯ EDITOR SCRIPT ---
     public void SetMeshesToColorFromEditor(List<MeshRenderer> newMeshes)
     {
-        meshesToColor = newMeshes;
+        outlineMeshRenderers = newMeshes;
     }
 }

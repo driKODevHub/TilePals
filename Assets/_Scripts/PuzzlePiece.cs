@@ -1,11 +1,12 @@
 using UnityEngine;
-using System; // <--- ДОДАНО: Потрібно для Action
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
 /// Основний контролер фігури. (LOGIC ONLY)
 /// Зберігає стан, дані та координує Visuals і Movement.
+/// ОНОВЛЕНО: Адаптовано під нову систему фідбеків.
 /// </summary>
 [RequireComponent(typeof(PieceMovement), typeof(PieceVisuals))]
 public class PuzzlePiece : MonoBehaviour
@@ -14,7 +15,7 @@ public class PuzzlePiece : MonoBehaviour
     [SerializeField] private PlacedObjectTypeSO pieceTypeSO;
 
     [Header("References")]
-    [SerializeField] private FacialExpressionController facialController; // Залишаємо поки тут, бо це частина "Особистості"
+    [SerializeField] private FacialExpressionController facialController;
 
     // --- Components ---
     public PieceMovement Movement { get; private set; }
@@ -47,7 +48,7 @@ public class PuzzlePiece : MonoBehaviour
         pieceTypeSO = type;
     }
 
-    // --- Visual Proxy ---
+    // --- Visual Proxy (Оновлено для нової системи) ---
     public void SetTemperamentMaterial(Material mat)
     {
         if (Visuals != null) Visuals.SetTemperamentMaterial(mat);
@@ -63,9 +64,14 @@ public class PuzzlePiece : MonoBehaviour
         if (Visuals != null) Visuals.SetOutlineLocked(locked);
     }
 
-    public void UpdatePlacementVisual(bool isValid, Material invalidMat)
+    // --- ВИПРАВЛЕНО: Змінено сигнатуру та виклик ---
+    public void SetInvalidPlacementVisual(bool isInvalid)
     {
-        if (Visuals != null) Visuals.SetInvalidPlacementVisual(!isValid, invalidMat);
+        if (Visuals != null)
+        {
+            // Тепер передаємо тільки булеве значення, бо менеджер сам знає про кольори
+            Visuals.SetInvalidPlacementVisual(isInvalid);
+        }
     }
 
     // --- State Management ---
@@ -76,7 +82,8 @@ public class PuzzlePiece : MonoBehaviour
         if (IsPlaced)
         {
             IsOffGrid = false;
-            if (Visuals != null) Visuals.OnDropFeedback?.Invoke(); // Trigger Drop/Place feedback
+            // Фідбеки тепер викликаються з PuzzleManager або команд, 
+            // щоб уникнути дублювання звуків при завантаженні рівня.
         }
     }
 
@@ -87,7 +94,6 @@ public class PuzzlePiece : MonoBehaviour
         if (isOffGrid)
         {
             OffGridOrigin = origin;
-            if (Visuals != null) Visuals.OnDropFeedback?.Invoke();
         }
     }
 
@@ -106,7 +112,6 @@ public class PuzzlePiece : MonoBehaviour
         }
         else
         {
-            // Fallback, якщо компонента немає (наприклад, при ініціалізації)
             transform.position = position;
             transform.rotation = rotation;
         }
@@ -122,7 +127,6 @@ public class PuzzlePiece : MonoBehaviour
         Vector3 currentVisualOffset = new Vector3(currentRotationOffset.x, 0, currentRotationOffset.y) * cellSize;
 
         Vector3 currentGridOrigin = transform.position;
-        // Корекція позиції, щоб знайти 0,0 фігури
         currentGridOrigin.x -= currentVisualOffset.x;
         currentGridOrigin.z -= currentVisualOffset.z;
 
@@ -138,7 +142,6 @@ public class PuzzlePiece : MonoBehaviour
         float angle = clockwise ? 90f : -90f;
 
         Movement.RotateAroundPivot(pivotPoint, Vector3.up, angle, () => {
-            // Після завершення фізичного обертання оновлюємо логічні дані
             CurrentDirection = nextDirection;
             RecalculateClickOffset(pivotPoint, cellSize);
             onComplete?.Invoke();

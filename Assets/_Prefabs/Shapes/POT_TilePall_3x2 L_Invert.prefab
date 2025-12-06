@@ -147,7 +147,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.y
@@ -155,7 +155,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalRotation.w
@@ -187,15 +187,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -987616800158289452, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.00038520727
+      value: -0.00038520855
       objectReference: {fileID: 0}
     - target: {fileID: -987616800158289452, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.0005524484
+      value: 0.000552448
       objectReference: {fileID: 0}
     - target: {fileID: -987616800158289452, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.00011005893
+      value: 0.00011006031
       objectReference: {fileID: 0}
     - target: {fileID: -987616800158289452, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalRotation.x
@@ -417,6 +417,14 @@ PrefabInstance:
       propertyPath: m_Color.a
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3719631435110820396, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3719631435110820396, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: pieceTypeSO
       value: 
@@ -518,10 +526,6 @@ PrefabInstance:
       value: POT_TilePall_3x2 L_Invert
       objectReference: {fileID: 0}
     - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
-      propertyPath: gizmoScaleRest
-      value: 0.01
-      objectReference: {fileID: 0}
-    - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: facingDirection
       value: 1
       objectReference: {fileID: 0}
@@ -540,10 +544,6 @@ PrefabInstance:
     - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: rightEye.limitUp
       value: 0.22
-      objectReference: {fileID: 0}
-    - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
-      propertyPath: gizmoScaleCurrent
-      value: 0.03
       objectReference: {fileID: 0}
     - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: leftEye.limitDown

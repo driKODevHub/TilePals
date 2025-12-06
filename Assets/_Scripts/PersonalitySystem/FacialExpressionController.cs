@@ -67,9 +67,9 @@ public class FacialExpressionController : MonoBehaviour
 
     [Header("Gizmo Settings")]
     [Tooltip("Розмір Зеленої сфери (Rest Position).")]
-    [Range(0.01f, 2f)][SerializeField] private float gizmoScaleRest = 0.1f;
+    [Range(0.00001f, 2f)][SerializeField] private float gizmoScaleRest = 0.1f;
     [Tooltip("Розмір Червоної сфери (Current Position).")]
-    [Range(0.01f, 2f)][SerializeField] private float gizmoScaleCurrent = 0.1f;
+    [Range(0.00001f, 2f)][SerializeField] private float gizmoScaleCurrent = 0.1f;
     [SerializeField] private bool showGizmos = true;
 
     private Coroutine _blinkingCoroutine;

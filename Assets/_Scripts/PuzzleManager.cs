@@ -18,13 +18,13 @@ public class PuzzleManager : MonoBehaviour
     [Header("Placement Settings")]
     [SerializeField] private float pieceHeightWhenHeld = 1.0f;
     [SerializeField] private float shakenVelocityThreshold = 15f;
-    [SerializeField] private Material invalidPlacementMaterial;
+    [SerializeField] private Material invalidPlacementMaterial; // Залишено для сумісності
 
     [Header("Interaction Settings")]
     [Tooltip("Мінімальна відстань (у пікселях), яку треба пройти мишкою з затиснутою кнопкою, щоб це вважалося Петінгом.")]
     [SerializeField] private float dragThreshold = 20f;
 
-    [Tooltip("Максимальний час (у секундах) для швидкого кліку. Якщо відпустити кнопку швидше, це буде вважатися 'Підняттям', навіть якщо мишка трохи рухалась.")]
+    [Tooltip("Максимальний час (у секундах) для швидкого кліку.")]
     [SerializeField] private float clickTimeThreshold = 0.25f;
 
     [Header("Layers")]
@@ -51,6 +51,11 @@ public class PuzzleManager : MonoBehaviour
     // Mouse Velocity Calculation
     private Vector2 _lastMousePos;
     private float _currentMouseSpeed;
+
+    // --- SNAP STATE TRACKING (UPDATED) ---
+    // Зберігаємо останню валідну позицію на сітці, де був звук снепу.
+    // Nullable тип дозволяє легко скидати стан.
+    private Vector2Int? _lastSnappedGridOrigin = null;
 
     public event Action<PuzzlePiece> OnPiecePickedUp;
     public event Action<PuzzlePiece> OnPieceDropped;
@@ -106,7 +111,6 @@ public class PuzzleManager : MonoBehaviour
     {
         CalculateMouseSpeed();
 
-        // 1. Якщо ми нічого не несемо - обробляємо логіку наведення та інтеракції (петінг/клік)
         if (_heldPiece == null)
         {
             HandleHoverLogic();
@@ -114,7 +118,6 @@ public class PuzzleManager : MonoBehaviour
         }
         else
         {
-            // 2. Якщо несемо - рухаємо
             UpdateHeldPiecePosition();
             CheckForFlyOver();
         }
@@ -136,8 +139,6 @@ public class PuzzleManager : MonoBehaviour
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
         if (_isLevelComplete) return;
 
-        // Якщо ми вже в активній фазі взаємодії (гладимо), то не змінюємо hover об'єкт,
-        // щоб не губити фокус, якщо мишка трохи зіслизнула.
         if (_potentialInteractionPiece != null) return;
 
         Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
@@ -161,16 +162,13 @@ public class PuzzleManager : MonoBehaviour
         }
     }
 
-    // Обробка натискання (Mouse Down)
     private void HandleClickStart()
     {
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
         if (_isLevelComplete) return;
 
-        // Ігноруємо, якщо натиснуто Alt (для дебагу)
         if (Keyboard.current != null && Keyboard.current.altKey.isPressed) return;
 
-        // Якщо ми нічого не тримаємо і навели на фігуру -> готуємось до взаємодії
         if (_heldPiece == null && _hoveredPiece != null)
         {
             _potentialInteractionPiece = _hoveredPiece;
@@ -180,54 +178,42 @@ public class PuzzleManager : MonoBehaviour
         }
     }
 
-    // Логіка, що виконується поки кнопка затиснута (Update)
     private void HandleInteractionLogic()
     {
         if (_potentialInteractionPiece == null) return;
 
-        // Перевіряємо, чи ми посунули мишку достатньо далеко для початку петінгу
         if (!_isPettingActive)
         {
             float dragDistance = Vector2.Distance(inputReader.MousePosition, _clickStartPos);
-            // Починаємо гладити тільки якщо пройшли дистанцію
             if (dragDistance > dragThreshold)
             {
                 StartPetting();
             }
         }
 
-        // Якщо петінг активний - оновлюємо його
         if (_isPettingActive)
         {
             PersonalityEventManager.RaisePettingUpdate(_potentialInteractionPiece, _currentMouseSpeed);
         }
     }
 
-    // Обробка відпускання (Mouse Up)
     private void HandleClickEnd()
     {
-        // 1. Якщо несемо фігуру -> Ставимо (Drop/Place)
         if (_heldPiece != null && !_heldPiece.IsRotating)
         {
             TryToPlaceOrDropPiece();
             return;
         }
 
-        // 2. Якщо ми взаємодіяли з фігурою на землі
         if (_potentialInteractionPiece != null)
         {
             float pressDuration = Time.time - _clickStartTime;
-
-            // Це швидкий клік? (навіть якщо ми трохи посунули мишку і почали гладити, 
-            // але відпустили дуже швидко - це має бути пікап)
             bool isFastClick = pressDuration <= clickTimeThreshold;
 
             if (isFastClick)
             {
-                // Якщо це швидкий клік -> Примусово зупиняємо петінг (якщо він встиг початись) і беремо фігуру
                 if (_isPettingActive) StopPetting();
 
-                // Перевіряємо, чи ми все ще над тією ж фігурою
                 if (_hoveredPiece == _potentialInteractionPiece)
                 {
                     PickUpPiece(_potentialInteractionPiece);
@@ -235,15 +221,12 @@ public class PuzzleManager : MonoBehaviour
             }
             else
             {
-                // Це був довгий натиск.
                 if (_isPettingActive)
                 {
-                    // Якщо ми гладили -> просто закінчуємо гладити
                     StopPetting();
                 }
                 else
                 {
-                    // Ми довго тримали, але не рухали мишкою (пікап після паузи)
                     if (_hoveredPiece == _potentialInteractionPiece)
                     {
                         PickUpPiece(_potentialInteractionPiece);
@@ -251,7 +234,6 @@ public class PuzzleManager : MonoBehaviour
                 }
             }
 
-            // Скидаємо стан взаємодії
             _potentialInteractionPiece = null;
             _isPettingActive = false;
         }
@@ -281,7 +263,6 @@ public class PuzzleManager : MonoBehaviour
 
     private void PickUpPiece(PuzzlePiece piece)
     {
-        // Перераховуємо точку кліку
         Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
         Vector3 hitPoint;
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer)) hitPoint = hit.point;
@@ -303,12 +284,14 @@ public class PuzzleManager : MonoBehaviour
 
         _heldPiece = piece;
         _heldPiece.SetOutlineLocked(true);
-        if (_heldPiece.Visuals != null) _heldPiece.Visuals.OnPickupFeedback?.Invoke();
+        if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayPickup();
 
         _initialPiecePosition = piece.transform.position;
         _initialPieceRotation = piece.transform.rotation;
 
-        // Calculate Offset
+        // Скидаємо трекер снепінгу, щоб перший вхід на грід теж тригернув звук
+        _lastSnappedGridOrigin = null;
+
         float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
         Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection);
         Vector3 pieceOriginWorld = piece.transform.position - new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
@@ -318,7 +301,6 @@ public class PuzzleManager : MonoBehaviour
 
         piece.ClickOffset = new Vector2Int(clickX - originX, clickZ - originZ);
 
-        // Remove from logic grids
         if (piece.IsPlaced)
         {
             GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
@@ -387,8 +369,30 @@ public class PuzzleManager : MonoBehaviour
                 _heldPiece.transform.position = Vector3.Lerp(_heldPiece.transform.position, targetPosition, Time.deltaTime * 25f);
             }
 
+            // --- ПЕРЕВІРКА ВАЛІДНОСТІ ТА СНЕПІНГУ ---
             CanPlaceHeldPiece(logicalOrigin, out bool canOnGrid, out bool canOffGrid);
-            _heldPiece.UpdatePlacementVisual(canOnGrid || canOffGrid, invalidPlacementMaterial);
+
+            // Візуалізація (Червоний/Синій аутлайн)
+            bool isValid = canOnGrid || canOffGrid;
+            _heldPiece.SetInvalidPlacementVisual(!isValid);
+
+            // --- ОНОВЛЕНА ЛОГІКА СНЕПІНГУ ---
+            if (canOnGrid)
+            {
+                // Якщо ми не зберегли позицію АБО нова позиція відрізняється від збереженої
+                // (тобто ми перемістилися на нову валідну клітинку)
+                if (_lastSnappedGridOrigin == null || _lastSnappedGridOrigin.Value != logicalOrigin)
+                {
+                    if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayGridSnap();
+                    _lastSnappedGridOrigin = logicalOrigin; // Запам'ятовуємо нову позицію
+                }
+            }
+            else
+            {
+                // Якщо ми пішли з валідної зони (або стали червоним), скидаємо трекер.
+                // Це дозволить зіграти звук знову, якщо ми повернемося навіть на ту саму клітинку.
+                _lastSnappedGridOrigin = null;
+            }
         }
     }
 
@@ -406,38 +410,45 @@ public class PuzzleManager : MonoBehaviour
 
         if (canOnGrid)
         {
+            // Успішне розміщення на ГРІДІ
             ICommand cmd = new PlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
             if (cmd.Execute())
             {
+                if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayPlaceSuccess();
                 FinalizeDrop(cmd);
                 CheckForWin();
             }
         }
         else if (canOffGrid)
         {
+            // Успішний дроп в OffGrid
             ICommand cmd = new OffGridPlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
-
-            // --- ВИПРАВЛЕННЯ: Кешуємо змінну перед тим як вона стане null ---
             PuzzlePiece droppedPiece = _heldPiece;
 
             if (cmd.Execute())
             {
-                FinalizeDrop(cmd); // Це очищує _heldPiece
-
-                // Використовуємо кешовану змінну, щоб відправити подію
+                if (droppedPiece.Visuals != null) droppedPiece.Visuals.PlayDrop();
+                FinalizeDrop(cmd);
                 PersonalityEventManager.RaisePieceDropped(droppedPiece);
             }
         }
         else
         {
+            // --- ПОМИЛКА РОЗМІЩЕННЯ ---
             Debug.Log("Invalid placement position.");
+            if (_heldPiece.Visuals != null)
+            {
+                _heldPiece.Visuals.PlayPlaceFailed();
+            }
         }
     }
 
     private void FinalizeDrop(ICommand command)
     {
-        _heldPiece.UpdatePlacementVisual(true, invalidPlacementMaterial);
+        // Скидаємо візуал валідності (повертаємо нормальний колір)
+        _heldPiece.SetInvalidPlacementVisual(false);
         _heldPiece.SetOutlineLocked(false);
+
         CommandHistory.AddCommand(command);
         OnPieceDropped?.Invoke(_heldPiece);
 
@@ -449,6 +460,9 @@ public class PuzzleManager : MonoBehaviour
     {
         if (_heldPiece != null && !_heldPiece.IsRotating)
         {
+            // --- ФІДБЕК ОБЕРТАННЯ ---
+            if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayRotate();
+
             float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
             _heldPiece.RotatePiece(clockwise, cellSize);
         }
