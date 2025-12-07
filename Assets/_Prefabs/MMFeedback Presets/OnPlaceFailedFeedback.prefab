@@ -26,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1254163004865830585}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -267,7 +267,7 @@ MonoBehaviour:
     - rid: 4777019713197441313
       type: {class: MMF_PositionShake, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
-        Active: 1
+        Active: 0
         UniqueID: 699474186
         Label: Position Shake
         OriginalLabel: Position Shake
@@ -465,7 +465,7 @@ MonoBehaviour:
         Owner: {fileID: 2892980801868548388}
         DebugActive: 0
         Source: 0
-        Sfx: {fileID: 8300000, guid: d87e7e1082b696e47b8370677e0cf719, type: 3}
+        Sfx: {fileID: 8300000, guid: 6383565de06161149930666a7fc6b057, type: 3}
         AudioResourceToPlay: {fileID: 0}
         RandomSfx: []
         SequentialOrder: 0

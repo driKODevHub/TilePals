@@ -26,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1254163004865830585}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -465,14 +465,9 @@ MonoBehaviour:
         Owner: {fileID: 2892980801868548388}
         DebugActive: 0
         Source: 0
-        Sfx: {fileID: 8300000, guid: d87e7e1082b696e47b8370677e0cf719, type: 3}
+        Sfx: {fileID: 0}
         AudioResourceToPlay: {fileID: 0}
         RandomSfx:
-        - {fileID: 8300000, guid: 11a14bc30088de74fa4aa67ea1952e1d, type: 3}
-        - {fileID: 8300000, guid: 6d9398c0d67aa424f90c095d890e4200, type: 3}
-        - {fileID: 8300000, guid: 84d220009766d994d89eaa6171e5f8b2, type: 3}
-        - {fileID: 8300000, guid: 477aa916e468e4a479fff25b8ef8e619, type: 3}
-        - {fileID: 8300000, guid: dc9753a6ba779324d8eda52492cabafe, type: 3}
         - {fileID: 8300000, guid: e4c86144ef749754cbaddb7daa497cdf, type: 3}
         - {fileID: 8300000, guid: c2c24f8d5f38a0f4aa95fcb3c15af7a5, type: 3}
         - {fileID: 8300000, guid: b617e2b53ab2ee240bf0ede205c63f34, type: 3}
@@ -496,8 +491,8 @@ MonoBehaviour:
         SequentialOrderHoldCooldownDuration: 2
         RandomUnique: 1
         SoundDataSO: {fileID: 0}
-        MinVolume: 1
-        MaxVolume: 1
+        MinVolume: 0.7
+        MaxVolume: 0.75
         MinPitch: 0.9
         MaxPitch: 1.05
         MmSoundManagerTrack: 0
