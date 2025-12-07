@@ -187,6 +187,11 @@ SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -2225693734660249561, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
   m_PrefabInstance: {fileID: 1285881173242452624}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &8955865904736273736 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -1328000545739497512, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
+  m_PrefabInstance: {fileID: 1285881173242452624}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8980564368416025821
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -259,6 +264,14 @@ PrefabInstance:
       propertyPath: m_Convex
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: bodyRoot
+      value: 
+      objectReference: {fileID: 6792336206369662170}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: softBoneController
+      value: 
+      objectReference: {fileID: 7625210259633581759}
     - target: {fileID: 3647591016452806247, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a
       value: 0
@@ -315,6 +328,10 @@ PrefabInstance:
       propertyPath: 'outlineSkinnedMeshRenderers.Array.data[8]'
       value: 
       objectReference: {fileID: 5211443333728190160}
+    - target: {fileID: 3861906150708742771, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: managedReferences[4777019751482261598].AnimateRotationTarget
+      value: 
+      objectReference: {fileID: 8955865904736273736}
     - target: {fileID: 4558718944081910837, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a
       value: 0
@@ -397,3 +414,14 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3719631435110820396, guid: 9debc67860535b144876a36a92629140, type: 3}
   m_PrefabInstance: {fileID: 8980564368416025821}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7625210259633581759 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1545702117781013090, guid: 9debc67860535b144876a36a92629140, type: 3}
+  m_PrefabInstance: {fileID: 8980564368416025821}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aa2b9bccfefda549bd1cf67fd922ad8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EZhex1991.EZSoftBone::EZhex1991.EZSoftBone.EZSoftBone

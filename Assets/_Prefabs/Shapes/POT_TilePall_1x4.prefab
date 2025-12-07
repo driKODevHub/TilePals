@@ -320,6 +320,11 @@ SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -4226469336819231482, guid: 8770d1b15aafaf84d8be53353c245a30, type: 3}
   m_PrefabInstance: {fileID: 612788090912412620}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &6164149015987631605 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6704306627575064121, guid: 8770d1b15aafaf84d8be53353c245a30, type: 3}
+  m_PrefabInstance: {fileID: 612788090912412620}
+  m_PrefabAsset: {fileID: 0}
 --- !u!137 &6410616359531354591 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -3425521773699921389, guid: 8770d1b15aafaf84d8be53353c245a30, type: 3}
@@ -348,6 +353,11 @@ SkinnedMeshRenderer:
 --- !u!1 &7622297278579210181 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -2213843053640195063, guid: 8770d1b15aafaf84d8be53353c245a30, type: 3}
+  m_PrefabInstance: {fileID: 612788090912412620}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8056422891932118546 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -1779161087445500450, guid: 8770d1b15aafaf84d8be53353c245a30, type: 3}
   m_PrefabInstance: {fileID: 612788090912412620}
   m_PrefabAsset: {fileID: 0}
 --- !u!137 &8448557760666295513 stripped
@@ -398,6 +408,10 @@ PrefabInstance:
       objectReference: {fileID: 6539091649355071928}
     - target: {fileID: 1545702117781013090, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: 'm_RootBones.Array.data[0]'
+      value: 
+      objectReference: {fileID: 5391806083238025089}
+    - target: {fileID: 1549448585721071698, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: managedReferences[4777019755965972576].AnimateScaleTarget
       value: 
       objectReference: {fileID: 5391806083238025089}
     - target: {fileID: 1617365217083788688, guid: 9debc67860535b144876a36a92629140, type: 3}
@@ -460,6 +474,22 @@ PrefabInstance:
       propertyPath: OnPickupFeedback.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: bodyRoot
+      value: 
+      objectReference: {fileID: 5391806083238025089}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: tailRoot
+      value: 
+      objectReference: {fileID: 6164149015987631605}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: tailWagSpeed
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: softBoneController
+      value: 
+      objectReference: {fileID: 7625210259633581759}
     - target: {fileID: 3647591016452806247, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a
       value: 0
@@ -512,6 +542,10 @@ PrefabInstance:
       propertyPath: 'outlineSkinnedMeshRenderers.Array.data[7]'
       value: 
       objectReference: {fileID: 8448557760666295513}
+    - target: {fileID: 3861906150708742771, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: managedReferences[4777019751482261598].AnimateRotationTarget
+      value: 
+      objectReference: {fileID: 8056422891932118546}
     - target: {fileID: 4053038559910145283, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: lookPlaneHeight
       value: 0
@@ -708,3 +742,14 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3719631435110820396, guid: 9debc67860535b144876a36a92629140, type: 3}
   m_PrefabInstance: {fileID: 8980564368416025821}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7625210259633581759 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1545702117781013090, guid: 9debc67860535b144876a36a92629140, type: 3}
+  m_PrefabInstance: {fileID: 8980564368416025821}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aa2b9bccfefda549bd1cf67fd922ad8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EZhex1991.EZSoftBone::EZhex1991.EZSoftBone.EZSoftBone

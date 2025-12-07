@@ -165,7 +165,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -6351198805824411180, guid: 955f5d9310724344ca20283937b4b861, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.000026914988
+      value: 0.000026915337
       objectReference: {fileID: 0}
     - target: {fileID: -6351198805824411180, guid: 955f5d9310724344ca20283937b4b861, type: 3}
       propertyPath: m_LocalPosition.y
@@ -226,6 +226,11 @@ PrefabInstance:
       addedObject: {fileID: 1358401593651622037}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 955f5d9310724344ca20283937b4b861, type: 3}
+--- !u!4 &140153831812701606 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3773016973626627597, guid: 955f5d9310724344ca20283937b4b861, type: 3}
+  m_PrefabInstance: {fileID: 3867923407787248555}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &278387984928825779 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5300569923058619880, guid: 955f5d9310724344ca20283937b4b861, type: 3}
@@ -359,6 +364,30 @@ PrefabInstance:
       propertyPath: 'outlineSkinnedMeshRenderers.Array.data[6]'
       value: 
       objectReference: {fileID: 6615185821467416789}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: bodyRoot
+      value: 
+      objectReference: {fileID: 278387984928825779}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: wagStrength
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: tailWaviness
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: petTailSpeedMult
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: forceDistribution
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: softBoneController
+      value: 
+      objectReference: {fileID: 7625210259633581759}
     - target: {fileID: 3647591016452806247, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a
       value: 0
@@ -407,6 +436,10 @@ PrefabInstance:
       propertyPath: 'outlineSkinnedMeshRenderers.Array.data[6]'
       value: 
       objectReference: {fileID: 6615185821467416789}
+    - target: {fileID: 3861906150708742771, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: managedReferences[4777019751482261598].AnimateRotationTarget
+      value: 
+      objectReference: {fileID: 140153831812701606}
     - target: {fileID: 4053038559910145283, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -614,3 +647,14 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3719631435110820396, guid: 9debc67860535b144876a36a92629140, type: 3}
   m_PrefabInstance: {fileID: 8980564368416025821}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7625210259633581759 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1545702117781013090, guid: 9debc67860535b144876a36a92629140, type: 3}
+  m_PrefabInstance: {fileID: 8980564368416025821}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aa2b9bccfefda549bd1cf67fd922ad8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EZhex1991.EZSoftBone::EZhex1991.EZSoftBone.EZSoftBone

@@ -195,6 +195,7 @@ GameObject:
   - component: {fileID: 1617365217083788688}
   - component: {fileID: 4053038559910145283}
   - component: {fileID: 1545702117781013090}
+  - component: {fileID: 2580341700186099159}
   m_Layer: 7
   m_Name: _PB_Shape_Base
   m_TagString: Untagged
@@ -498,6 +499,39 @@ MonoBehaviour:
   m_ForceModule: {fileID: 0}
   m_ForceScale: 1
   m_SimulateSpace: {fileID: 0}
+--- !u!114 &2580341700186099159
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7108696464137794126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5f8f2c925daf7f4a936749174913344, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProceduralCatAnimator
+  bodyRoot: {fileID: 0}
+  softBoneController: {fileID: 0}
+  _isShowPettingState: 0
+  idleSpeed: 0.5
+  bodyPosAxis: {x: 0, y: 1, z: 0}
+  bodyPosAmount: 0
+  bodyRotAxis: {x: 0, y: 0, z: 1}
+  bodyRotAmount: 3
+  bodyScaleAxis: {x: 1, y: 1, z: 1}
+  bodyScaleAmount: 0
+  enableTailWag: 1
+  wagLocalAxis: {x: 1, y: 0, z: 0}
+  wagSpeed: 3
+  wagStrength: 3
+  tailWaviness: 2
+  forceDistribution: 3
+  petBodySpeedMult: 5
+  petBodyAmpMult: 1.5
+  petTailSpeedMult: 10
+  petTailAmpMult: 1.2
+  transitionSpeed: 200
 --- !u!1 &7258113813301745620
 GameObject:
   m_ObjectHideFlags: 0
@@ -777,6 +811,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2892980801868548388, guid: 25e483ee6f645a94780452dc85a229f7, type: 3}
+      propertyPath: managedReferences[4777019755965972579].AnimateScaleTarget
+      value: 
+      objectReference: {fileID: 3719631435110820396}
     - target: {fileID: 2892980801868548388, guid: 25e483ee6f645a94780452dc85a229f7, type: 3}
       propertyPath: managedReferences[4777019707291861075].SquashAndStretchTarget
       value: 
@@ -1587,6 +1625,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2892980801868548388, guid: 279281b4a93182345a65ac489f626b3c, type: 3}
+      propertyPath: managedReferences[4777019755965972576].AnimateScaleTarget
+      value: 
+      objectReference: {fileID: 3719631435110820396}
     - target: {fileID: 2892980801868548388, guid: 279281b4a93182345a65ac489f626b3c, type: 3}
       propertyPath: managedReferences[4777019707291861075].SquashAndStretchTarget
       value: 

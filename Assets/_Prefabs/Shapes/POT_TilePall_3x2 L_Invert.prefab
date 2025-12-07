@@ -308,6 +308,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -4348473095575251128, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
   m_PrefabInstance: {fileID: 1523188253392267655}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &6495686372181051787 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5694278303080046604, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+  m_PrefabInstance: {fileID: 1523188253392267655}
+  m_PrefabAsset: {fileID: 0}
 --- !u!137 &7291124132004475371 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -1149485110197102484, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
@@ -413,6 +418,14 @@ PrefabInstance:
       propertyPath: 'outlineSkinnedMeshRenderers.Array.data[8]'
       value: 
       objectReference: {fileID: 3903081349677438843}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: bodyRoot
+      value: 
+      objectReference: {fileID: 4823604255845276826}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: softBoneController
+      value: 
+      objectReference: {fileID: 7625210259633581759}
     - target: {fileID: 3647591016452806247, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a
       value: 0
@@ -469,6 +482,18 @@ PrefabInstance:
       propertyPath: 'outlineSkinnedMeshRenderers.Array.data[8]'
       value: 
       objectReference: {fileID: 3903081349677438843}
+    - target: {fileID: 3861906150708742771, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: managedReferences[4777019751482261598].AnimateX
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3861906150708742771, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: managedReferences[4777019751482261598].AnimateZ
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3861906150708742771, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: managedReferences[4777019751482261598].AnimateRotationTarget
+      value: 
+      objectReference: {fileID: 6495686372181051787}
     - target: {fileID: 4558718944081910837, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a
       value: 0
@@ -668,3 +693,14 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3719631435110820396, guid: 9debc67860535b144876a36a92629140, type: 3}
   m_PrefabInstance: {fileID: 8980564368416025821}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7625210259633581759 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1545702117781013090, guid: 9debc67860535b144876a36a92629140, type: 3}
+  m_PrefabInstance: {fileID: 8980564368416025821}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8aa2b9bccfefda549bd1cf67fd922ad8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EZhex1991.EZSoftBone::EZhex1991.EZSoftBone.EZSoftBone
