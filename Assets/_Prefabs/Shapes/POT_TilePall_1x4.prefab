@@ -415,6 +415,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 5391806083238025089}
     - target: {fileID: 1617365217083788688, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1617365217083788688, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: outlineSkinnedMeshRenderers.Array.size
       value: 8
       objectReference: {fileID: 0}
@@ -547,8 +551,8 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 8056422891932118546}
     - target: {fileID: 4053038559910145283, guid: 9debc67860535b144876a36a92629140, type: 3}
-      propertyPath: lookPlaneHeight
-      value: 0
+      propertyPath: lookAreaOffset.z
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4558718944081910837, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a

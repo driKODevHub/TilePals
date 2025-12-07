@@ -52,9 +52,7 @@ public class PuzzleManager : MonoBehaviour
     private Vector2 _lastMousePos;
     private float _currentMouseSpeed;
 
-    // --- SNAP STATE TRACKING (UPDATED) ---
-    // Зберігаємо останню валідну позицію на сітці, де був звук снепу.
-    // Nullable тип дозволяє легко скидати стан.
+    // --- SNAP STATE TRACKING ---
     private Vector2Int? _lastSnappedGridOrigin = null;
 
     public event Action<PuzzlePiece> OnPiecePickedUp;
@@ -241,11 +239,9 @@ public class PuzzleManager : MonoBehaviour
 
     private void StartPetting()
     {
-        if (!_potentialInteractionPiece.IsPlaced)
-        {
-            _isPettingActive = true;
-            PersonalityEventManager.RaisePettingStart(_potentialInteractionPiece);
-        }
+        // --- FIX BUG: Allow petting anywhere (removed !IsPlaced check) ---
+        _isPettingActive = true;
+        PersonalityEventManager.RaisePettingStart(_potentialInteractionPiece);
     }
 
     private void StopPetting()
@@ -265,10 +261,62 @@ public class PuzzleManager : MonoBehaviour
     {
         Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
         Vector3 hitPoint;
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer)) hitPoint = hit.point;
-        else hitPoint = piece.transform.position;
+
+        // --- FIX BUG: Коли клікаємо збоку, фігура стрибає ---
+        // Замість сирої точки удару, ми шукаємо центр найближчої логічної клітинки цієї фігури.
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
+        {
+            hitPoint = GetSmartClickPosition(piece, hit.point);
+        }
+        else
+        {
+            hitPoint = piece.transform.position;
+        }
 
         DoPickUpLogic(piece, hitPoint);
+    }
+
+    /// <summary>
+    /// Знаходить центр клітинки фігури, який є найближчим до точки кліку.
+    /// Це виправляє проблему, коли клік по бічній грані зараховується сусідній клітинці.
+    /// </summary>
+    private Vector3 GetSmartClickPosition(PuzzlePiece piece, Vector3 rawHitPoint)
+    {
+        // 1. Якщо фігура ще не має логічної позиції (рідкісний кейс), повертаємо як є
+        if (!piece.IsPlaced && !piece.IsOffGrid) return rawHitPoint;
+
+        // 2. Отримуємо список всіх клітинок, які зараз займає ця фігура
+        Vector2Int origin = piece.IsPlaced ? piece.PlacedObjectComponent.Origin : piece.OffGridOrigin;
+        var occupiedCells = piece.PieceTypeSO.GetGridPositionsList(origin, piece.CurrentDirection);
+
+        // 3. Знаходимо центр тієї клітинки фігури, яка геометрично найближча до точки кліку
+        var grid = GridBuildingSystem.Instance.GetGrid();
+        float cellSize = grid.GetCellSize();
+
+        Vector3 bestCandidate = rawHitPoint;
+        float minDstSq = float.MaxValue;
+
+        foreach (var cell in occupiedCells)
+        {
+            // Обчислюємо світовий центр цієї конкретної клітинки
+            // GetWorldPosition повертає лівий нижній кут, тому додаємо половину розміру
+            Vector3 cellWorldPos = grid.GetWorldPosition(cell.x, cell.y);
+            Vector3 cellCenter = cellWorldPos + new Vector3(cellSize * 0.5f, 0, cellSize * 0.5f);
+
+            // Порівнюємо дистанцію в площині XZ (ігноруємо висоту кліку)
+            float distSq = (rawHitPoint.x - cellCenter.x) * (rawHitPoint.x - cellCenter.x) +
+                           (rawHitPoint.z - cellCenter.z) * (rawHitPoint.z - cellCenter.z);
+
+            if (distSq < minDstSq)
+            {
+                minDstSq = distSq;
+                bestCandidate = cellCenter;
+            }
+        }
+
+        // Повертаємо ідеальну позицію центру клітинки.
+        // GetXZ потім перетворить це в правильні координати без помилок округлення.
+        return bestCandidate;
     }
 
     private void DoPickUpLogic(PuzzlePiece piece, Vector3 hitPoint)
@@ -289,7 +337,6 @@ public class PuzzleManager : MonoBehaviour
         _initialPiecePosition = piece.transform.position;
         _initialPieceRotation = piece.transform.rotation;
 
-        // Скидаємо трекер снепінгу, щоб перший вхід на грід теж тригернув звук
         _lastSnappedGridOrigin = null;
 
         float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
@@ -372,25 +419,21 @@ public class PuzzleManager : MonoBehaviour
             // --- ПЕРЕВІРКА ВАЛІДНОСТІ ТА СНЕПІНГУ ---
             CanPlaceHeldPiece(logicalOrigin, out bool canOnGrid, out bool canOffGrid);
 
-            // Візуалізація (Червоний/Синій аутлайн)
             bool isValid = canOnGrid || canOffGrid;
             _heldPiece.SetInvalidPlacementVisual(!isValid);
 
-            // --- ОНОВЛЕНА ЛОГІКА СНЕПІНГУ ---
-            if (canOnGrid)
+            // --- FIX BUG: Play snap sound even on invalid grid placement ---
+            // Ми перевіряємо isMouseOverGrid (чи ми над дошкою), а не canOnGrid (чи місце вільне)
+            if (isMouseOverGrid)
             {
-                // Якщо ми не зберегли позицію АБО нова позиція відрізняється від збереженої
-                // (тобто ми перемістилися на нову валідну клітинку)
                 if (_lastSnappedGridOrigin == null || _lastSnappedGridOrigin.Value != logicalOrigin)
                 {
                     if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayGridSnap();
-                    _lastSnappedGridOrigin = logicalOrigin; // Запам'ятовуємо нову позицію
+                    _lastSnappedGridOrigin = logicalOrigin;
                 }
             }
             else
             {
-                // Якщо ми пішли з валідної зони (або стали червоним), скидаємо трекер.
-                // Це дозволить зіграти звук знову, якщо ми повернемося навіть на ту саму клітинку.
                 _lastSnappedGridOrigin = null;
             }
         }
@@ -410,7 +453,6 @@ public class PuzzleManager : MonoBehaviour
 
         if (canOnGrid)
         {
-            // Успішне розміщення на ГРІДІ
             ICommand cmd = new PlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
             if (cmd.Execute())
             {
@@ -421,7 +463,6 @@ public class PuzzleManager : MonoBehaviour
         }
         else if (canOffGrid)
         {
-            // Успішний дроп в OffGrid
             ICommand cmd = new OffGridPlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
             PuzzlePiece droppedPiece = _heldPiece;
 
@@ -434,7 +475,6 @@ public class PuzzleManager : MonoBehaviour
         }
         else
         {
-            // --- ПОМИЛКА РОЗМІЩЕННЯ ---
             Debug.Log("Invalid placement position.");
             if (_heldPiece.Visuals != null)
             {
@@ -445,7 +485,6 @@ public class PuzzleManager : MonoBehaviour
 
     private void FinalizeDrop(ICommand command)
     {
-        // Скидаємо візуал валідності (повертаємо нормальний колір)
         _heldPiece.SetInvalidPlacementVisual(false);
         _heldPiece.SetOutlineLocked(false);
 
@@ -460,7 +499,6 @@ public class PuzzleManager : MonoBehaviour
     {
         if (_heldPiece != null && !_heldPiece.IsRotating)
         {
-            // --- ФІДБЕК ОБЕРТАННЯ ---
             if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayRotate();
 
             float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();

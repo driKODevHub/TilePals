@@ -434,6 +434,7 @@ MonoBehaviour:
   gentlePettingSpeedThreshold: 200
   tickleSpeedThreshold: 800
   lookPlaneHeight: 1
+  lookAreaOffset: {x: 0.5, y: 1, z: 0.5}
   idleLookIntervalMin: 1.5
   idleLookIntervalMax: 4
   idleLookDurationMin: 1

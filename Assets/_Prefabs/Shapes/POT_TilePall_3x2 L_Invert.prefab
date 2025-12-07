@@ -484,7 +484,7 @@ PrefabInstance:
       objectReference: {fileID: 3903081349677438843}
     - target: {fileID: 3861906150708742771, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: managedReferences[4777019751482261598].AnimateX
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3861906150708742771, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: managedReferences[4777019751482261598].AnimateZ
@@ -494,6 +494,14 @@ PrefabInstance:
       propertyPath: managedReferences[4777019751482261598].AnimateRotationTarget
       value: 
       objectReference: {fileID: 6495686372181051787}
+    - target: {fileID: 4053038559910145283, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: lookAreaOffset.x
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4053038559910145283, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: lookAreaOffset.z
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4558718944081910837, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Color.a
       value: 0

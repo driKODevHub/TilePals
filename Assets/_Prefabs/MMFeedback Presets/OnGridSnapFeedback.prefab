@@ -151,7 +151,7 @@ MonoBehaviour:
     - rid: 4777019707291861075
       type: {class: MMF_SquashAndStretch, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
-        Active: 1
+        Active: 0
         UniqueID: 125811342
         Label: Squash and Stretch
         OriginalLabel: Squash and Stretch
@@ -612,7 +612,7 @@ MonoBehaviour:
     - rid: 4777019755965972579
       type: {class: MMF_Scale, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
-        Active: 1
+        Active: 0
         UniqueID: -217421888
         Label: Scale
         OriginalLabel: Scale

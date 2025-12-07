@@ -28,9 +28,12 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private float gentlePettingSpeedThreshold = 200f;
     [SerializeField] private float tickleSpeedThreshold = 800f;
 
-    [Header("Налаштування погляду")]
-    [Tooltip("Висота площини очей над землею.")]
+    [Header("Налаштування погляду (Idle Gaze)")]
+    [Tooltip("Висота площини, куди дивиться кіт (Y координата цілі).")]
     [SerializeField] private float lookPlaneHeight = 0.5f;
+
+    [Tooltip("Зміщення центру зони погляду відносно півота (Local Space). Налаштуй це, щоб центр був перед лицем кота.")]
+    [SerializeField] private Vector3 lookAreaOffset = Vector3.zero;
 
     [SerializeField] private float idleLookIntervalMin = 1.5f;
     [SerializeField] private float idleLookIntervalMax = 4f;
@@ -208,8 +211,7 @@ public class PiecePersonality : MonoBehaviour
         LogDebug("Petting Ended");
         _isBeingPetted = false;
         _lastPettingEmotion = null;
-        
-        // Важливо: повертаємося до нейтрального стану, щоб погляд запрацював знову
+
         ReturnToNeutralState();
     }
 
@@ -251,7 +253,7 @@ public class PiecePersonality : MonoBehaviour
         if (piece != _puzzlePiece) return;
 
         LogDebug("Dropped (Off Grid)");
-        _isHeld = false; 
+        _isHeld = false;
         SetEmotion(droppedEmotion);
         if (facialController != null) facialController.UpdateSortingOrder(false);
 
@@ -276,9 +278,9 @@ public class PiecePersonality : MonoBehaviour
         {
             LogDebug("Placed (On Grid)");
             _isHeld = false;
-            
+
             if (facialController != null) facialController.UpdateSortingOrder(false);
-            
+
             CheckForNeighborReaction(null);
             StartCoroutine(ReturnToNeutralAfterDelay(0.5f));
         }
@@ -329,7 +331,7 @@ public class PiecePersonality : MonoBehaviour
             }
         }
     }
-    
+
     private List<PuzzlePiece> FindAllNeighbors()
     {
         List<PuzzlePiece> neighbors = new List<PuzzlePiece>();
@@ -376,7 +378,7 @@ public class PiecePersonality : MonoBehaviour
         LogDebug("Neutral State");
         StopAllBehaviorCoroutines();
         _isSleeping = false;
-        _isLookingRandomly = false; // Важливо для LookAtCursor в Update!
+        _isLookingRandomly = false;
 
         SetEmotion(neutralEmotion);
 
@@ -421,7 +423,7 @@ public class PiecePersonality : MonoBehaviour
     private void LookAtCursor()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        Vector3 planePoint = new Vector3(0, lookPlaneHeight, 0); 
+        Vector3 planePoint = new Vector3(0, lookPlaneHeight, 0);
         Plane plane = new Plane(Vector3.up, planePoint);
 
         if (plane.Raycast(ray, out float distance))
@@ -438,7 +440,7 @@ public class PiecePersonality : MonoBehaviour
             yield return new WaitForSeconds(Random.Range(idleLookIntervalMin, idleLookIntervalMax));
             if (_isHeld || _isSleeping || _isBeingPetted) continue;
 
-            _isLookingRandomly = true; // Вимикаємо LookAtCursor в Update
+            _isLookingRandomly = true;
 
             var allPieces = FindObjectsByType<PiecePersonality>(FindObjectsSortMode.None)
                             .Where(p => p != this && p.gameObject.activeInHierarchy).ToList();
@@ -453,9 +455,17 @@ public class PiecePersonality : MonoBehaviour
                 switch (nextAction)
                 {
                     case IdleGazeState.LookAtRandom:
+                        // --- ОНОВЛЕНА ЛОГІКА ЗМІЩЕННЯ ЦЕНТРУ ---
+                        Vector3 lookCenter = transform.TransformPoint(lookAreaOffset);
+                        // Заміщуємо Y на фіксований, якщо треба тримати погляд на рівні очей, 
+                        // або залишаємо як є (тоді погляд буде "гуляти" сферою навколо цього центру).
+                        // Для плоского гріда краще фіксувати Y на рівні lookPlaneHeight, щоб не дивився в підлогу.
+                        lookCenter.y = lookPlaneHeight; // Опціонально, якщо хочеш щоб завжди дивився на рівень очей
+
                         Vector3 randomDirection = Random.insideUnitSphere * idleLookRadius;
-                        randomDirection.y = 0;
-                        facialController.LookAt(transform.position + randomDirection);
+                        randomDirection.y = 0; // Плоский розкид погляду
+
+                        facialController.LookAt(lookCenter + randomDirection);
                         break;
 
                     case IdleGazeState.LookAtNeighbor:
@@ -477,17 +487,30 @@ public class PiecePersonality : MonoBehaviour
 
             yield return new WaitForSeconds(Random.Range(idleLookDurationMin, idleLookDurationMax));
 
-            _isLookingRandomly = false; // Вмикаємо LookAtCursor назад!
+            _isLookingRandomly = false;
         }
     }
-    
+
     private void OnDrawGizmosSelected()
     {
+        // --- ОНОВЛЕНЕ ГІЗМО ---
         Gizmos.color = new Color(0, 1, 1, 0.2f);
-        Vector3 planeCenter = new Vector3(transform.position.x, lookPlaneHeight, transform.position.z);
-        Gizmos.DrawCube(planeCenter, new Vector3(5, 0.01f, 5));
+
+        // Вираховуємо реальний центр зони з урахуванням повороту фігури
+        Vector3 worldLookCenter = transform.TransformPoint(lookAreaOffset);
+        // Застосовуємо висоту площини для відображення
+        Vector3 planeCenter = new Vector3(worldLookCenter.x, lookPlaneHeight, worldLookCenter.z);
+
+        // Малюємо зону, де можуть з'являтися точки погляду
+        Gizmos.DrawCube(planeCenter, new Vector3(idleLookRadius * 2, 0.01f, idleLookRadius * 2));
+
         Gizmos.color = new Color(0, 1, 1, 0.5f);
-        Gizmos.DrawWireCube(planeCenter, new Vector3(5, 0.01f, 5));
+        Gizmos.DrawWireCube(planeCenter, new Vector3(idleLookRadius * 2, 0.01f, idleLookRadius * 2));
+
+        // Малюємо лінію від центру кота до центру зони погляду, щоб було видно офсет
+        Gizmos.color = Color.blue;
+        Gizmos.DrawLine(transform.position, planeCenter);
+
         if (Application.isPlaying && _debugHasTarget)
         {
             Gizmos.color = Color.yellow;

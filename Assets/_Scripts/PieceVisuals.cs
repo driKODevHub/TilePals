@@ -41,6 +41,9 @@ public class PieceVisuals : MonoBehaviour
     private bool _isOutlineLocked = false;
     private bool _isCurrentStateInvalid = false;
 
+    // --- FIX BUG: Tracking actual hover state to prevent double triggers ---
+    private bool _isHovered = false;
+
     private void Awake()
     {
         InitializeOutlineData();
@@ -60,11 +63,9 @@ public class PieceVisuals : MonoBehaviour
     public void PlayDrop() => feedbacks.OnDrop?.Invoke();
     public void PlayPlaceSuccess() => feedbacks.OnPlaceSuccess?.Invoke();
 
-    // Новий метод для "помилки"
     public void PlayPlaceFailed()
     {
         feedbacks.OnPlaceFailed?.Invoke();
-        // Можна тут додатково форсувати червоний аутлайн на долю секунди, якщо треба
     }
 
     public void PlayRotate() => feedbacks.OnRotate?.Invoke();
@@ -74,13 +75,8 @@ public class PieceVisuals : MonoBehaviour
 
     #region Visual State Management
 
-    /// <summary>
-    /// Оновлює тільки ГРАФІЧНИЙ стан (червоний/синій аутлайн).
-    /// Більше не викликає звукові фідбеки сам по собі.
-    /// </summary>
     public void SetInvalidPlacementVisual(bool isInvalid)
     {
-        // Оновлюємо стан, але не граємо фідбек (фідбек тепер в PlayPlaceFailed / PlayGridSnap)
         _isCurrentStateInvalid = isInvalid;
 
         if (VisualFeedbackManager.Instance != null)
@@ -89,7 +85,6 @@ public class PieceVisuals : MonoBehaviour
         }
     }
 
-    // Заглушка сумісності
     public void SetTemperamentMaterial(Material mat) { }
 
     #endregion
@@ -126,8 +121,21 @@ public class PieceVisuals : MonoBehaviour
     {
         if (_isOutlineLocked && !isActive) return;
 
-        if (isActive) feedbacks.OnHoverStart?.Invoke();
-        else feedbacks.OnHoverEnd?.Invoke();
+        // --- FIX BUG: Logic to prevent double triggering of Hover Sounds ---
+        // Ми перевіряємо, чи змінився стан, перш ніж викликати івент.
+        // Якщо ми вже Hovered і нам знову кажуть SetOutline(true) (наприклад при пікапі), ми ігноруємо івент.
+
+        if (isActive && !_isHovered)
+        {
+            feedbacks.OnHoverStart?.Invoke();
+            _isHovered = true;
+        }
+        else if (!isActive && _isHovered)
+        {
+            feedbacks.OnHoverEnd?.Invoke();
+            _isHovered = false;
+        }
+        // ---------------------------------------------------------------
 
         SetRenderersLayer(outlineMeshRenderers, isActive);
         SetRenderersLayer(outlineSkinnedMeshRenderers, isActive);
