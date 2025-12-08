@@ -616,13 +616,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42c527ec26e9df14ba7878b42ea842f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  facingDirection: 0
-  lookSensitivity: 1
+  eyesFacingDirection: 1
+  eyesLookSensitivity: 1
+  eyesRotationSpeed: 30
+  eyesDamping: 0.1
   leftEye:
     referencePivot: {fileID: 0}
     eyeBone: {fileID: 0}
     blinkObject: {fileID: 0}
-    scaleMultiplier: 0.1
+    scaleMultiplier: 0.001
     useEllipticalClamp: 1
     limitLeft: 0.5
     limitRight: 0.5
@@ -634,7 +636,7 @@ MonoBehaviour:
     referencePivot: {fileID: 0}
     eyeBone: {fileID: 0}
     blinkObject: {fileID: 0}
-    scaleMultiplier: 0.1
+    scaleMultiplier: 0.001
     useEllipticalClamp: 1
     limitLeft: 0.5
     limitRight: 0.5
@@ -642,8 +644,21 @@ MonoBehaviour:
     limitDown: 0.5
     restPosition: {x: 0, y: 0}
     currentWorldRotation: {x: 0, y: 0, z: 0, w: 0}
-  rotationSpeed: 30
-  damping: 0.1
+  faceRig:
+    referencePivot: {fileID: 0}
+    rootBone: {fileID: 0}
+    facingDirection: 0
+    moveSensitivity: 1
+    smoothTime: 0.2
+    scaleMultiplier: 0.001
+    useEllipticalClamp: 1
+    limitLeft: 0.9
+    limitRight: 0.9
+    limitUp: 0.8
+    limitDown: 1
+    restPosition: {x: 0, y: 0}
+    currentLocalPosition: {x: 0, y: 0, z: 0}
+    currentVelocity: {x: 0, y: 0, z: 0}
   blinkIntervalMin: 4
   blinkIntervalMax: 12
   blinkDuration: 0.1
