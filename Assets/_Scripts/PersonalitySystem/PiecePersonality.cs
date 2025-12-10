@@ -18,6 +18,7 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private EmotionProfileSO pettingTickleEmotion;
     [SerializeField] private EmotionProfileSO pettingAnnoyedEmotion;
     [SerializeField] private EmotionProfileSO curiousEmotion;
+    [SerializeField] private EmotionProfileSO excitedEmotion; // Нова емоція для іграшок
 
     [Header("Налаштування Поведінки")]
     [SerializeField] private float timeToSleepMin = 15f;
@@ -32,7 +33,7 @@ public class PiecePersonality : MonoBehaviour
     [Tooltip("Висота площини, куди дивиться кіт (Y координата цілі).")]
     [SerializeField] private float lookPlaneHeight = 0.5f;
 
-    [Tooltip("Зміщення центру зони погляду відносно півота (Local Space). Налаштуй це, щоб центр був перед лицем кота.")]
+    [Tooltip("Зміщення центру зони погляду відносно півота (Local Space).")]
     [SerializeField] private Vector3 lookAreaOffset = Vector3.zero;
 
     [SerializeField] private float idleLookIntervalMin = 1.5f;
@@ -52,13 +53,16 @@ public class PiecePersonality : MonoBehaviour
     private EmotionProfileSO _lastPettingEmotion;
     private bool _isLookingRandomly = false;
 
+    // Нова змінна для відстеження об'єкта уваги (іграшка в руках)
+    private PuzzlePiece _attentionTarget;
+
     // --- DEBUG ЗМІННІ ---
     private bool _isDebugActive = false;
     private Coroutine _debugStatsCoroutine;
     private Vector3 _debugLookTarget;
     private bool _debugHasTarget;
 
-    private enum IdleGazeState { LookAtRandom, LookAtNeighbor, LookAtPlayer, Wait }
+    private enum IdleGazeState { LookAtRandom, LookAtNeighbor, LookAtPlayer, Wait, LookAtToy }
 
     public float GetFlyOverRadius() => flyOverReactionRadius;
 
@@ -125,7 +129,17 @@ public class PiecePersonality : MonoBehaviour
 
         if (!_isHeld && !_isSleeping && !_isBeingPetted && facialController != null)
         {
-            if (_isLookingRandomly)
+            // Пріоритет: Дивитися на іграшку/предмет уваги
+            if (_attentionTarget != null)
+            {
+                facialController.LookAt(_attentionTarget.transform.position);
+                // Можна додати емоцію збудження
+                if (curiousEmotion != null && _puzzlePiece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Character)
+                {
+                    // Це спрощено, в ідеалі перевіряти поточну емоцію, щоб не спамити
+                }
+            }
+            else if (_isLookingRandomly)
             {
                 // Логіка в корутині
             }
@@ -167,15 +181,26 @@ public class PiecePersonality : MonoBehaviour
 
     private void HandlePettingStart(PuzzlePiece piece)
     {
-        if (piece != _puzzlePiece || _isHeld) return;
-
-        LogDebug("Petting Started");
-        StopAllBehaviorCoroutines();
-        _isBeingPetted = true;
-        _isSleeping = false;
-        _isLookingRandomly = false;
-
-        SetEmotion(neutralEmotion);
+        if (piece == _puzzlePiece && !_isHeld)
+        {
+            // Гладимо ЦЬОГО кота
+            LogDebug("Petting Started");
+            StopAllBehaviorCoroutines();
+            _isBeingPetted = true;
+            _isSleeping = false;
+            _isLookingRandomly = false;
+            SetEmotion(neutralEmotion);
+        }
+        else if (piece != _puzzlePiece && piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.AttractAttention)
+        {
+            // Гладимо (або тримаємо) ІГРАШКУ - привертаємо увагу
+            if (!_isSleeping && !_isHeld)
+            {
+                _attentionTarget = piece;
+                SetEmotion(excitedEmotion != null ? excitedEmotion : curiousEmotion);
+                StopAllBehaviorCoroutines(); // Зупиняємо рандомний погляд, щоб дивитись на іграшку
+            }
+        }
     }
 
     private void HandlePettingUpdate(PuzzlePiece piece, float mouseSpeed)
@@ -206,13 +231,20 @@ public class PiecePersonality : MonoBehaviour
 
     private void HandlePettingEnd(PuzzlePiece piece)
     {
-        if (piece != _puzzlePiece || !_isBeingPetted) return;
-
-        LogDebug("Petting Ended");
-        _isBeingPetted = false;
-        _lastPettingEmotion = null;
-
-        ReturnToNeutralState();
+        if (piece == _puzzlePiece)
+        {
+            if (!_isBeingPetted) return;
+            LogDebug("Petting Ended");
+            _isBeingPetted = false;
+            _lastPettingEmotion = null;
+            ReturnToNeutralState();
+        }
+        else if (piece == _attentionTarget)
+        {
+            // Перестали взаємодіяти з іграшкою
+            _attentionTarget = null;
+            ReturnToNeutralState();
+        }
     }
 
     public void TriggerExternalReaction(EmotionProfileSO reactionEmotion, float duration)
@@ -231,33 +263,50 @@ public class PiecePersonality : MonoBehaviour
 
     private void HandlePiecePickedUp(PuzzlePiece piece)
     {
-        if (piece != _puzzlePiece) return;
-
-        LogDebug("Picked Up");
-        StopAllBehaviorCoroutines();
-        _isHeld = true;
-        _isSleeping = false;
-        _isBeingPetted = false;
-        _isLookingRandomly = false;
-
-        SetEmotion(pickedUpEmotion);
-        if (facialController != null)
+        if (piece == _puzzlePiece)
         {
-            facialController.UpdateSortingOrder(true);
-            facialController.ResetPupilPosition();
+            LogDebug("Picked Up");
+            StopAllBehaviorCoroutines();
+            _isHeld = true;
+            _isSleeping = false;
+            _isBeingPetted = false;
+            _isLookingRandomly = false;
+            SetEmotion(pickedUpEmotion);
+            if (facialController != null)
+            {
+                facialController.UpdateSortingOrder(true);
+                facialController.ResetPupilPosition();
+            }
+        }
+        else if (piece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Toy ||
+                 piece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Food)
+        {
+            // Якщо підняли іграшку, кіт може зацікавитись
+            if (!_isSleeping && !_isHeld && Vector3.Distance(transform.position, piece.transform.position) < idleLookRadius * 1.5f)
+            {
+                _attentionTarget = piece;
+                SetEmotion(curiousEmotion);
+                StopAllBehaviorCoroutines();
+            }
         }
     }
 
     private void HandlePieceDropped(PuzzlePiece piece)
     {
-        if (piece != _puzzlePiece) return;
-
-        LogDebug("Dropped (Off Grid)");
-        _isHeld = false;
-        SetEmotion(droppedEmotion);
-        if (facialController != null) facialController.UpdateSortingOrder(false);
-
-        StartCoroutine(ReturnToNeutralAfterDelay(0.5f));
+        if (piece == _puzzlePiece)
+        {
+            LogDebug("Dropped (Off Grid)");
+            _isHeld = false;
+            SetEmotion(droppedEmotion);
+            if (facialController != null) facialController.UpdateSortingOrder(false);
+            StartCoroutine(ReturnToNeutralAfterDelay(0.5f));
+        }
+        else if (piece == _attentionTarget)
+        {
+            // Іграшку кинули
+            _attentionTarget = null;
+            ReturnToNeutralState();
+        }
     }
 
     private void HandlePieceShaken(PuzzlePiece piece, float velocity)
@@ -396,7 +445,7 @@ public class PiecePersonality : MonoBehaviour
     private IEnumerator SleepTimer(float time)
     {
         yield return new WaitForSeconds(time);
-        if (_isBeingPetted || _isHeld) yield break;
+        if (_isBeingPetted || _isHeld || _attentionTarget != null) yield break;
         StopAllBehaviorCoroutines();
         _isLookingRandomly = false;
         _isSleeping = true;
@@ -438,7 +487,7 @@ public class PiecePersonality : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(Random.Range(idleLookIntervalMin, idleLookIntervalMax));
-            if (_isHeld || _isSleeping || _isBeingPetted) continue;
+            if (_isHeld || _isSleeping || _isBeingPetted || _attentionTarget != null) continue;
 
             _isLookingRandomly = true;
 
@@ -455,16 +504,10 @@ public class PiecePersonality : MonoBehaviour
                 switch (nextAction)
                 {
                     case IdleGazeState.LookAtRandom:
-                        // --- ОНОВЛЕНА ЛОГІКА ЗМІЩЕННЯ ЦЕНТРУ ---
                         Vector3 lookCenter = transform.TransformPoint(lookAreaOffset);
-                        // Заміщуємо Y на фіксований, якщо треба тримати погляд на рівні очей, 
-                        // або залишаємо як є (тоді погляд буде "гуляти" сферою навколо цього центру).
-                        // Для плоского гріда краще фіксувати Y на рівні lookPlaneHeight, щоб не дивився в підлогу.
-                        lookCenter.y = lookPlaneHeight; // Опціонально, якщо хочеш щоб завжди дивився на рівень очей
-
+                        lookCenter.y = lookPlaneHeight;
                         Vector3 randomDirection = Random.insideUnitSphere * idleLookRadius;
-                        randomDirection.y = 0; // Плоский розкид погляду
-
+                        randomDirection.y = 0;
                         facialController.LookAt(lookCenter + randomDirection);
                         break;
 
@@ -493,21 +536,12 @@ public class PiecePersonality : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        // --- ОНОВЛЕНЕ ГІЗМО ---
         Gizmos.color = new Color(0, 1, 1, 0.2f);
-
-        // Вираховуємо реальний центр зони з урахуванням повороту фігури
         Vector3 worldLookCenter = transform.TransformPoint(lookAreaOffset);
-        // Застосовуємо висоту площини для відображення
         Vector3 planeCenter = new Vector3(worldLookCenter.x, lookPlaneHeight, worldLookCenter.z);
-
-        // Малюємо зону, де можуть з'являтися точки погляду
         Gizmos.DrawCube(planeCenter, new Vector3(idleLookRadius * 2, 0.01f, idleLookRadius * 2));
-
         Gizmos.color = new Color(0, 1, 1, 0.5f);
         Gizmos.DrawWireCube(planeCenter, new Vector3(idleLookRadius * 2, 0.01f, idleLookRadius * 2));
-
-        // Малюємо лінію від центру кота до центру зони погляду, щоб було видно офсет
         Gizmos.color = Color.blue;
         Gizmos.DrawLine(transform.position, planeCenter);
 

@@ -4,9 +4,9 @@ using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
-/// Основний контролер фігури. (LOGIC ONLY)
-/// Зберігає стан, дані та координує Visuals і Movement.
-/// ОНОВЛЕНО: Адаптовано під нову систему фідбеків.
+/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ. (LOGIC ONLY)
+/// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Visuals пїЅ Movement.
+/// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 /// </summary>
 [RequireComponent(typeof(PieceMovement), typeof(PieceVisuals))]
 public class PuzzlePiece : MonoBehaviour
@@ -20,6 +20,8 @@ public class PuzzlePiece : MonoBehaviour
     // --- Components ---
     public PieceMovement Movement { get; private set; }
     public PieceVisuals Visuals { get; private set; }
+    public Rigidbody Rb { get; private set; }
+    public Collider PieceCollider { get; private set; }
 
     // --- State ---
     public PlacedObjectTypeSO PieceTypeSO => pieceTypeSO;
@@ -31,7 +33,7 @@ public class PuzzlePiece : MonoBehaviour
     public PlacedObject PlacedObjectComponent { get; private set; }
     public bool IsRotating => Movement != null && Movement.IsRotating;
 
-    // Логічне зміщення кліку
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
     public Vector2Int ClickOffset { get; set; }
 
     private void Awake()
@@ -39,16 +41,81 @@ public class PuzzlePiece : MonoBehaviour
         Movement = GetComponent<PieceMovement>();
         Visuals = GetComponent<PieceVisuals>();
 
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Rigidbody, пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ'пїЅпїЅпїЅ
+        Rb = GetComponent<Rigidbody>();
+        PieceCollider = GetComponent<Collider>();
+
         if (facialController == null)
             facialController = GetComponentInChildren<FacialExpressionController>();
+    }
+
+    private void Start()
+    {
+        InitializePhysics();
     }
 
     public void Initialize(PlacedObjectTypeSO type)
     {
         pieceTypeSO = type;
+        InitializePhysics();
     }
 
-    // --- Visual Proxy (Оновлено для нової системи) ---
+    private void InitializePhysics()
+    {
+        if (pieceTypeSO != null && pieceTypeSO.usePhysics)
+        {
+            if (Rb == null) Rb = gameObject.AddComponent<Rigidbody>();
+
+            Rb.mass = pieceTypeSO.mass;
+            Rb.isKinematic = true; // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)
+            Rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (Bounciness)
+            if (PieceCollider != null)
+            {
+                PhysicsMaterial mat = new PhysicsMaterial();
+                mat.bounciness = pieceTypeSO.bounciness;
+                mat.bounceCombine = PhysicsMaterialCombine.Maximum;
+                mat.dynamicFriction = 0.6f;
+                mat.staticFriction = 0.6f;
+                PieceCollider.material = mat;
+            }
+        }
+        else
+        {
+            // пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ'пїЅпїЅпїЅ, Rb пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+            if (Rb != null) Rb.isKinematic = true;
+        }
+    }
+
+    // --- Physics Controls ---
+    public void EnablePhysics(Vector3 initialVelocity)
+    {
+        if (Rb != null && pieceTypeSO.usePhysics)
+        {
+            Movement.enabled = false; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+            Rb.isKinematic = false;
+            Rb.linearVelocity = initialVelocity;
+            Rb.angularVelocity = new Vector3(
+                UnityEngine.Random.Range(-5f, 5f),
+                UnityEngine.Random.Range(-5f, 5f),
+                UnityEngine.Random.Range(-5f, 5f)
+            ); // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+        }
+    }
+
+    public void DisablePhysics()
+    {
+        if (Rb != null)
+        {
+            Rb.isKinematic = true;
+            Rb.linearVelocity = Vector3.zero;
+            Rb.angularVelocity = Vector3.zero;
+        }
+        Movement.enabled = true; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+    }
+
+    // --- Visual Proxy ---
     public void SetTemperamentMaterial(Material mat)
     {
         if (Visuals != null) Visuals.SetTemperamentMaterial(mat);
@@ -64,12 +131,10 @@ public class PuzzlePiece : MonoBehaviour
         if (Visuals != null) Visuals.SetOutlineLocked(locked);
     }
 
-    // --- ВИПРАВЛЕНО: Змінено сигнатуру та виклик ---
     public void SetInvalidPlacementVisual(bool isInvalid)
     {
         if (Visuals != null)
         {
-            // Тепер передаємо тільки булеве значення, бо менеджер сам знає про кольори
             Visuals.SetInvalidPlacementVisual(isInvalid);
         }
     }
@@ -79,11 +144,11 @@ public class PuzzlePiece : MonoBehaviour
     {
         this.PlacedObjectComponent = placedObjectComponent;
         IsPlaced = (placedObjectComponent != null);
+
         if (IsPlaced)
         {
             IsOffGrid = false;
-            // Фідбеки тепер викликаються з PuzzleManager або команд, 
-            // щоб уникнути дублювання звуків при завантаженні рівня.
+            DisablePhysics(); // пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
         }
     }
 
@@ -106,7 +171,10 @@ public class PuzzlePiece : MonoBehaviour
     // --- Movement Logic Wrapper ---
     public void UpdateTransform(Vector3 position, Quaternion rotation)
     {
-        if (Movement != null)
+        // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ Movement
+        if (Rb != null && !Rb.isKinematic) return;
+
+        if (Movement != null && Movement.enabled)
         {
             Movement.TeleportTo(position, rotation);
         }
@@ -120,9 +188,9 @@ public class PuzzlePiece : MonoBehaviour
 
     public void RotatePiece(bool clockwise, float cellSize, Action onComplete = null)
     {
-        if (Movement == null || Movement.IsRotating) return;
+        if (Movement == null || Movement.IsRotating || (Rb != null && !Rb.isKinematic)) return;
 
-        // Розрахунок точки обертання (Pivot)
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (Pivot)
         Vector2Int currentRotationOffset = pieceTypeSO.GetRotationOffset(CurrentDirection);
         Vector3 currentVisualOffset = new Vector3(currentRotationOffset.x, 0, currentRotationOffset.y) * cellSize;
 
@@ -134,7 +202,7 @@ public class PuzzlePiece : MonoBehaviour
         Vector3 halfCellVector = new Vector3(cellSize * 0.5f, 0, cellSize * 0.5f);
         Vector3 pivotPoint = currentGridOrigin + clickOffsetVector + halfCellVector;
 
-        // Визначаємо новий напрямок
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         PlacedObjectTypeSO.Dir nextDirection = clockwise
             ? PlacedObjectTypeSO.GetNextDirencion(CurrentDirection)
             : PlacedObjectTypeSO.GetPreviousDir(CurrentDirection);

@@ -17,8 +17,6 @@ public class GridBuildingSystem : MonoBehaviour
 
     public void InitializeGrid(GridDataSO data)
     {
-        // --- ВИПРАВЛЕННЯ ---
-        // Якщо сітка вже існує (від попереднього рівня), очищуємо її дебаг-об'єкти
         if (grid != null)
         {
             grid.ClearDebugText();
@@ -49,20 +47,34 @@ public class GridBuildingSystem : MonoBehaviour
         {
             grid.ClearDebugText();
         }
-
-        // Створюємо тимчасову порожню сітку, щоб уникнути помилок
         grid = new GridXZ<GridObject>(0, 0, 1f, Vector3.zero, (g, x, z) => new GridObject(g, x, z));
     }
 
     public bool CanPlacePiece(PuzzlePiece piece, Vector2Int origin, PlacedObjectTypeSO.Dir dir)
     {
         List<Vector2Int> gridPositionList = piece.PieceTypeSO.GetGridPositionsList(origin, dir);
+        bool isTool = piece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Tool;
+
         foreach (Vector2Int gridPosition in gridPositionList)
         {
+            // Перевірка меж сітки
+            if (!IsValidGridPosition(gridPosition.x, gridPosition.y)) return false;
+
             GridObject gridObject = grid.GetGridObject(gridPosition.x, gridPosition.y);
-            if (gridObject == null || !gridObject.CanBuild())
+
+            // Якщо це інструмент, він може ставати на "неактивні" клітинки, щоб їх розблокувати
+            if (isTool)
             {
-                return false;
+                // Інструмент не може ставати тільки на вже зайняті клітинки
+                if (gridObject.IsOccupied()) return false;
+            }
+            else
+            {
+                // Звичайні фігури потребують Buildable і Free
+                if (gridObject == null || !gridObject.CanBuild())
+                {
+                    return false;
+                }
             }
         }
         return true;
@@ -96,8 +108,7 @@ public class GridBuildingSystem : MonoBehaviour
                 grid.GetGridObject(gridPosition.x, gridPosition.y).ClearPlacedObject();
             }
         }
-        // !!! ВИПРАВЛЕННЯ БАГУ: ВИКОРИСТОВУЄМО DestroyImmediate, ЯКЩО ЗНАХОДИМОСЯ В РЕДАКТОРІ (або в логіці Undo/Redo),
-        // ЩОБ ГАРАНТУВАТИ СИНХРОННЕ ВИДАЛЕННЯ КОМПОНЕНТА.
+
         if (Application.isEditor && !Application.isPlaying)
         {
             Object.DestroyImmediate(placedObject);
@@ -123,7 +134,12 @@ public class GridBuildingSystem : MonoBehaviour
                     totalBuildableCells++;
                     if (gridObject.IsOccupied())
                     {
-                        occupiedBuildableCells++;
+                        // Вважаємо зайнятим, тільки якщо це НЕ інструмент (інструменти тимчасові)
+                        var obj = gridObject.GetPlacedObject();
+                        if (obj != null && obj.PlacedObjectTypeSO.category != PlacedObjectTypeSO.ItemCategory.Tool)
+                        {
+                            occupiedBuildableCells++;
+                        }
                     }
                 }
             }
@@ -132,8 +148,6 @@ public class GridBuildingSystem : MonoBehaviour
     }
 
     public GridXZ<GridObject> GetGrid() => grid;
-
-    // --- ПРИБРАНО GetGridData() ---
 
     public bool IsValidGridPosition(int x, int z)
     {

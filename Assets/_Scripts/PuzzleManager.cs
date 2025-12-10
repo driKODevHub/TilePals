@@ -18,7 +18,12 @@ public class PuzzleManager : MonoBehaviour
     [Header("Placement Settings")]
     [SerializeField] private float pieceHeightWhenHeld = 1.0f;
     [SerializeField] private float shakenVelocityThreshold = 15f;
-    [SerializeField] private Material invalidPlacementMaterial; // Залишено для сумісності
+    [SerializeField] private Material invalidPlacementMaterial;
+
+    [Header("Physics Throw Settings")]
+    [Tooltip("Множник сили кидка для фізичних об'єктів.")]
+    [SerializeField] private float throwForceMultiplier = 5f;
+    [SerializeField] private float maxThrowVelocity = 20f;
 
     [Header("Interaction Settings")]
     [Tooltip("Мінімальна відстань (у пікселях), яку треба пройти мишкою з затиснутою кнопкою, щоб це вважалося Петінгом.")]
@@ -50,6 +55,9 @@ public class PuzzleManager : MonoBehaviour
 
     // Mouse Velocity Calculation
     private Vector2 _lastMousePos;
+    private Vector3 _worldMousePos;
+    private Vector3 _lastWorldMousePos;
+    private Vector3 _currentThrowVelocity; // Вектор швидкості для кидка
     private float _currentMouseSpeed;
 
     // --- SNAP STATE TRACKING ---
@@ -107,7 +115,13 @@ public class PuzzleManager : MonoBehaviour
 
     private void Update()
     {
-        CalculateMouseSpeed();
+        CalculateMouseVelocity();
+
+        // Use Item Input (Right Click або клавіша) - простий приклад
+        if (Input.GetMouseButtonDown(1)) // Right Click
+        {
+            TryUseHoveredItem();
+        }
 
         if (_heldPiece == null)
         {
@@ -121,13 +135,37 @@ public class PuzzleManager : MonoBehaviour
         }
     }
 
-    private void CalculateMouseSpeed()
+    private void CalculateMouseVelocity()
     {
         if (inputReader == null) return;
+
+        // 2D Screen Velocity
         Vector2 currentPos = inputReader.MousePosition;
         float dist = (currentPos - _lastMousePos).magnitude;
         _currentMouseSpeed = dist / Time.deltaTime;
         _lastMousePos = currentPos;
+
+        // 3D World Velocity (для кидка)
+        Ray ray = Camera.main.ScreenPointToRay(currentPos);
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
+        {
+            Vector3 currentWorldPos = hit.point;
+            if (_lastWorldMousePos != Vector3.zero)
+            {
+                Vector3 velocity = (currentWorldPos - _lastWorldMousePos) / Time.deltaTime;
+                // Згладжування вектора швидкості для меншої дриганини
+                _currentThrowVelocity = Vector3.Lerp(_currentThrowVelocity, velocity, Time.deltaTime * 10f);
+            }
+            _lastWorldMousePos = currentWorldPos;
+        }
+    }
+
+    private void TryUseHoveredItem()
+    {
+        if (_hoveredPiece != null && ItemUsageManager.Instance != null)
+        {
+            ItemUsageManager.Instance.TryUseItem(_hoveredPiece);
+        }
     }
 
     #region Input Handlers & Interaction Logic
@@ -140,6 +178,7 @@ public class PuzzleManager : MonoBehaviour
         if (_potentialInteractionPiece != null) return;
 
         Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
+        // Враховуємо і шар фігур, і шар фізичних предметів (якщо вони різні, але зазвичай один)
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
         {
             PuzzlePiece piece = hit.collider.GetComponentInParent<PuzzlePiece>();
@@ -185,7 +224,7 @@ public class PuzzleManager : MonoBehaviour
             float dragDistance = Vector2.Distance(inputReader.MousePosition, _clickStartPos);
             if (dragDistance > dragThreshold)
             {
-                StartPetting();
+                StartPettingOrInteraction();
             }
         }
 
@@ -237,9 +276,8 @@ public class PuzzleManager : MonoBehaviour
         }
     }
 
-    private void StartPetting()
+    private void StartPettingOrInteraction()
     {
-        // --- FIX BUG: Allow petting anywhere (removed !IsPlaced check) ---
         _isPettingActive = true;
         PersonalityEventManager.RaisePettingStart(_potentialInteractionPiece);
     }
@@ -262,8 +300,6 @@ public class PuzzleManager : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
         Vector3 hitPoint;
 
-        // --- FIX BUG: Коли клікаємо збоку, фігура стрибає ---
-        // Замість сирої точки удару, ми шукаємо центр найближчої логічної клітинки цієї фігури.
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
         {
             hitPoint = GetSmartClickPosition(piece, hit.point);
@@ -276,20 +312,13 @@ public class PuzzleManager : MonoBehaviour
         DoPickUpLogic(piece, hitPoint);
     }
 
-    /// <summary>
-    /// Знаходить центр клітинки фігури, який є найближчим до точки кліку.
-    /// Це виправляє проблему, коли клік по бічній грані зараховується сусідній клітинці.
-    /// </summary>
     private Vector3 GetSmartClickPosition(PuzzlePiece piece, Vector3 rawHitPoint)
     {
-        // 1. Якщо фігура ще не має логічної позиції (рідкісний кейс), повертаємо як є
         if (!piece.IsPlaced && !piece.IsOffGrid) return rawHitPoint;
 
-        // 2. Отримуємо список всіх клітинок, які зараз займає ця фігура
         Vector2Int origin = piece.IsPlaced ? piece.PlacedObjectComponent.Origin : piece.OffGridOrigin;
         var occupiedCells = piece.PieceTypeSO.GetGridPositionsList(origin, piece.CurrentDirection);
 
-        // 3. Знаходимо центр тієї клітинки фігури, яка геометрично найближча до точки кліку
         var grid = GridBuildingSystem.Instance.GetGrid();
         float cellSize = grid.GetCellSize();
 
@@ -298,12 +327,9 @@ public class PuzzleManager : MonoBehaviour
 
         foreach (var cell in occupiedCells)
         {
-            // Обчислюємо світовий центр цієї конкретної клітинки
-            // GetWorldPosition повертає лівий нижній кут, тому додаємо половину розміру
             Vector3 cellWorldPos = grid.GetWorldPosition(cell.x, cell.y);
             Vector3 cellCenter = cellWorldPos + new Vector3(cellSize * 0.5f, 0, cellSize * 0.5f);
 
-            // Порівнюємо дистанцію в площині XZ (ігноруємо висоту кліку)
             float distSq = (rawHitPoint.x - cellCenter.x) * (rawHitPoint.x - cellCenter.x) +
                            (rawHitPoint.z - cellCenter.z) * (rawHitPoint.z - cellCenter.z);
 
@@ -313,9 +339,6 @@ public class PuzzleManager : MonoBehaviour
                 bestCandidate = cellCenter;
             }
         }
-
-        // Повертаємо ідеальну позицію центру клітинки.
-        // GetXZ потім перетворить це в правильні координати без помилок округлення.
         return bestCandidate;
     }
 
@@ -332,6 +355,10 @@ public class PuzzleManager : MonoBehaviour
 
         _heldPiece = piece;
         _heldPiece.SetOutlineLocked(true);
+
+        // Вимикаємо фізику при піднятті (стає кінематичним, контролюється кодом)
+        _heldPiece.DisablePhysics();
+
         if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayPickup();
 
         _initialPiecePosition = piece.transform.position;
@@ -385,13 +412,16 @@ public class PuzzleManager : MonoBehaviour
             Vector2Int rotationOffset = _heldPiece.PieceTypeSO.GetRotationOffset(_heldPiece.CurrentDirection);
             Vector3 rotationVisualOffset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
 
+            // --- ЛОГІКА ПОЗИЦІОНУВАННЯ ---
             if (isMouseOverGrid || !smoothMovementOffGrid)
             {
+                // Снепінг до гріда
                 Vector3 snappedGridPos = grid.GetWorldPosition(logicalOrigin.x, logicalOrigin.y);
                 targetPosition = snappedGridPos + rotationVisualOffset;
             }
             else
             {
+                // Вільний рух off-grid
                 Vector3 mouseWorldPos = hit.point;
                 mouseWorldPos.y = 0;
                 Vector3 clickOffsetVector = new Vector3(_heldPiece.ClickOffset.x, 0, _heldPiece.ClickOffset.y) * cellSize;
@@ -402,6 +432,7 @@ public class PuzzleManager : MonoBehaviour
 
             targetPosition.y = pieceHeightWhenHeld;
 
+            // --- ЗАСТОСУВАННЯ РУХУ ---
             if (_heldPiece.Movement != null)
             {
                 _heldPiece.Movement.SetTargetPosition(targetPosition);
@@ -416,14 +447,12 @@ public class PuzzleManager : MonoBehaviour
                 _heldPiece.transform.position = Vector3.Lerp(_heldPiece.transform.position, targetPosition, Time.deltaTime * 25f);
             }
 
-            // --- ПЕРЕВІРКА ВАЛІДНОСТІ ТА СНЕПІНГУ ---
+            // --- ПЕРЕВІРКА ВАЛІДНОСТІ ---
             CanPlaceHeldPiece(logicalOrigin, out bool canOnGrid, out bool canOffGrid);
 
             bool isValid = canOnGrid || canOffGrid;
             _heldPiece.SetInvalidPlacementVisual(!isValid);
 
-            // --- FIX BUG: Play snap sound even on invalid grid placement ---
-            // Ми перевіряємо isMouseOverGrid (чи ми над дошкою), а не canOnGrid (чи місце вільне)
             if (isMouseOverGrid)
             {
                 if (_lastSnappedGridOrigin == null || _lastSnappedGridOrigin.Value != logicalOrigin)
@@ -451,6 +480,7 @@ public class PuzzleManager : MonoBehaviour
 
         CanPlaceHeldPiece(origin, out bool canOnGrid, out bool canOffGrid);
 
+        // 1. Спроба поставити НА ГРІД (снепінг, без фізики)
         if (canOnGrid)
         {
             ICommand cmd = new PlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
@@ -461,6 +491,7 @@ public class PuzzleManager : MonoBehaviour
                 CheckForWin();
             }
         }
+        // 2. Спроба кинути ПОЗА ГРІДОМ
         else if (canOffGrid)
         {
             ICommand cmd = new OffGridPlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
@@ -469,6 +500,17 @@ public class PuzzleManager : MonoBehaviour
             if (cmd.Execute())
             {
                 if (droppedPiece.Visuals != null) droppedPiece.Visuals.PlayDrop();
+
+                // --- PHYSICS THROW LOGIC ---
+                // Якщо це фізичний об'єкт (м'яч), надаємо йому прискорення
+                if (droppedPiece.PieceTypeSO.usePhysics)
+                {
+                    Vector3 throwVel = Vector3.ClampMagnitude(_currentThrowVelocity * throwForceMultiplier, maxThrowVelocity);
+                    // Додаємо трохи "вгору", щоб об'єкт не провалювався
+                    throwVel.y = Mathf.Abs(throwVel.y) + 2f;
+                    droppedPiece.EnablePhysics(throwVel);
+                }
+
                 FinalizeDrop(cmd);
                 PersonalityEventManager.RaisePieceDropped(droppedPiece);
             }
