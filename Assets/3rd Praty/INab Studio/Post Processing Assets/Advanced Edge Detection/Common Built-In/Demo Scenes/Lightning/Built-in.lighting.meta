@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 2be03cefc7dd1da4bb16bdd0626aa859
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 262863
+  packageName: Advanced Edge Detection
+  packageVersion: 2.1
+  assetPath: Assets/INab Studio/Post Processing Assets/Advanced Edge Detection/Common
+    Built-In/Demo Scenes/Lightning/Built-in.lighting
+  uploadId: 769266

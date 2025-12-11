@@ -6,9 +6,9 @@
     "CustomOutputPath": "Art/Shaders",
     "LastImplementationExportImportPath": "C:/Unity/Unity Projects/_GitHub/TilePals/Assets",
     "OpenedFoldouts": [
-        "LIGHTING",
-        "SURFACE",
-        "STYLIZATION"
+        "OPTIONS",
+        "SHADER STATES",
+        "TRANSPARENCY/BLENDING"
     ],
     "UseCustomFont": true,
     "CustomFont": {

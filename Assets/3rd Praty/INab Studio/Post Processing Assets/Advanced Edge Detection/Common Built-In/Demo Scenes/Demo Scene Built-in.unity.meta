@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bcbd5a0554741ab499c8837a6587bd36
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 262863
+  packageName: Advanced Edge Detection
+  packageVersion: 2.1
+  assetPath: Assets/INab Studio/Post Processing Assets/Advanced Edge Detection/Common
+    Built-In/Demo Scenes/Demo Scene Built-in.unity
+  uploadId: 769266

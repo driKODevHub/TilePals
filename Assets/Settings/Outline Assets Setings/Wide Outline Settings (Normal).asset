@@ -56,13 +56,13 @@ MonoBehaviour:
   materialType: 0
   customMaterial: {fileID: 0}
   widthControl: 0
-  sharedWidth: 10
+  sharedWidth: 6
   gap: 0
   blendMode: 1
   customDepthBuffer: 0
   silhouetteBufferFormat: 0
-  occludedColor: {r: 0.9010617, g: 1, b: 0.33018857, a: 1}
-  clearStencil: 0
-  scaleWithResolution: 0
+  occludedColor: {r: 1, g: 1, b: 1, a: 1}
+  clearStencil: 1
+  scaleWithResolution: 1
   referenceResolution: 2
   customResolution: 0

@@ -1,0 +1,138 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-5101854373847113139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e110547dcf715004dbd808d078bd1d6a, type: 3}
+  m_Name: AdvancedEdgeDetectionFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  settings:
+    Event: 450
+    _CustomDataLayerMask:
+      serializedVersion: 2
+      m_Bits: 16
+    _DepthMaskLayerMask:
+      serializedVersion: 2
+      m_Bits: 0
+    _UseCustomData: 1
+    _UseDepthMask: 0
+    _UseCustomTexture: 0
+    _CustomTexture: {fileID: 2800000, guid: cbdd39a49a5bf994aa489cdb7d0bbf29, type: 3}
+    _CustomTextureLayerMask:
+      serializedVersion: 2
+      m_Bits: 4
+    _Thickness: 0.84
+    _ResolutionAdjust: 0
+    _UseDepthFade: 0
+    _FadeStart: 4
+    _FadeEnd: 10
+    _NormalsEdgeDetection: 0
+    _NormalsOffset: 0.183
+    _NormalsHardness: 0.675
+    _NormalsPower: 5
+    _DepthEdgeDetection: 0
+    _AcuteAngleFix: 0
+    _ViewDirThreshold: 1
+    _ViewDirThresholdScale: 50
+    _DepthThreshold: 0.48
+    _DepthHardness: 0.9
+    _DepthPower: 5
+    _EdgeColor: {r: 0, g: 0, b: 0, a: 1}
+    _UseEdgeBlendDepthFade: 0
+    _EdgeBlendFadeStart: 25
+    _EdgeBlendFadeEnd: 55
+    _UseSketchEdges: 1
+    _Amplitude: 0.00248
+    _Frequency: 73.3
+    _ChangesPerSecond: 0
+    _UseGrain: 0
+    _GrainTexture: {fileID: 2800000, guid: c8af988159aa17c44932cc1876832848, type: 3}
+    _GrainStrength: 1
+    _GrainScale: 3
+    _UseUvOffset: 1
+    _OffsetNoise: {fileID: 2800000, guid: c8af988159aa17c44932cc1876832848, type: 3}
+    _OffsetNoiseScale: 4
+    _OffsetChangesPerSecond: 2.11
+    _OffsetStrength: 0.00348
+--- !u!114 &-4197337700258730362
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd553e262309b9247ab24e3fac0bbc2e, type: 3}
+  m_Name: HandDrawnOutlinesFeature
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  ID: 1
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 32
+  UseDepthMask: 1
+  handDrawnOutlinesSettings: {fileID: 11400000, guid: c31568d8d082bc24e9f64ae095a59a8a, type: 2}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de640fe3d0db1804a85f9fc8f5cadab6, type: 3}
+  m_Name: Advanced Edge Detection Renderer Sketch
+  m_EditorClassIdentifier: 
+  debugShaders:
+    debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
+    hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
+  m_RendererFeatures:
+  - {fileID: -5101854373847113139}
+  m_RendererFeatureMap: 4de2114f7a9232b9
+  m_UseNativeRenderPass: 0
+  postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
+  xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
+  shaders:
+    blitPS: {fileID: 4800000, guid: c17132b1f77d20942aa75f8429c0f8bc, type: 3}
+    copyDepthPS: {fileID: 4800000, guid: d6dae50ee9e1bfa4db75f19f99355220, type: 3}
+    screenSpaceShadowPS: {fileID: 0}
+    samplingPS: {fileID: 4800000, guid: 04c410c9937594faa893a11dceb85f7e, type: 3}
+    stencilDeferredPS: {fileID: 4800000, guid: e9155b26e1bc55942a41e518703fe304, type: 3}
+    fallbackErrorPS: {fileID: 4800000, guid: e6e9a19c3678ded42a3bc431ebef7dbd, type: 3}
+    fallbackLoadingPS: {fileID: 4800000, guid: 7f888aff2ac86494babad1c2c5daeee2, type: 3}
+    materialErrorPS: {fileID: 4800000, guid: 5fd9a8feb75a4b5894c241777f519d4e, type: 3}
+    coreBlitPS: {fileID: 4800000, guid: 93446b5c5339d4f00b85c159e1159b7c, type: 3}
+    coreBlitColorAndDepthPS: {fileID: 4800000, guid: d104b2fc1ca6445babb8e90b0758136b, type: 3}
+    blitHDROverlay: {fileID: 4800000, guid: a89bee29cffa951418fc1e2da94d1959, type: 3}
+    cameraMotionVector: {fileID: 4800000, guid: c56b7e0d4c7cb484e959caeeedae9bbf, type: 3}
+    objectMotionVector: {fileID: 4800000, guid: 7b3ede40266cd49a395def176e1bc486, type: 3}
+    dataDrivenLensFlare: {fileID: 4800000, guid: 6cda457ac28612740adb23da5d39ea92, type: 3}
+  m_AssetVersion: 2
+  m_OpaqueLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_TransparentLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_DefaultStencilState:
+    overrideStencilState: 0
+    stencilReference: 0
+    stencilCompareFunction: 8
+    passOperation: 2
+    failOperation: 0
+    zFailOperation: 0
+  m_ShadowTransparentReceive: 1
+  m_RenderingMode: 0
+  m_DepthPrimingMode: 0
+  m_CopyDepthMode: 0
+  m_AccurateGbufferNormals: 0
+  m_IntermediateTextureMode: 1

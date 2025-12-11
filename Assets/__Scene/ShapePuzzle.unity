@@ -176,6 +176,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 2723641020190725018, guid: e48ae66fcf62633448f3ac044c8033ad, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 3857189935961958645, guid: e48ae66fcf62633448f3ac044c8033ad, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.484
@@ -220,6 +224,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_10
       objectReference: {fileID: 0}
+    - target: {fileID: 4525182370181624399, guid: e48ae66fcf62633448f3ac044c8033ad, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -238,6 +246,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2413776976672737046, guid: 201aef01975a0824dafd6b0fe7a97676, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 3545557228801473657, guid: 201aef01975a0824dafd6b0fe7a97676, type: 3}
       propertyPath: m_LocalScale.x
       value: 4.3823
@@ -293,6 +305,10 @@ PrefabInstance:
     - target: {fileID: 4215238611923625667, guid: 201aef01975a0824dafd6b0fe7a97676, type: 3}
       propertyPath: m_Name
       value: Bed_19
+      objectReference: {fileID: 0}
+    - target: {fileID: 4215238611923625667, guid: 201aef01975a0824dafd6b0fe7a97676, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -436,6 +452,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 5116165039285660404, guid: eb162172cf0a2794cb159597ecb788c0, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 6290235806484992411, guid: eb162172cf0a2794cb159597ecb788c0, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.0312
@@ -492,6 +512,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Carpet_07
       objectReference: {fileID: 0}
+    - target: {fileID: 6629501576149682977, guid: eb162172cf0a2794cb159597ecb788c0, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -505,9 +529,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 2977400124374228471, guid: 33000237632362649ac8fa77c2ea3fed, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 3625720764942531618, guid: 33000237632362649ac8fa77c2ea3fed, type: 3}
       propertyPath: m_Name
       value: Plants_08
+      objectReference: {fileID: 0}
+    - target: {fileID: 3625720764942531618, guid: 33000237632362649ac8fa77c2ea3fed, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 4114871139452872344, guid: 33000237632362649ac8fa77c2ea3fed, type: 3}
       propertyPath: m_LocalPosition.x
@@ -706,9 +738,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 7543507868858968020, guid: eada9e6098433724aab105fb5aa8b449, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 8335899030510650881, guid: eada9e6098433724aab105fb5aa8b449, type: 3}
       propertyPath: m_Name
       value: Plants_07
+      objectReference: {fileID: 0}
+    - target: {fileID: 8335899030510650881, guid: eada9e6098433724aab105fb5aa8b449, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 8711299425008098491, guid: eada9e6098433724aab105fb5aa8b449, type: 3}
       propertyPath: m_LocalPosition.x
@@ -828,6 +868,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Picture_09
       objectReference: {fileID: 0}
+    - target: {fileID: 689410802403166921, guid: b8c238334dea69f49bd0d2c846fdafe1, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 1338056211284716316, guid: b8c238334dea69f49bd0d2c846fdafe1, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -841,6 +889,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 469881266642468097, guid: 1202868725d78b141b38c64bc3efa48a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 1643381040486172270, guid: 1202868725d78b141b38c64bc3efa48a, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.5
@@ -900,6 +952,10 @@ PrefabInstance:
     - target: {fileID: 2127289974334823636, guid: 1202868725d78b141b38c64bc3efa48a, type: 3}
       propertyPath: m_Name
       value: Picture_12
+      objectReference: {fileID: 0}
+    - target: {fileID: 2127289974334823636, guid: 1202868725d78b141b38c64bc3efa48a, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -989,6 +1045,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_16
       objectReference: {fileID: 0}
+    - target: {fileID: 290121757256062741, guid: 6dfaa613c098f1741b551146e36e08da, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     - target: {fileID: 1102652519649922479, guid: 6dfaa613c098f1741b551146e36e08da, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.5
@@ -1029,6 +1089,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2235549320872179392, guid: 6dfaa613c098f1741b551146e36e08da, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1047,9 +1111,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 923610397939106956, guid: 821cadc1542b6934c966ffa5c3b81b8b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 1716345018012869977, guid: 821cadc1542b6934c966ffa5c3b81b8b, type: 3}
       propertyPath: m_Name
       value: Plants_19
+      objectReference: {fileID: 0}
+    - target: {fileID: 1716345018012869977, guid: 821cadc1542b6934c966ffa5c3b81b8b, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2061098454777298915, guid: 821cadc1542b6934c966ffa5c3b81b8b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1109,6 +1181,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 4985544140976287820, guid: e313eb48f4d105e47a0820c0d689daeb, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 6159544574461348643, guid: e313eb48f4d105e47a0820c0d689daeb, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.95
@@ -1153,6 +1229,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_18
       objectReference: {fileID: 0}
+    - target: {fileID: 6787146239302717849, guid: e313eb48f4d105e47a0820c0d689daeb, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1171,9 +1251,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 921252505646948181, guid: 5546c00d14c69464ca5ee184774f3e65, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 1713635282989481600, guid: 5546c00d14c69464ca5ee184774f3e65, type: 3}
       propertyPath: m_Name
       value: Plants_09
+      objectReference: {fileID: 0}
+    - target: {fileID: 1713635282989481600, guid: 5546c00d14c69464ca5ee184774f3e65, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2054730605728998458, guid: 5546c00d14c69464ca5ee184774f3e65, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1281,9 +1369,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 8047713489549251874, guid: c3f95be14d9da354db6a9a7a47a79ca1, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 8408155321731413239, guid: c3f95be14d9da354db6a9a7a47a79ca1, type: 3}
       propertyPath: m_Name
       value: Plants_14
+      objectReference: {fileID: 0}
+    - target: {fileID: 8408155321731413239, guid: c3f95be14d9da354db6a9a7a47a79ca1, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 9215512844151041613, guid: c3f95be14d9da354db6a9a7a47a79ca1, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1347,6 +1443,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_12
       objectReference: {fileID: 0}
+    - target: {fileID: 72386965986428800, guid: d67a2c88456deb546807533851615262, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     - target: {fileID: 741681218466946362, guid: d67a2c88456deb546807533851615262, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.407
@@ -1387,6 +1487,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1874016413792003669, guid: d67a2c88456deb546807533851615262, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1635,6 +1739,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_17
       objectReference: {fileID: 0}
+    - target: {fileID: 7843816273080965014, guid: ec764edf27793804497f1deb2e760b05, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 8636260485714736707, guid: ec764edf27793804497f1deb2e760b05, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1697,6 +1809,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_04
       objectReference: {fileID: 0}
+    - target: {fileID: 625737765107960217, guid: 5569a6a5e6586394fb69a5ab38d3babf, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 1418613398536529996, guid: 5569a6a5e6586394fb69a5ab38d3babf, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1875,6 +1995,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Armchair_18
       objectReference: {fileID: 0}
+    - target: {fileID: 7674977800888455558, guid: d4e460859b1765442b0fcb1059c4c9ea, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 8179104088204030035, guid: d4e460859b1765442b0fcb1059c4c9ea, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1888,6 +2016,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 5116688210360393241, guid: 30cb9982f0caf1b4882a64c61eb83672, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 6289571607944504694, guid: 30cb9982f0caf1b4882a64c61eb83672, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.67
@@ -1931,6 +2063,10 @@ PrefabInstance:
     - target: {fileID: 6630104186872299468, guid: 30cb9982f0caf1b4882a64c61eb83672, type: 3}
       propertyPath: m_Name
       value: Plants_20
+      objectReference: {fileID: 0}
+    - target: {fileID: 6630104186872299468, guid: 30cb9982f0caf1b4882a64c61eb83672, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2025,8 +2161,8 @@ Camera:
   m_GameObject: {fileID: 1005976325}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.9686275, g: 0.9725491, b: 0.89019614, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -2372,6 +2508,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Guitar_01
       objectReference: {fileID: 0}
+    - target: {fileID: 5701511008288131399, guid: eea88619756eb7e4f96e855255a9bdc9, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 6061610343804823698, guid: eea88619756eb7e4f96e855255a9bdc9, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2388,6 +2532,10 @@ PrefabInstance:
     - target: {fileID: 5037423064481301176, guid: 29755eb1aeba03f4c961d879b309c038, type: 3}
       propertyPath: m_Name
       value: Plants_06
+      objectReference: {fileID: 0}
+    - target: {fileID: 5037423064481301176, guid: 29755eb1aeba03f4c961d879b309c038, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 5666466467776092162, guid: 29755eb1aeba03f4c961d879b309c038, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2429,6 +2577,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6838850064042632045, guid: 29755eb1aeba03f4c961d879b309c038, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2647,6 +2799,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_21
       objectReference: {fileID: 0}
+    - target: {fileID: 4991805099771664344, guid: 58af72212d1c098449cce9c4eaf3ddb5, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     - target: {fileID: 5624332820717489506, guid: 58af72212d1c098449cce9c4eaf3ddb5, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.2
@@ -2687,6 +2843,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6793266872393414157, guid: 58af72212d1c098449cce9c4eaf3ddb5, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2749,6 +2909,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_15
       objectReference: {fileID: 0}
+    - target: {fileID: 3244827681968177488, guid: 98e66404414bb4e45a84be2130e918f0, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 3893095682428297349, guid: 98e66404414bb4e45a84be2130e918f0, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2767,6 +2935,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 296096239070151334, guid: 50769569e727e334e93decd27e049ea2, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 1463913048149653961, guid: 50769569e727e334e93decd27e049ea2, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.52
@@ -2811,6 +2983,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_05
       objectReference: {fileID: 0}
+    - target: {fileID: 2241400108114813811, guid: 50769569e727e334e93decd27e049ea2, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2829,9 +3005,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 8036450242273294783, guid: 1191c4f7f66947943b8f45a36ccd0deb, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 8396900596948572266, guid: 1191c4f7f66947943b8f45a36ccd0deb, type: 3}
       propertyPath: m_Name
       value: Pouf_07
+      objectReference: {fileID: 0}
+    - target: {fileID: 8396900596948572266, guid: 1191c4f7f66947943b8f45a36ccd0deb, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 9208761959176127184, guid: 1191c4f7f66947943b8f45a36ccd0deb, type: 3}
       propertyPath: m_LocalScale.x
@@ -2956,6 +3140,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2396264320525311818, guid: cdef5c0f0c741ca43b5b60fd0ac34922, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 3533655998965572645, guid: cdef5c0f0c741ca43b5b60fd0ac34922, type: 3}
       propertyPath: m_LocalScale.x
       value: 3
@@ -3015,6 +3203,10 @@ PrefabInstance:
     - target: {fileID: 4197849375956090527, guid: cdef5c0f0c741ca43b5b60fd0ac34922, type: 3}
       propertyPath: m_Name
       value: Carpet_05
+      objectReference: {fileID: 0}
+    - target: {fileID: 4197849375956090527, guid: cdef5c0f0c741ca43b5b60fd0ac34922, type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3156,6 +3348,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 4978749248974603823, guid: 965ddfd855f2f6243befbe291bd8a11c, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 6148326964714290496, guid: 965ddfd855f2f6243befbe291bd8a11c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.204
@@ -3199,6 +3395,10 @@ PrefabInstance:
     - target: {fileID: 6780431335299246074, guid: 965ddfd855f2f6243befbe291bd8a11c, type: 3}
       propertyPath: m_Name
       value: Plants_03
+      objectReference: {fileID: 0}
+    - target: {fileID: 6780431335299246074, guid: 965ddfd855f2f6243befbe291bd8a11c, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3376,6 +3576,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 2684231044055704500, guid: 830472eb20240ad468d7998952964bf1, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 3822255589419636955, guid: 830472eb20240ad468d7998952964bf1, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.522
@@ -3419,6 +3623,10 @@ PrefabInstance:
     - target: {fileID: 4485780501741404769, guid: 830472eb20240ad468d7998952964bf1, type: 3}
       propertyPath: m_Name
       value: Plants_01
+      objectReference: {fileID: 0}
+    - target: {fileID: 4485780501741404769, guid: 830472eb20240ad468d7998952964bf1, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3652,9 +3860,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1061839948542595165, guid: a93d8ebb13825614b83b1f4b9e115b12, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 1566291416305168776, guid: a93d8ebb13825614b83b1f4b9e115b12, type: 3}
       propertyPath: m_Name
       value: Bed_21
+      objectReference: {fileID: 0}
+    - target: {fileID: 1566291416305168776, guid: a93d8ebb13825614b83b1f4b9e115b12, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2231328084016802610, guid: a93d8ebb13825614b83b1f4b9e115b12, type: 3}
       propertyPath: m_LocalScale.x
@@ -3729,6 +3945,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Pouf_05_Cover
       objectReference: {fileID: 0}
+    - target: {fileID: 2803722236776174234, guid: 646f96a2edefde347a2a68a5727636d0, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     - target: {fileID: 3288474530600192032, guid: 646f96a2edefde347a2a68a5727636d0, type: 3}
       propertyPath: m_LocalScale.x
       value: 3.5
@@ -3785,6 +4005,10 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4460867061606249295, guid: 646f96a2edefde347a2a68a5727636d0, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3842,6 +4066,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_02
       objectReference: {fileID: 0}
+    - target: {fileID: 1102778778621081559, guid: 58b70f23e004d9043a6a2198c3f4cdb5, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 1462868355909408258, guid: 58b70f23e004d9043a6a2198c3f4cdb5, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3860,6 +4092,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 61232074035518367, guid: 84b6f2d59a810a34399032ef510c6d27, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 1194200347671830768, guid: 84b6f2d59a810a34399032ef510c6d27, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.046
@@ -3904,6 +4140,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_11
       objectReference: {fileID: 0}
+    - target: {fileID: 2006765190696204874, guid: 84b6f2d59a810a34399032ef510c6d27, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3914,6 +4154,87 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1194200347671830768, guid: 84b6f2d59a810a34399032ef510c6d27, type: 3}
   m_PrefabInstance: {fileID: 1748791998}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1804978313
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 2.5171
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 2.11
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: f875cbc64a66c2e49b4ae1f551ff62ce, type: 2}
+    - target: {fileID: 919132149155446097, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_Name
+      value: ShowInsidePlane
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
 --- !u!1001 &1899557530
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3925,6 +4246,10 @@ PrefabInstance:
     - target: {fileID: 2713589543316314178, guid: e99ce624e43042c43a36d5fafb48bd1d, type: 3}
       propertyPath: m_Name
       value: Carpet_04
+      objectReference: {fileID: 0}
+    - target: {fileID: 2713589543316314178, guid: e99ce624e43042c43a36d5fafb48bd1d, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 3378627585417478904, guid: e99ce624e43042c43a36d5fafb48bd1d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3966,6 +4291,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4514972150162717079, guid: e99ce624e43042c43a36d5fafb48bd1d, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3982,6 +4311,10 @@ PrefabInstance:
     - target: {fileID: 7046595890016754958, guid: 9df012580bb807949a15eadb0005ac4a, type: 3}
       propertyPath: m_Name
       value: Plants_23
+      objectReference: {fileID: 0}
+    - target: {fileID: 7046595890016754958, guid: 9df012580bb807949a15eadb0005ac4a, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 7674513149141010356, guid: 9df012580bb807949a15eadb0005ac4a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4023,6 +4356,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8848013956594449627, guid: 9df012580bb807949a15eadb0005ac4a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4085,6 +4422,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Plants_22
       objectReference: {fileID: 0}
+    - target: {fileID: 5193139295420465556, guid: c263c490cbb9dc942ac58def0528a29c, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 5985636695704821825, guid: c263c490cbb9dc942ac58def0528a29c, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4226,9 +4571,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1483016337}
     m_Modifications:
+    - target: {fileID: 3447184265723236446, guid: b060ae74e26edc2498b8731d2ce91cf3, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c6a19e6ce21a9445af143e8f227a473, type: 2}
     - target: {fileID: 3807274117482181003, guid: b060ae74e26edc2498b8731d2ce91cf3, type: 3}
       propertyPath: m_Name
       value: Plants_13
+      objectReference: {fileID: 0}
+    - target: {fileID: 3807274117482181003, guid: b060ae74e26edc2498b8731d2ce91cf3, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 4584091642979429169, guid: b060ae74e26edc2498b8731d2ce91cf3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4510,3 +4863,4 @@ SceneRoots:
   - {fileID: 1341157891}
   - {fileID: 1692446976}
   - {fileID: 1137084325}
+  - {fileID: 1804978313}

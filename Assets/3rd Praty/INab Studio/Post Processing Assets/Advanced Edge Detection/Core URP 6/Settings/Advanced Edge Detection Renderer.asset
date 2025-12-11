@@ -1,0 +1,205 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8768074336328379005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e110547dcf715004dbd808d078bd1d6a, type: 3}
+  m_Name: AdvancedEdgeDetection
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  m_Settings:
+    Event: 450
+    _ControlViaVolumes: 0
+    _CustomDataLayerMask:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    _DepthMaskLayerMask:
+      serializedVersion: 2
+      m_Bits: 2
+    _UseCustomData: 1
+    _UseDepthMask: 1
+    _UseCustomTexture: 1
+    _CustomTexture: {fileID: 2800000, guid: cbdd39a49a5bf994aa489cdb7d0bbf29, type: 3}
+    _CustomTextureLayerMask:
+      serializedVersion: 2
+      m_Bits: 4
+    _Thickness: 1
+    _ResolutionAdjust: 0
+    _UseDepthFade: 0
+    _FadeStart: 20
+    _FadeEnd: 39.73
+    _NormalsEdgeDetection: 1
+    _NormalsOffset: 0.208
+    _NormalsHardness: 0.187
+    _NormalsPower: 2.14
+    _DepthEdgeDetection: 0
+    _AcuteAngleFix: 0
+    _ViewDirThreshold: 0.807
+    _ViewDirThresholdScale: 19.5
+    _DepthThreshold: 0.43
+    _DepthHardness: 0.836
+    _DepthPower: 3.89
+    _EdgeColor: {r: 0, g: 0, b: 0, a: 1}
+    _UseEdgeBlendDepthFade: 0
+    _EdgeBlendFadeStart: 2
+    _EdgeBlendFadeEnd: 12.53
+    _UseSketchEdges: 0
+    _Amplitude: 0.00365
+    _Frequency: 23.3
+    _ChangesPerSecond: 10
+    _UseGrain: 0
+    _GrainTexture: {fileID: 2800000, guid: 4e32b36c75a5c544cb743dbbfe284e13, type: 3}
+    _GrainStrength: 0.49
+    _GrainScale: 3
+    _UseUvOffset: 0
+    _OffsetNoise: {fileID: 2800000, guid: f833d067f6fa46a43a4ab64ad0700595, type: 3}
+    _OffsetNoiseScale: 0.96
+    _OffsetChangesPerSecond: 3.25
+    _OffsetStrength: 0.01
+  m_EdgeDetectionShader: {fileID: -6465566751694194690, guid: 2721fa7d24f75ba44bf446b4b0105f62, type: 3}
+  m_EdgeBlendShader: {fileID: -6465566751694194690, guid: 134968410aa280f49ada28cb69c64fdc, type: 3}
+  m_DepthMaskShader: {fileID: -6465566751694194690, guid: faccf2cc91431be459c0e9ac8ad01d2d, type: 3}
+  m_CustomDataShader: {fileID: -6465566751694194690, guid: 1828106f6c57d3849bb4c610a49ade2a, type: 3}
+--- !u!114 &-5101854373847113139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e110547dcf715004dbd808d078bd1d6a, type: 3}
+  m_Name: AdvancedEdgeDetectionFeature
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  m_Settings:
+    Event: 450
+    _ControlViaVolumes: 0
+    _CustomDataLayerMask:
+      serializedVersion: 2
+      m_Bits: 0
+    _DepthMaskLayerMask:
+      serializedVersion: 2
+      m_Bits: 0
+    _UseCustomData: 0
+    _UseDepthMask: 0
+    _UseCustomTexture: 0
+    _CustomTexture: {fileID: 0}
+    _CustomTextureLayerMask:
+      serializedVersion: 2
+      m_Bits: 0
+    _Thickness: 1
+    _ResolutionAdjust: 0
+    _UseDepthFade: 0
+    _FadeStart: 20
+    _FadeEnd: 40
+    _NormalsEdgeDetection: 1
+    _NormalsOffset: 0.1
+    _NormalsHardness: 0
+    _NormalsPower: 1
+    _DepthEdgeDetection: 1
+    _AcuteAngleFix: 0
+    _ViewDirThreshold: 1
+    _ViewDirThresholdScale: 50
+    _DepthThreshold: 1
+    _DepthHardness: 0.9
+    _DepthPower: 5
+    _EdgeColor: {r: 0, g: 0, b: 0, a: 1}
+    _UseEdgeBlendDepthFade: 0
+    _EdgeBlendFadeStart: 10
+    _EdgeBlendFadeEnd: 20
+    _UseSketchEdges: 0
+    _Amplitude: 0.005
+    _Frequency: 40
+    _ChangesPerSecond: 0
+    _UseGrain: 0
+    _GrainTexture: {fileID: 0}
+    _GrainStrength: 1
+    _GrainScale: 1
+    _UseUvOffset: 0
+    _OffsetNoise: {fileID: 0}
+    _OffsetNoiseScale: 0.4
+    _OffsetChangesPerSecond: 0
+    _OffsetStrength: 0.005
+  m_EdgeDetectionShader: {fileID: 0}
+  m_EdgeBlendShader: {fileID: 0}
+  m_DepthMaskShader: {fileID: 0}
+  m_CustomDataShader: {fileID: 0}
+--- !u!114 &-4197337700258730362
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd553e262309b9247ab24e3fac0bbc2e, type: 3}
+  m_Name: HandDrawnOutlinesFeature
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  ID: 1
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 32
+  UseDepthMask: 1
+  handDrawnOutlinesSettings: {fileID: 11400000, guid: c31568d8d082bc24e9f64ae095a59a8a, type: 2}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de640fe3d0db1804a85f9fc8f5cadab6, type: 3}
+  m_Name: Advanced Edge Detection Renderer
+  m_EditorClassIdentifier: 
+  debugShaders:
+    debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
+    hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
+    probeVolumeSamplingDebugComputeShader: {fileID: 7200000, guid: 53626a513ea68ce47b59dc1299fe3959, type: 3}
+  probeVolumeResources:
+    probeVolumeDebugShader: {fileID: 0}
+    probeVolumeFragmentationDebugShader: {fileID: 0}
+    probeVolumeOffsetDebugShader: {fileID: 0}
+    probeVolumeSamplingDebugShader: {fileID: 0}
+    probeSamplingDebugMesh: {fileID: 0}
+    probeSamplingDebugTexture: {fileID: 0}
+    probeVolumeBlendStatesCS: {fileID: 0}
+  m_RendererFeatures:
+  - {fileID: -8768074336328379005}
+  m_RendererFeatureMap: 8395edaad88a5186
+  m_UseNativeRenderPass: 0
+  xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
+  postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
+  m_AssetVersion: 2
+  m_OpaqueLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_TransparentLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_DefaultStencilState:
+    overrideStencilState: 0
+    stencilReference: 0
+    stencilCompareFunction: 8
+    passOperation: 2
+    failOperation: 0
+    zFailOperation: 0
+  m_ShadowTransparentReceive: 1
+  m_RenderingMode: 0
+  m_DepthPrimingMode: 0
+  m_CopyDepthMode: 0
+  m_DepthAttachmentFormat: 0
+  m_DepthTextureFormat: 0
+  m_AccurateGbufferNormals: 0
+  m_IntermediateTextureMode: 1
