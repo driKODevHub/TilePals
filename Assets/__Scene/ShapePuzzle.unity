@@ -4226,9 +4226,17 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: f875cbc64a66c2e49b4ae1f551ff62ce, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: e1661dff1e30d3c4ea3f0ff0712ffa04, type: 2}
     - target: {fileID: 919132149155446097, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
       propertyPath: m_Name
       value: ShowInsidePlane
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 7821b1612c3855646879e06f7a6dccb4, type: 3}
+      propertyPath: m_Layer
+      value: 13
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -20,6 +20,25 @@ MonoBehaviour:
     silhouetteInstanced: {fileID: 4800000, guid: 85d004b6af6cd48209d21826b2f0a5a3, type: 3}
     outline: {fileID: 4800000, guid: 90865e175cad4ccd80a2e1965c38f3e9, type: 3}
     clear: {fileID: 4800000, guid: 9d6033fe8c48f4059a892093b5eec20b, type: 3}
+--- !u!114 &-3782766715665903361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1bf42c897c344772a8dea9cae097da4, type: 3}
+  m_Name: FastOutline
+  m_EditorClassIdentifier: Linework::Linework.FastOutline.FastOutline
+  m_Active: 1
+  settings: {fileID: 11400000, guid: 3f97eff1d1d7a7041bc192477fac1553, type: 2}
+  shaders:
+    mask: {fileID: 4800000, guid: d6efd8a53bb54ff68576b38c066c3134, type: 3}
+    outline: {fileID: 4800000, guid: 981392195909457093e91e09efd412a1, type: 3}
+    outlineInstanced: {fileID: 4800000, guid: 43dbe363270164c96812acf35572a126, type: 3}
+    clear: {fileID: 4800000, guid: 9d6033fe8c48f4059a892093b5eec20b, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48,8 +67,9 @@ MonoBehaviour:
   - {fileID: 7833122117494664109}
   - {fileID: -5503759105745244610}
   - {fileID: 345321952908897831}
+  - {fileID: -3782766715665903361}
   - {fileID: 3989350782350934273}
-  m_RendererFeatureMap: ad6b866f10d7b46c3eaebbe440b89eb3276e47907cd4ca040141746a66055d37
+  m_RendererFeatureMap: ad6b866f10d7b46c3eaebbe440b89eb3276e47907cd4ca04ff1090ccb6e980cb0141746a66055d37
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
