@@ -56,7 +56,7 @@ MonoBehaviour:
   materialType: 0
   customMaterial: {fileID: 0}
   widthControl: 0
-  sharedWidth: 6
+  sharedWidth: 7
   gap: 0
   blendMode: 1
   customDepthBuffer: 0
