@@ -52,6 +52,9 @@ MonoBehaviour:
   - {x: 5, y: 3}
   - {x: 5, y: 4}
   - {x: 5, y: 5}
+  cameraBoundsCenter: {x: 0, y: 0}
+  cameraBoundsSize: {x: 20, y: 20}
+  cameraBoundsYRotation: 0
   boardToSpawnPadding: 2
   pieceToPiecePadding: 1
   maxSpawnRadius: 5
@@ -498,10 +501,10 @@ MonoBehaviour:
     direction: 0
   - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
     position: {x: 0, y: 5}
-    direction: 1
+    direction: 3
   - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
     position: {x: 4, y: 5}
-    direction: 2
+    direction: 1
   isComplete: 1
   solutionVariantsCount: 78280
   allFoundSolutions:
@@ -14505,4 +14508,4 @@ MonoBehaviour:
     - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
       position: {x: 4, y: 5}
       direction: 3
-  currentSolutionIndex: 146
+  currentSolutionIndex: 149
