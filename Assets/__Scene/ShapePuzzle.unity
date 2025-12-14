@@ -2536,7 +2536,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1005976325}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c49b4cc203aa6414fae5c798d1d0e7d6, type: 3}
   m_Name: 
@@ -3434,7 +3434,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cinemachineCamera: {fileID: 8434513683717558060}
-  enableRotation: 1
+  enableRotation: 0
   moveSpeed: 15
   rotationSpeed: 120
   defaultZoom: 15
@@ -3442,6 +3442,7 @@ MonoBehaviour:
   movementSmoothing: 10
   focusSmoothing: 5
   enableBounds: 1
+  showDebugLogs: 1
   activeGridData: {fileID: 0}
 --- !u!4 &1353730456
 Transform:

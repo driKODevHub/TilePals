@@ -62,6 +62,15 @@ public class PuzzleManager : MonoBehaviour
     public event Action<PuzzlePiece> OnPiecePickedUp;
     public event Action<PuzzlePiece> OnPieceDropped;
 
+    // --- ÏÓÁË²×ÍÀ ÂËÀÑÒÈÂ²ÑÒÜ ÄËß ÊÀÌÅÐÈ ---
+    // Ïîâåðòàº true, ÿêùî ãðàâåöü çàðàç âçàºìîä³º ç ô³ãóðîþ àáî íàâèñàº íàä íåþ.
+    // Öå ïîòð³áíî, ùîá êàìåðà íå ïåðåõîïëþâàëà êë³ê ËÊÌ.
+    public bool IsInteracting =>
+        _heldPiece != null ||
+        _hoveredPiece != null ||
+        _potentialInteractionPiece != null ||
+        _isPettingActive;
+
     private void Awake()
     {
         if (Instance != null) { Destroy(gameObject); return; }
