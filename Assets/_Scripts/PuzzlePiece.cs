@@ -96,7 +96,9 @@ public class PuzzlePiece : MonoBehaviour
     {
         if (Rb != null && pieceTypeSO.usePhysics)
         {
-            Movement.enabled = false;
+            // Вимикаємо Movement, щоб він не конфліктував з фізикою
+            if (Movement) Movement.enabled = false;
+
             Rb.isKinematic = false;
             Rb.linearVelocity = initialVelocity;
             Rb.angularVelocity = new Vector3(
@@ -115,7 +117,9 @@ public class PuzzlePiece : MonoBehaviour
             Rb.linearVelocity = Vector3.zero;
             Rb.angularVelocity = Vector3.zero;
         }
-        Movement.enabled = true;
+
+        // Вмикаємо Movement, щоб він міг підхопити об'єкт і поставити його на місце
+        if (Movement) Movement.enabled = true;
 
         float yAngle = transform.eulerAngles.y;
         float snappedAngle = Mathf.Round(yAngle / 90f) * 90f;
@@ -258,8 +262,15 @@ public class PuzzlePiece : MonoBehaviour
     {
         if (Rb != null && !Rb.isKinematic) return;
 
-        if (Movement != null && Movement.enabled)
+        // Якщо Movement компонент існує і він увімкнений (або ми хочемо, щоб він обробив це)
+        // Але оскільки ми вимикаємо Movement для оптимізації, треба перевірити логіку.
+        // Якщо ми тут, то це зазвичай телепортація або Undo. 
+        // Краще ввімкнути Movement на один кадр, щоб він оновив свої змінні (_targetPosition) і заснув.
+
+        if (Movement != null)
         {
+            // Примусово вмикаємо для обробки телепортації, скрипт сам вимкнеться в TeleportTo
+            Movement.enabled = true;
             Movement.TeleportTo(position, rotation);
         }
         else
@@ -291,6 +302,7 @@ public class PuzzlePiece : MonoBehaviour
 
         float angle = clockwise ? 90f : -90f;
 
+        // Movement сам увімкнеться всередині RotateAroundPivot
         Movement.RotateAroundPivot(pivotPoint, Vector3.up, angle, () => {
             CurrentDirection = nextDirection;
             RecalculateClickOffset(pivotPoint, cellSize);
@@ -299,7 +311,7 @@ public class PuzzlePiece : MonoBehaviour
         });
     }
 
-    // --- NEW METHOD: FORCE SYNC PASSENGERS ---
+    // --- FORCE SYNC PASSENGERS ---
     public void SyncPassengersRotation()
     {
         if (StoredPassengers.Count == 0) return;
@@ -311,7 +323,7 @@ public class PuzzlePiece : MonoBehaviour
                 // Оновлюємо логічний напрямок пасажира
                 p.SyncDirectionFromRotation(p.transform.rotation);
 
-                // Округляємо локальні координати, щоб уникнути накопичення похибки float (дрібні зміщення)
+                // Округляємо локальні координати
                 Vector3 localPos = p.transform.localPosition;
                 localPos.x = (float)Math.Round(localPos.x, 2);
                 localPos.y = (float)Math.Round(localPos.y, 2);
