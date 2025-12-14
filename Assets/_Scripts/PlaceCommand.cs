@@ -19,9 +19,9 @@ public class PlaceCommand : ICommand
 
     public bool Execute()
     {
-        // --- ВИПРАВЛЕННЯ БАГУ REDO ---
-        // Перед тим як поставити фігуру на нове місце, ми мусимо переконатися, 
-        // що вона не займає старе місце (це критично для ланцюжків Redo).
+        if (piece == null) return false;
+
+        // Очищаємо попереднє місце
         if (piece.IsPlaced)
         {
             GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
@@ -31,7 +31,6 @@ public class PlaceCommand : ICommand
             OffGridManager.RemovePiece(piece);
             piece.SetOffGrid(false);
         }
-        // -----------------------------
 
         if (GridBuildingSystem.Instance.CanPlacePiece(piece, gridPosition, direction))
         {
@@ -54,6 +53,8 @@ public class PlaceCommand : ICommand
 
     public void Undo()
     {
+        if (piece == null) return;
+
         GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
 
         if (piece.PlacedObjectComponent != null)

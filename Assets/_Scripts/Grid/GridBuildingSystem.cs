@@ -95,7 +95,13 @@ public class GridBuildingSystem : MonoBehaviour
 
     public PlacedObject PlacePieceOnGrid(PuzzlePiece piece, Vector2Int origin, PlacedObjectTypeSO.Dir dir)
     {
-        PlacedObject placedObject = piece.gameObject.AddComponent<PlacedObject>();
+        // Перевіряємо, чи вже є компонент, щоб не дублювати
+        PlacedObject placedObject = piece.GetComponent<PlacedObject>();
+        if (placedObject == null)
+        {
+            placedObject = piece.gameObject.AddComponent<PlacedObject>();
+        }
+
         placedObject.PlacedObjectTypeSO = piece.PieceTypeSO;
         placedObject.Origin = origin;
         placedObject.Direction = dir;
@@ -105,6 +111,8 @@ public class GridBuildingSystem : MonoBehaviour
 
         foreach (Vector2Int gridPosition in gridPositionList)
         {
+            if (!IsValidGridPosition(gridPosition.x, gridPosition.y)) continue;
+
             GridObject obj = grid.GetGridObject(gridPosition.x, gridPosition.y);
 
             if (isTool)
@@ -122,11 +130,35 @@ public class GridBuildingSystem : MonoBehaviour
 
     public void RemovePieceFromGrid(PuzzlePiece piece)
     {
-        PlacedObject placedObject = piece.IsPlaced ? (piece.PlacedObjectComponent != null ? piece.PlacedObjectComponent : piece.InfrastructureComponent) : null;
-        if (placedObject == null) return;
+        if (piece == null) return;
+
+        // Визначаємо компонент (звичайний чи інфраструктура)
+        PlacedObject placedObject = null;
+
+        if (piece.IsPlaced)
+        {
+            placedObject = piece.PlacedObjectComponent != null ? piece.PlacedObjectComponent : piece.InfrastructureComponent;
+        }
+
+        // --- FIX: Якщо piece.IsPlaced каже false, але у об'єкта все ще висить компонент PlacedObject (баг розсинхрону) ---
+        if (placedObject == null)
+        {
+            placedObject = piece.GetComponent<PlacedObject>();
+        }
+
+        if (placedObject == null) return; // Немає чого видаляти
+
+        // --- FIX: Безпечне отримання списку позицій ---
+        if (placedObject.PlacedObjectTypeSO == null)
+        {
+            // Якщо SO втрачено, ми не знаємо які клітинки чистити. 
+            // Видаляємо компонент і виходимо.
+            DestroyPlacedObjectComponent(placedObject);
+            return;
+        }
 
         List<Vector2Int> gridPositionList = placedObject.GetGridPositionList();
-        bool isTool = piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid;
+        bool isTool = placedObject.PlacedObjectTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid;
 
         foreach (Vector2Int gridPosition in gridPositionList)
         {
@@ -136,39 +168,47 @@ public class GridBuildingSystem : MonoBehaviour
 
                 if (isTool)
                 {
-                    obj.ClearInfrastructureObject();
-                    obj.SetLocked(true);
+                    // Перевіряємо, чи це дійсно той самий об'єкт, щоб не видалити чужий
+                    if (obj.GetInfrastructureObject() == placedObject)
+                    {
+                        obj.ClearInfrastructureObject();
+                        obj.SetLocked(true);
+                    }
                 }
                 else
                 {
-                    obj.ClearPlacedObject();
+                    if (obj.GetPlacedObject() == placedObject)
+                    {
+                        obj.ClearPlacedObject();
+                    }
                 }
             }
         }
 
+        DestroyPlacedObjectComponent(placedObject);
+    }
+
+    private void DestroyPlacedObjectComponent(PlacedObject obj)
+    {
         if (Application.isEditor && !Application.isPlaying)
         {
-            Object.DestroyImmediate(placedObject);
+            Object.DestroyImmediate(obj);
         }
         else
         {
-            Object.Destroy(placedObject);
+            Object.Destroy(obj);
         }
     }
 
-    // --- НОВА ЛОГІКА: Перевірка, чи можна підняти тулз разом з котами ---
-
+    // --- Перевірка, чи можна підняти тулз разом з котами ---
     public bool CanPickUpToolWithPassengers(PuzzlePiece tool, out List<PuzzlePiece> passengers)
     {
         passengers = new List<PuzzlePiece>();
 
-        if (!tool.IsPlaced || tool.InfrastructureComponent == null) return true; // Якщо не на гріді, можна брати
+        if (!tool.IsPlaced || tool.InfrastructureComponent == null) return true;
 
-        // Клітинки, які займає сам тулз
         List<Vector2Int> toolCells = tool.InfrastructureComponent.GetGridPositionList();
         HashSet<Vector2Int> toolCellSet = new HashSet<Vector2Int>(toolCells);
-
-        // Знаходимо всіх, хто стоїть на цих клітинках
         HashSet<PuzzlePiece> uniqueObjectsOnTop = new HashSet<PuzzlePiece>();
 
         foreach (var cell in toolCells)
@@ -187,17 +227,14 @@ public class GridBuildingSystem : MonoBehaviour
             }
         }
 
-        // Перевіряємо кожного кандидата: чи ПОВНІСТЮ він стоїть на тулзі?
         foreach (var piece in uniqueObjectsOnTop)
         {
-            // Отримуємо всі клітинки, які займає цей кіт
             if (piece.PlacedObjectComponent == null) continue;
             List<Vector2Int> catCells = piece.PlacedObjectComponent.GetGridPositionList();
 
             bool isFullySupported = true;
             foreach (var catCell in catCells)
             {
-                // Якщо хоча б одна клітинка кота НЕ належить набору клітинок тулза -> він вилазить
                 if (!toolCellSet.Contains(catCell))
                 {
                     isFullySupported = false;
@@ -211,12 +248,11 @@ public class GridBuildingSystem : MonoBehaviour
             }
             else
             {
-                // Є кіт, який стоїть на тулзі частково. Тулз заблоковано.
+                // Є кіт, який стоїть на тулзі частково
                 return false;
             }
         }
 
-        // Якщо дійшли сюди - всі об'єкти зверху стоять повністю на тулзі (або їх немає)
         return true;
     }
 
@@ -232,16 +268,20 @@ public class GridBuildingSystem : MonoBehaviour
             {
                 GridObject gridObject = grid.GetGridObject(x, z);
 
+                // Заповнювати треба buildable або locked (бо locked розблокуються і стануть buildable)
                 bool isTargetCell = gridObject.IsBuildable() || gridObject.IsLocked();
 
                 if (isTargetCell)
                 {
                     totalRequiredCells++;
 
-                    bool hasCat = gridObject.IsOccupied() && gridObject.GetPlacedObject().PlacedObjectTypeSO.category == PlacedObjectTypeSO.ItemCategory.Character;
-                    bool hasTool = gridObject.HasInfrastructure();
+                    // Перевіряємо, чи є там кіт (персонаж)
+                    // Тулзи не рахуються як "заповнення", вони лише засіб
+                    bool hasCat = gridObject.IsOccupied() &&
+                                  gridObject.GetPlacedObject() != null &&
+                                  gridObject.GetPlacedObject().PlacedObjectTypeSO.category == PlacedObjectTypeSO.ItemCategory.Character;
 
-                    if (hasCat || hasTool)
+                    if (hasCat)
                     {
                         occupiedRequiredCells++;
                     }
