@@ -27,6 +27,7 @@ public class GridDataSOEditor : Editor
     // --- Default Foldout State: Collapsed ---
     private bool showRequiredPieces = false;
     private bool showAllPieces = false;
+    private bool showLevelItems = false; // Новий список для айтемів
 
     private bool enableDebugLogs = false;
 
@@ -159,7 +160,7 @@ public class GridDataSOEditor : Editor
         int oldWidth = gridDataSO.width;
         int oldHeight = gridDataSO.height;
 
-        DrawPropertiesExcluding(serializedObject, "m_Script", "puzzlePieces", "generatedPieceSummary", "puzzleSolution", "availablePieceTypesForGeneration", "generatorPieceConfig", "solutionVariantsCount", "allFoundSolutions", "currentSolutionIndex", "isComplete", "personalityData", "width", "height", "buildableCells", "lockedCells", "generatedObstacles");
+        DrawPropertiesExcluding(serializedObject, "m_Script", "puzzlePieces", "levelItems", "generatedPieceSummary", "puzzleSolution", "availablePieceTypesForGeneration", "generatorPieceConfig", "solutionVariantsCount", "allFoundSolutions", "currentSolutionIndex", "isComplete", "personalityData", "width", "height", "buildableCells", "lockedCells", "generatedObstacles");
 
         EditorGUILayout.PropertyField(serializedObject.FindProperty("width"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("height"));
@@ -182,7 +183,7 @@ public class GridDataSOEditor : Editor
         DrawPersonalityEditor();
 
         EditorGUILayout.Space(20);
-        EditorGUILayout.LabelField("Puzzle Generator", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Puzzle Generator & Level Items", EditorStyles.boldLabel);
 
         EditorGUILayout.PropertyField(serializedObject.FindProperty("availablePieceTypesForGeneration"), true);
         if (GUILayout.Button(new GUIContent("Update & Manage Generator Pieces", "Синхронізує список фігур нижче з тими, що вказані у 'Available Piece Types'."))) UpdateGeneratorPieceConfig();
@@ -196,10 +197,19 @@ public class GridDataSOEditor : Editor
         if (GUILayout.Button(new GUIContent("Reset All Counts", "Встановлює значення 'Count' на 1 для всіх обов'язкових фігур."))) ResetAllCounts();
         EditorGUILayout.EndHorizontal();
 
-        showRequiredPieces = EditorGUILayout.Foldout(showRequiredPieces, "Required Pieces", true);
+        showRequiredPieces = EditorGUILayout.Foldout(showRequiredPieces, "Required Pieces (Generator)", true);
         if (showRequiredPieces) DrawGeneratorPieceConfigList(true);
-        showAllPieces = EditorGUILayout.Foldout(showAllPieces, "All Available Pieces", true);
+        showAllPieces = EditorGUILayout.Foldout(showAllPieces, "All Available Pieces (Generator)", true);
         if (showAllPieces) DrawGeneratorPieceConfigList(false);
+
+        // --- НОВЕ: Список статичних предметів (Тулзи, Іграшки) ---
+        EditorGUILayout.Space(10);
+        showLevelItems = EditorGUILayout.Foldout(showLevelItems, "Level Items (Spawn Always - Tools/Toys)", true);
+        if (showLevelItems)
+        {
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("levelItems"), true);
+        }
+        // --------------------------------------------------------
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Generator Settings", EditorStyles.boldLabel);
@@ -253,7 +263,7 @@ public class GridDataSOEditor : Editor
 
             if (!gridDataSO.isComplete)
             {
-                EditorGUILayout.HelpBox("Puzzle is incomplete! You can try to fill the empty space or regenerate the whole puzzle.", MessageType.Warning);
+                EditorGUILayout.HelpBox("Puzzle is incomplete (geometry not filled)! You can try to fill the empty space or regenerate the whole puzzle.", MessageType.Warning);
                 if (GUILayout.Button(new GUIContent("Fill Empty Space", "Намагається заповнити порожні місця на полі, не змінюючи існуючі фігури.")))
                 {
                     FillEmptySpace();
@@ -507,7 +517,7 @@ public class GridDataSOEditor : Editor
 
     private void DrawBuildableCellsEditor()
     {
-        EditorGUILayout.HelpBox("LMB to Paint Buildable (Green).\nMiddle Click (Mouse Wheel) to Paint Locked (Orange).\nHold and drag to paint multiple cells.", MessageType.Info);
+        EditorGUILayout.HelpBox("LMB to Paint Buildable (Green).\nMiddle Click to Paint Locked (Orange).", MessageType.Info);
 
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("All Buildable")) SelectAllBuildableCells(true);
@@ -1191,6 +1201,7 @@ public class GridDataSOEditor : Editor
         {
             for (int x = 0; x < gridDataSO.width; x++)
             {
+                // Відображаємо Buildalbe (Яскраво-зелений), Locked (Помаранчевий) або Background (Темний)
                 Color bgColor = new Color(0.2f, 0.2f, 0.2f);
                 if (gridDataSO.buildableCells.Contains(new Vector2Int(x, z))) bgColor = new Color(0.4f, 1f, 0.4f);
                 if (gridDataSO.lockedCells.Contains(new Vector2Int(x, z))) bgColor = new Color(1f, 0.5f, 0f);

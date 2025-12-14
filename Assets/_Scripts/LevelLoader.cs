@@ -25,7 +25,7 @@ public class LevelLoader : MonoBehaviour
         GridBuildingSystem.Instance.InitializeGrid(_currentLevelData);
         if (GridVisualManager.Instance != null) GridVisualManager.Instance.ReinitializeVisuals();
 
-        // 1. Спавнимо фігури (рішення + обстакли, якщо є в списку)
+        // 1. Спавнимо фігури (фізично створюємо об'єкти)
         SpawnPieces();
 
         // 2. Якщо є збереження - застосовуємо
@@ -34,16 +34,26 @@ public class LevelLoader : MonoBehaviour
 
     private void SpawnPieces()
     {
-        if (_currentLevelData.puzzlePieces == null || _currentLevelData.puzzlePieces.Count == 0) return;
+        List<PlacedObjectTypeSO> piecesToSpawnTypes = new List<PlacedObjectTypeSO>();
+
+        if (_currentLevelData.puzzlePieces != null)
+            piecesToSpawnTypes.AddRange(_currentLevelData.puzzlePieces);
+
+        if (_currentLevelData.levelItems != null)
+        {
+            foreach (var item in _currentLevelData.levelItems)
+            {
+                if (item.pieceType != null)
+                    piecesToSpawnTypes.Add(item.pieceType);
+            }
+        }
+
+        if (piecesToSpawnTypes.Count == 0) return;
 
         var personalityMap = _currentLevelData.personalityData?.personalityMappings
             .ToDictionary(m => m.pieceType, m => m.temperament) ?? new Dictionary<PlacedObjectTypeSO, TemperamentSO>();
 
-        List<PlacedObjectTypeSO> piecesToSpawnTypes = new List<PlacedObjectTypeSO>(_currentLevelData.puzzlePieces);
-
-        // Якщо в майбутньому будуть окремо Obstacles в DataSO, додаємо їх сюди
-        // if (_currentLevelData.generatedObstacles != null) ...
-
+        // Використовуємо метод розширення Shuffle (визначений нижче)
         piecesToSpawnTypes.Shuffle();
 
         List<PuzzlePiece> piecesToPlace = new List<PuzzlePiece>();
@@ -85,7 +95,6 @@ public class LevelLoader : MonoBehaviour
 
         int padding = _currentLevelData.boardToSpawnPadding;
         int radius = _currentLevelData.maxSpawnRadius;
-        int attempts = MAX_PLACEMENT_ATTEMPTS;
         int pieceSpacing = _currentLevelData.pieceToPiecePadding;
 
         RectInt forbiddenZone = new RectInt(-padding, -padding, grid.GetWidth() + padding * 2, grid.GetHeight() + padding * 2);
@@ -93,7 +102,7 @@ public class LevelLoader : MonoBehaviour
         foreach (var piece in pieces)
         {
             bool placed = false;
-            for (int attempt = 0; attempt < attempts; attempt++)
+            for (int attempt = 0; attempt < MAX_PLACEMENT_ATTEMPTS; attempt++)
             {
                 int x = Random.Range(forbiddenZone.xMin - radius, forbiddenZone.xMax + radius);
                 int z = Random.Range(forbiddenZone.yMin - radius, forbiddenZone.yMax + radius);
@@ -141,23 +150,22 @@ public class LevelLoader : MonoBehaviour
         {
             if (piece == null) continue;
 
-            // Якщо предмет у когось в зубах, його не треба зберігати як окремий OffGrid об'єкт?
-            // Або треба зберігати інфу, хто його тримає.
-            // ДЛЯ СПРОЩЕННЯ: Зберігаємо тільки ті, що на гріді або off-grid.
-            // Ті, що в зубах, поки що ігноруються або їх треба викинути перед збереженням.
-            // Або вважати, що вони "off grid" в координатах кота.
-            // Щоб не ускладнювати SaveSystem, поки що ігноруємо прикріплені предмети (вони можуть зникнути при перезавантаженні, це баг/фіча).
-            // Але краще б їх "випльовувати" при збереженні?
-            // Ні, просто ігноруємо.
-
             if (piece.IsPlaced)
             {
-                saveData.onGridPieces.Add(new PiecePlacementData
+                // Безпечне отримання компонента PlacedObject або Infrastructure
+                PlacedObject placedObj = piece.PlacedObjectComponent;
+                if (placedObj == null) placedObj = piece.InfrastructureComponent;
+                if (placedObj == null) placedObj = piece.GetComponent<PlacedObject>(); // Final check
+
+                if (placedObj != null)
                 {
-                    pieceTypeName = piece.PieceTypeSO.name,
-                    origin = piece.PlacedObjectComponent.Origin,
-                    direction = piece.PlacedObjectComponent.Direction
-                });
+                    saveData.onGridPieces.Add(new PiecePlacementData
+                    {
+                        pieceTypeName = piece.PieceTypeSO.name,
+                        origin = placedObj.Origin,
+                        direction = placedObj.Direction
+                    });
+                }
             }
             else if (piece.IsOffGrid)
             {
@@ -236,41 +244,75 @@ public class LevelLoader : MonoBehaviour
 
         List<PuzzlePiece> availablePieces = new List<PuzzlePiece>(_spawnedPieces);
 
-        foreach (var pieceData in saveData.onGridPieces)
-        {
-            PuzzlePiece pieceToPlace = availablePieces.FirstOrDefault(p => p != null && p.PieceTypeSO != null && p.PieceTypeSO.name == pieceData.pieceTypeName);
-            if (pieceToPlace != null)
-            {
-                // Якщо це тулз, він автоматично розблокує клітинки при Execute
-                ICommand command = new PlaceCommand(pieceToPlace, pieceData.origin, pieceData.direction, pieceToPlace.transform.position, pieceToPlace.transform.rotation);
-                command.Execute();
+        // --- СОРТУВАННЯ: Спочатку ставимо Тулзи (Infrastructure), потім Котів ---
+        var toolsToPlace = new List<PiecePlacementData>();
+        var othersToPlace = new List<PiecePlacementData>();
 
-                TeleportPieceAndResetPhysics(pieceToPlace, pieceToPlace.transform.position, pieceToPlace.transform.rotation);
-                availablePieces.Remove(pieceToPlace);
+        foreach (var data in saveData.onGridPieces)
+        {
+            var samplePiece = availablePieces.FirstOrDefault(p => p != null && p.PieceTypeSO.name == data.pieceTypeName);
+            if (samplePiece != null && samplePiece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
+            {
+                toolsToPlace.Add(data);
+            }
+            else
+            {
+                othersToPlace.Add(data);
             }
         }
 
+        // 1. Ставимо Тулзи
+        foreach (var pieceData in toolsToPlace)
+        {
+            PlacePieceFromSave(pieceData, availablePieces);
+        }
+
+        // 2. Ставимо Все Інше (Котів на Тулзи)
+        foreach (var pieceData in othersToPlace)
+        {
+            PlacePieceFromSave(pieceData, availablePieces);
+        }
+
+        // 3. Відновлюємо OffGrid
         foreach (var pieceData in saveData.offGridPieces)
         {
-            PuzzlePiece pieceToPlace = availablePieces.FirstOrDefault(p => p != null && p.PieceTypeSO != null && p.PieceTypeSO.name == pieceData.pieceTypeName);
-            if (pieceToPlace != null)
-            {
-                float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
-                Vector2Int rotationOffset = pieceToPlace.PieceTypeSO.GetRotationOffset(pieceData.direction);
-                Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
-                Vector3 finalPos = new Vector3(pieceData.origin.x * cellSize, 0, pieceData.origin.y * cellSize) + offset;
-
-                TeleportPieceAndResetPhysics(pieceToPlace, finalPos, Quaternion.Euler(0, pieceToPlace.PieceTypeSO.GetRotationAngle(pieceData.direction), 0));
-
-                pieceToPlace.SetOffGrid(true, pieceData.origin);
-                OffGridManager.PlacePiece(pieceToPlace, pieceData.origin);
-                availablePieces.Remove(pieceToPlace);
-            }
+            PlacePieceFromSaveOffGrid(pieceData, availablePieces);
         }
+
         CommandHistory.Clear();
+    }
+
+    private void PlacePieceFromSave(PiecePlacementData data, List<PuzzlePiece> availablePieces)
+    {
+        PuzzlePiece piece = availablePieces.FirstOrDefault(p => p != null && p.PieceTypeSO.name == data.pieceTypeName);
+        if (piece != null)
+        {
+            ICommand command = new PlaceCommand(piece, data.origin, data.direction, piece.transform.position, piece.transform.rotation, null);
+            command.Execute();
+            TeleportPieceAndResetPhysics(piece, piece.transform.position, piece.transform.rotation);
+            availablePieces.Remove(piece);
+        }
+    }
+
+    private void PlacePieceFromSaveOffGrid(PiecePlacementData data, List<PuzzlePiece> availablePieces)
+    {
+        PuzzlePiece piece = availablePieces.FirstOrDefault(p => p != null && p.PieceTypeSO.name == data.pieceTypeName);
+        if (piece != null)
+        {
+            float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
+            Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(data.direction);
+            Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
+            Vector3 finalPos = new Vector3(data.origin.x * cellSize, 0, data.origin.y * cellSize) + offset;
+
+            TeleportPieceAndResetPhysics(piece, finalPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(data.direction), 0));
+            piece.SetOffGrid(true, data.origin);
+            OffGridManager.PlacePiece(piece, data.origin);
+            availablePieces.Remove(piece);
+        }
     }
 }
 
+// --- ОСЬ ЦЕЙ КЛАС БУВ ПРОПУЩЕНИЙ ---
 public static class ListExtensions
 {
     private static System.Random rng = new System.Random();

@@ -76,12 +76,14 @@ public class GridDataSO : ScriptableObject
     public List<PlacedObjectTypeSO> availablePieceTypesForGeneration;
     public List<GeneratorPieceConfig> generatorPieceConfig;
 
+    [Header("Level Items (Spawn Always)")]
+    [Tooltip("Предмети, які будуть заспавнені на рівні незалежно від генератора (Тулзи, Іграшки, тощо).")]
+    public List<GeneratedPieceData> levelItems = new List<GeneratedPieceData>();
+
     [Header("Generated Puzzle Data (Read-Only)")]
-    public List<PlacedObjectTypeSO> puzzlePieces;
+    public List<PlacedObjectTypeSO> puzzlePieces; // Це список, який використовує гра для спавну котів з рішення
     public List<PieceCount> generatedPieceSummary;
     public List<GeneratedPieceData> puzzleSolution;
-
-    public List<GeneratedPieceData> generatedObstacles;
 
     public bool isComplete = true;
 

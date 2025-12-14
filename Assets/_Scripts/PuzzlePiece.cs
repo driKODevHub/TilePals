@@ -134,7 +134,7 @@ public class PuzzlePiece : MonoBehaviour
             // Вимикаємо фізику пасажиру
             passenger.DisablePhysics();
             if (passenger.Movement) passenger.Movement.enabled = false;
-            if (passenger.PieceCollider) passenger.PieceCollider.enabled = false; // Щоб не заважав рейкастам
+            if (passenger.PieceCollider) passenger.PieceCollider.enabled = false;
         }
     }
 
@@ -148,7 +148,6 @@ public class PuzzlePiece : MonoBehaviour
                 if (p.Movement) p.Movement.enabled = true;
                 if (p.PieceCollider) p.PieceCollider.enabled = true;
 
-                // Оновлюємо напрямок пасажира після обертання разом з тулзом
                 p.SyncDirectionFromRotation(p.transform.rotation);
             }
         }
@@ -295,8 +294,31 @@ public class PuzzlePiece : MonoBehaviour
         Movement.RotateAroundPivot(pivotPoint, Vector3.up, angle, () => {
             CurrentDirection = nextDirection;
             RecalculateClickOffset(pivotPoint, cellSize);
+            SyncPassengersRotation(); // Синхронізуємо пасажирів після повороту
             onComplete?.Invoke();
         });
+    }
+
+    // --- NEW METHOD: FORCE SYNC PASSENGERS ---
+    public void SyncPassengersRotation()
+    {
+        if (StoredPassengers.Count == 0) return;
+
+        foreach (var p in StoredPassengers)
+        {
+            if (p != null)
+            {
+                // Оновлюємо логічний напрямок пасажира
+                p.SyncDirectionFromRotation(p.transform.rotation);
+
+                // Округляємо локальні координати, щоб уникнути накопичення похибки float (дрібні зміщення)
+                Vector3 localPos = p.transform.localPosition;
+                localPos.x = (float)Math.Round(localPos.x, 2);
+                localPos.y = (float)Math.Round(localPos.y, 2);
+                localPos.z = (float)Math.Round(localPos.z, 2);
+                p.transform.localPosition = localPos;
+            }
+        }
     }
 
     public void SyncDirectionFromRotation(Quaternion rotation)

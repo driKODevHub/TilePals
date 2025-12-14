@@ -36,6 +36,7 @@ public class PuzzleManager : MonoBehaviour
     // State
     private PuzzlePiece _heldPiece;
     private PuzzlePiece _hoveredPiece;
+    private PuzzlePiece _hoveredToolForDrop;
 
     private PuzzlePiece _potentialInteractionPiece;
     private Vector2 _clickStartPos;
@@ -48,13 +49,15 @@ public class PuzzleManager : MonoBehaviour
     private List<PuzzlePiece> _piecesBeingFlownOver = new List<PuzzlePiece>();
     private List<PiecePersonality> _allPersonalities = new List<PiecePersonality>();
 
-    // Mouse Velocity
     private Vector2 _lastMousePos;
     private Vector3 _lastWorldMousePos;
     private Vector3 _currentThrowVelocity;
     private float _currentMouseSpeed;
 
     private Vector2Int? _lastSnappedGridOrigin = null;
+
+    // --- SNAPSHOT FOR UNDO/REDO ---
+    private List<PuzzlePiece> _initialPassengersSnapshot = new List<PuzzlePiece>();
 
     public event Action<PuzzlePiece> OnPiecePickedUp;
     public event Action<PuzzlePiece> OnPieceDropped;
@@ -168,14 +171,8 @@ public class PuzzleManager : MonoBehaviour
                 float score = 0f;
                 var cat = p.PieceTypeSO.category;
 
-                // Перевірка: якщо це пасажир, він має високий пріоритет тільки якщо ми хочемо його зняти?
-                // Ні, якщо це пасажир тулза, ми скоріше хочемо підняти тулз, ХІБА ЩО ми клікнули прямо в кота.
-                // Але в поточній логіці, якщо ми клікаємо на тулз з котами - ми беремо тулз.
-                // Якщо ми хочемо взяти кота, ми маємо клікнути на нього.
-
                 if (p.transform.parent != null && p.transform.parent.GetComponentInParent<PuzzlePiece>() != null)
                 {
-                    // Це пасажир або предмет у роті
                     score = 100f;
                 }
                 else if (cat == PlacedObjectTypeSO.ItemCategory.Toy ||
@@ -215,7 +212,6 @@ public class PuzzleManager : MonoBehaviour
 
         if (_heldPiece == null && _hoveredPiece != null)
         {
-            // Якщо це Тулз, перевіряємо чи можна його взяти (або з котами, або без)
             if (GridBuildingSystem.Instance != null && _hoveredPiece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
             {
                 if (!GridBuildingSystem.Instance.CanPickUpToolWithPassengers(_hoveredPiece, out _))
@@ -336,29 +332,24 @@ public class PuzzleManager : MonoBehaviour
     {
         if (piece == null) return;
 
-        // Перевірка батьківства (рот або пасажир)
+        // Handling passenger/parent logic
         if (piece.transform.parent != null)
         {
             PuzzlePiece parentPiece = piece.transform.parent.GetComponentInParent<PuzzlePiece>();
             if (parentPiece != null)
             {
-                // 1. Предмет у роті?
                 PuzzlePiece detached = parentPiece.DetachItem();
                 if (detached == piece)
                 {
                     piece = detached;
                 }
-                // 2. Пасажир тулза? (Тулз не віддає пасажирів через DetachItem, вони просто діти)
                 else if (parentPiece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
                 {
-                    // Це пасажир. Ми його забираємо.
-                    // Важливо: він не має PlacedObject компонента, бо він дитина.
-                    // Але нам треба його "відчепити" від тулза логічно.
+                    // This logic is mostly handled by CanPickUpToolWithPassengers for tools on grid
+                    // But if off-grid tool holding piece:
                     parentPiece.StoredPassengers.Remove(piece);
-                    piece.transform.SetParent(null); // Від'єднуємо від тулза
-                    piece.EnablePhysics(Vector3.zero); // Вмикаємо фізику/коллайдери тимчасово, щоб працював як окремий об'єкт
-
-                    // Він ще не на гріді, тому RemovePieceFromGrid не потрібен для нього.
+                    piece.transform.SetParent(null);
+                    piece.EnablePhysics(Vector3.zero);
                 }
             }
         }
@@ -366,28 +357,34 @@ public class PuzzleManager : MonoBehaviour
         if (lockPiecesOnLevelComplete && _isLevelComplete && piece.IsPlaced) return;
         if (GridBuildingSystem.Instance == null || GridBuildingSystem.Instance.GetGrid() == null) return;
 
-        // --- ЛОГІКА ТУЛЗА З ПАСАЖИРАМИ ---
-        if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid && piece.IsPlaced)
+        _initialPassengersSnapshot.Clear();
+
+        if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
         {
-            if (GridBuildingSystem.Instance.CanPickUpToolWithPassengers(piece, out List<PuzzlePiece> passengers))
+            if (piece.IsPlaced)
             {
-                foreach (var passenger in passengers)
+                if (GridBuildingSystem.Instance.CanPickUpToolWithPassengers(piece, out List<PuzzlePiece> passengers))
                 {
-                    // Видаляємо пасажирів з гріда
-                    GridBuildingSystem.Instance.RemovePieceFromGrid(passenger);
-                    passenger.SetPlaced(null);
-                    // Додаємо їх у внутрішній список тулза
-                    piece.AddPassenger(passenger);
+                    foreach (var passenger in passengers)
+                    {
+                        GridBuildingSystem.Instance.RemovePieceFromGrid(passenger);
+                        passenger.SetPlaced(null);
+                        piece.AddPassenger(passenger); // Фізично і логічно додаємо в тулз
+                        _initialPassengersSnapshot.Add(passenger);
+                    }
+                }
+                else
+                {
+                    if (piece.Visuals != null) piece.Visuals.PlayPlaceFailed();
+                    return;
                 }
             }
             else
             {
-                // Не можна підняти (хтось вилазить)
-                if (piece.Visuals != null) piece.Visuals.PlayPlaceFailed();
-                return;
+                // Якщо піднімаємо з OffGrid або повітря, пасажири вже в StoredPassengers
+                _initialPassengersSnapshot.AddRange(piece.StoredPassengers);
             }
         }
-        // ---------------------------------
 
         _heldPiece = piece;
         _heldPiece.SetOutlineLocked(true);
@@ -428,7 +425,6 @@ public class PuzzleManager : MonoBehaviour
             piece.ClickOffset = Vector2Int.zero;
         }
 
-        // Очистка стану перед переміщенням
         if (piece.IsPlaced)
         {
             GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
@@ -448,6 +444,33 @@ public class PuzzleManager : MonoBehaviour
     private void UpdateHeldPiecePosition()
     {
         if (_heldPiece == null || _heldPiece.IsRotating) return;
+
+        _hoveredToolForDrop = null;
+        if (_heldPiece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Character)
+        {
+            Ray hoverRay = Camera.main.ScreenPointToRay(inputReader.MousePosition);
+            RaycastHit[] hits = Physics.RaycastAll(hoverRay, 100f, pieceLayer);
+            foreach (var hitInfo in hits)
+            {
+                PuzzlePiece tool = hitInfo.collider.GetComponentInParent<PuzzlePiece>();
+
+                if (tool != null && tool != _heldPiece &&
+                    tool.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid &&
+                    tool.IsOffGrid)
+                {
+                    _hoveredToolForDrop = tool;
+
+                    Vector3 toolCenter = tool.transform.position;
+                    Vector3 targetPos = toolCenter + Vector3.up * 0.5f;
+
+                    if (_heldPiece.Movement != null) _heldPiece.Movement.SetTargetPosition(targetPos);
+                    else _heldPiece.transform.position = Vector3.Lerp(_heldPiece.transform.position, targetPos, Time.deltaTime * 25f);
+
+                    _heldPiece.SetInvalidPlacementVisual(false);
+                    return;
+                }
+            }
+        }
 
         Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
@@ -517,6 +540,19 @@ public class PuzzleManager : MonoBehaviour
 
     private void TryToPlaceOrDropPiece()
     {
+        if (_hoveredToolForDrop != null && _hoveredToolForDrop.IsOffGrid)
+        {
+            _hoveredToolForDrop.AddPassenger(_heldPiece);
+
+            _heldPiece.SetInvalidPlacementVisual(false);
+            _heldPiece.SetOutlineLocked(false);
+            OnPieceDropped?.Invoke(_heldPiece);
+            _heldPiece = null;
+
+            if (_hoveredToolForDrop.Visuals) _hoveredToolForDrop.Visuals.PlayPlaceSuccess();
+            return;
+        }
+
         Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
         if (!Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer)) return;
 
@@ -529,33 +565,25 @@ public class PuzzleManager : MonoBehaviour
 
         if (canOnGrid)
         {
-            ICommand cmd = new PlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
+            // Передаємо збережений список пасажирів (той що був при Pickup або поточний, якщо не змінювався)
+            // Але оскільки ми могли додати когось під час утримання, беремо поточний StoredPassengers
+            ICommand cmd = new PlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation, _heldPiece.StoredPassengers);
+
             if (cmd.Execute())
             {
                 if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayPlaceSuccess();
-
-                if (_heldPiece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
-                {
-                    _heldPiece.SetInfrastructure(_heldPiece.GetComponent<PlacedObject>());
-                    // Розпаковуємо пасажирів на грід
-                    PlacePassengersOnGrid(_heldPiece);
-                }
-
                 FinalizeDrop(cmd);
                 CheckForWin();
             }
         }
         else if (canOffGrid)
         {
-            ICommand cmd = new OffGridPlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
+            ICommand cmd = new OffGridPlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation, _heldPiece.StoredPassengers);
             PuzzlePiece droppedPiece = _heldPiece;
 
             if (cmd.Execute())
             {
                 if (droppedPiece.Visuals != null) droppedPiece.Visuals.PlayDrop();
-
-                // Якщо це тулз з пасажирами, вони залишаються на ньому (в OffGridManager немає поняття стеку)
-                // Але візуально вони діти, тому їдуть з ним.
 
                 float speed = _currentThrowVelocity.magnitude;
                 bool shouldThrow = speed > minThrowVelocity && droppedPiece.PieceTypeSO.usePhysics;
@@ -580,59 +608,6 @@ public class PuzzleManager : MonoBehaviour
             Debug.Log("Invalid placement position.");
             if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayPlaceFailed();
         }
-    }
-
-    private void PlacePassengersOnGrid(PuzzlePiece tool)
-    {
-        if (tool.StoredPassengers.Count == 0) return;
-
-        var grid = GridBuildingSystem.Instance.GetGrid();
-        float cellSize = grid.GetCellSize();
-
-        List<PuzzlePiece> passengers = new List<PuzzlePiece>(tool.StoredPassengers);
-
-        foreach (var p in passengers)
-        {
-            // Важливо: переносимо пасажира в корінь сцени/ієрархії, 
-            // щоб він став незалежним від трансформа тулза
-            p.transform.SetParent(tool.transform.parent);
-
-            // Вираховуємо світову позицію де візуально стоїть кіт
-            Vector3 worldPos = p.transform.position;
-            grid.GetXZ(worldPos, out int x, out int z);
-            Vector2Int pOrigin = new Vector2Int(x, z);
-
-            // Враховуємо офсет повороту
-            Vector2Int rotOffset = p.PieceTypeSO.GetRotationOffset(p.CurrentDirection);
-            Vector2Int calculatedOrigin = pOrigin - rotOffset;
-
-            // Спроба поставити
-            if (GridBuildingSystem.Instance.CanPlacePiece(p, calculatedOrigin, p.CurrentDirection))
-            {
-                GridBuildingSystem.Instance.PlacePieceOnGrid(p, calculatedOrigin, p.CurrentDirection);
-                p.SetPlaced(p.GetComponent<PlacedObject>());
-
-                // Вирівнюємо ідеально по центру
-                Vector3 finalPos = grid.GetWorldPosition(calculatedOrigin.x, calculatedOrigin.y) +
-                                   new Vector3(rotOffset.x, 0, rotOffset.y) * cellSize;
-
-                p.UpdateTransform(finalPos, p.transform.rotation);
-
-                // Вмикаємо назад компоненти, якщо треба
-                if (p.Movement) p.Movement.enabled = true;
-                if (p.PieceCollider) p.PieceCollider.enabled = true;
-            }
-            else
-            {
-                Debug.LogError($"Error placing passenger {p.name} at {calculatedOrigin}. Tool placed, but cat is invalid!");
-                // Якщо не вийшло поставити - лишаємо його "OffGrid" або просто кидаємо поряд?
-                // Поки що просто викидаємо його як фізичний об'єкт
-                p.SetOffGrid(false);
-                p.EnablePhysics(Vector3.up * 2f);
-            }
-        }
-
-        tool.StoredPassengers.Clear();
     }
 
     private void FinalizeDrop(ICommand command)
@@ -679,7 +654,6 @@ public class PuzzleManager : MonoBehaviour
         }
         else
         {
-            // Частково на гріді, частково ні - вважаємо OffGrid, якщо не перетинає buildable
             bool occupiesBuildable = pieceCells.Any(cell => {
                 GridObject go = grid.GetGridObject(cell.x, cell.y);
                 return go != null && go.IsBuildable();

@@ -1077,6 +1077,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1180661167}
     m_Modifications:
+    - target: {fileID: 3952033608981393804, guid: a2e2d64e805720746a7df2e6f3596870, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5676327504016542259, guid: a2e2d64e805720746a7df2e6f3596870, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.29
@@ -2591,6 +2595,7 @@ MonoBehaviour:
   occupiedMaterial: {fileID: 2100000, guid: 3cd806d8127a2b74c8985d360042b7e0, type: 2}
   hoveredMaterial: {fileID: 2100000, guid: e0f2e4073d2e1bb498eaa4b9ba7a3e92, type: 2}
   invalidPlacementMaterial: {fileID: 2100000, guid: dc984b399d99752498861f37385e2c4d, type: 2}
+  lockedMaterial: {fileID: 2100000, guid: 322b28d8f543bb24d908d82cf85a30c3, type: 2}
 --- !u!1 &1124090868
 GameObject:
   m_ObjectHideFlags: 0
@@ -2938,6 +2943,7 @@ MonoBehaviour:
   invalidPlacementMaterial: {fileID: 2100000, guid: 3c1631e8a39198c41a413a022ee22c41, type: 2}
   throwForceMultiplier: 5
   maxThrowVelocity: 20
+  minThrowVelocity: 2
   dragThreshold: 15
   clickTimeThreshold: 0.15
   pieceLayer:
@@ -3029,6 +3035,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1180661167}
     m_Modifications:
+    - target: {fileID: 659127900810102131, guid: 8bcf9ac8450020c41b158e0d51bb55cf, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5676327504016542259, guid: 8bcf9ac8450020c41b158e0d51bb55cf, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.8428867

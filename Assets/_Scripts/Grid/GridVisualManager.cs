@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
 public class GridVisualManager : MonoBehaviour
 {
@@ -13,11 +12,11 @@ public class GridVisualManager : MonoBehaviour
     [SerializeField] private Material occupiedMaterial;
     [SerializeField] private Material hoveredMaterial;
     [SerializeField] private Material invalidPlacementMaterial;
+    [SerializeField] private Material lockedMaterial;
 
     private GridXZ<GridObject> grid;
     private GameObject[,] cellVisuals;
     private PuzzlePiece currentlyHeldPiece;
-    private bool isInitialized = false;
 
     private void Awake()
     {
@@ -25,57 +24,77 @@ public class GridVisualManager : MonoBehaviour
         Instance = this;
     }
 
-    public void ReinitializeVisuals()
+    private void Start()
     {
-        if (isInitialized) ClearVisuals();
-        Initialize();
+        // Не ініціалізуємось тут автоматично, чекаємо команди від LevelLoader або GameManager
+        // Але про всяк випадок пробуємо, якщо рівень вже є
+        if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
+        {
+            ReinitializeVisuals();
+        }
     }
 
-    private void Initialize()
+    public void ReinitializeVisuals()
     {
-        grid = GridBuildingSystem.Instance.GetGrid();
-        if (grid == null || grid.GetWidth() == 0)
-        {
-            enabled = false;
-            return;
-        }
+        // 1. Очищаємо старі візуали та відписуємось від старого гріда
+        ClearVisuals();
 
-        enabled = true;
+        // 2. Отримуємо новий грід
+        if (GridBuildingSystem.Instance == null) return;
+        grid = GridBuildingSystem.Instance.GetGrid();
+
+        if (grid == null || grid.GetWidth() == 0) return;
+
+        // 3. Створюємо нові візуали
         InitializeCellVisuals();
 
-        if (!isInitialized)
+        // 4. Підписуємось на події
+        SubscribeToEvents();
+
+        // 5. Оновлюємо картинку
+        RefreshAllCellVisuals();
+    }
+
+    private void SubscribeToEvents()
+    {
+        // Відписуємось про всяк випадок, щоб не дублювати
+        if (PuzzleManager.Instance != null)
         {
-            // Підписуємось на старі події PuzzleManager для сумісності
-            if (PuzzleManager.Instance != null)
-            {
-                PuzzleManager.Instance.OnPiecePickedUp += HandlePiecePickedUp;
-                PuzzleManager.Instance.OnPieceDropped += HandlePieceDropped;
-            }
+            PuzzleManager.Instance.OnPiecePickedUp -= HandlePiecePickedUp;
+            PuzzleManager.Instance.OnPieceDropped -= HandlePieceDropped;
+
+            PuzzleManager.Instance.OnPiecePickedUp += HandlePiecePickedUp;
+            PuzzleManager.Instance.OnPieceDropped += HandlePieceDropped;
         }
 
-        RefreshAllCellVisuals();
-        isInitialized = true;
+        if (grid != null)
+        {
+            grid.OnGridObjectChanged -= Grid_OnGridObjectChanged;
+            grid.OnGridObjectChanged += Grid_OnGridObjectChanged;
+        }
     }
 
     private void ClearVisuals()
     {
+        // Відписуємось від старого гріда (якщо він був)
+        if (grid != null)
+        {
+            grid.OnGridObjectChanged -= Grid_OnGridObjectChanged;
+        }
+
         if (cellVisuals != null)
         {
-            for (int x = 0; x < cellVisuals.GetLength(0); x++)
+            foreach (var cell in cellVisuals)
             {
-                for (int z = 0; z < cellVisuals.GetLength(1); z++)
-                {
-                    if (cellVisuals[x, z] != null) Destroy(cellVisuals[x, z]);
-                }
+                if (cell != null) Destroy(cell);
             }
         }
         cellVisuals = null;
-        if (grid != null) grid.OnGridObjectChanged -= Grid_OnGridObjectChanged;
     }
 
     private void OnDestroy()
     {
-        if (isInitialized && PuzzleManager.Instance != null)
+        if (PuzzleManager.Instance != null)
         {
             PuzzleManager.Instance.OnPiecePickedUp -= HandlePiecePickedUp;
             PuzzleManager.Instance.OnPieceDropped -= HandlePieceDropped;
@@ -105,6 +124,8 @@ public class GridVisualManager : MonoBehaviour
                 GameObject cell = Instantiate(cellPrefab, worldPosition, Quaternion.identity, transform);
                 cell.name = $"Cell_{x}_{z}";
                 cellVisuals[x, z] = cell;
+
+                // Налаштування розміру квада
                 Transform quad = cell.transform.Find("Quad");
                 if (quad != null)
                 {
@@ -113,7 +134,6 @@ public class GridVisualManager : MonoBehaviour
                 }
             }
         }
-        grid.OnGridObjectChanged += Grid_OnGridObjectChanged;
     }
 
     private void Grid_OnGridObjectChanged(object sender, GridXZ<GridObject>.OnGridObjectChangedEventArgs e)
@@ -126,7 +146,7 @@ public class GridVisualManager : MonoBehaviour
         UpdateHoveredCellVisuals();
     }
 
-    private void RefreshAllCellVisuals()
+    public void RefreshAllCellVisuals()
     {
         if (grid == null || cellVisuals == null) return;
         for (int x = 0; x < grid.GetWidth(); x++)
@@ -140,29 +160,30 @@ public class GridVisualManager : MonoBehaviour
 
     private void UpdateCellVisual(int x, int z)
     {
-        if (x < 0 || x >= grid.GetWidth() || z < 0 || z >= grid.GetHeight() || cellVisuals == null || cellVisuals[x, z] == null) return;
+        if (cellVisuals == null || x < 0 || x >= cellVisuals.GetLength(0) || z < 0 || z >= cellVisuals.GetLength(1)) return;
+
+        GameObject cellVisual = cellVisuals[x, z];
+        if (cellVisual == null) return;
+
         GridObject gridObject = grid.GetGridObject(x, z);
         GridCellState currentState = GetCellState(gridObject);
-        SetCellMaterial(x, z, currentState);
+        SetCellMaterial(cellVisual, currentState);
     }
 
     private void UpdateHoveredCellVisuals()
     {
-        RefreshAllCellVisuals();
         if (currentlyHeldPiece == null) return;
+
+        // Оновлюємо весь грід до базового стану, щоб стерти старий ховер
+        RefreshAllCellVisuals();
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, LayerMask.GetMask("OffGridPlane")))
         {
             grid.GetXZ(hit.point, out int cursorX, out int cursorZ);
 
-            // --- ВИПРАВЛЕННЯ: ЗАСТОСУВАННЯ ЗМІЩЕННЯ КЛІКУ ---
-            // 1. Отримуємо зміщення, яке було збережено в PuzzleManager під час кліку
             Vector2Int clickOffset = currentlyHeldPiece.ClickOffset;
-
-            // 2. Обчислюємо фактичний Origin фігури (її 0,0) на основі курсора та зміщення
             Vector2Int origin = new Vector2Int(cursorX, cursorZ) - clickOffset;
-            // ----------------------------------------------------
 
             List<Vector2Int> occupiedPositionsOfGhost = currentlyHeldPiece.PieceTypeSO.GetGridPositionsList(origin, currentlyHeldPiece.CurrentDirection);
             bool canBuildEntireObject = GridBuildingSystem.Instance.CanPlacePiece(currentlyHeldPiece, origin, currentlyHeldPiece.CurrentDirection);
@@ -171,7 +192,15 @@ public class GridVisualManager : MonoBehaviour
             {
                 if (GridBuildingSystem.Instance.IsValidGridPosition(gridPos.x, gridPos.y))
                 {
-                    SetCellMaterial(gridPos.x, gridPos.y, canBuildEntireObject ? GridCellState.Hovered : GridCellState.InvalidPlacement);
+                    // Знаходимо візуал
+                    if (cellVisuals != null && gridPos.x >= 0 && gridPos.x < cellVisuals.GetLength(0) && gridPos.y >= 0 && gridPos.y < cellVisuals.GetLength(1))
+                    {
+                        GameObject cellVisual = cellVisuals[gridPos.x, gridPos.y];
+                        if (cellVisual != null)
+                        {
+                            SetCellMaterial(cellVisual, canBuildEntireObject ? GridCellState.Hovered : GridCellState.InvalidPlacement);
+                        }
+                    }
                 }
             }
         }
@@ -179,16 +208,14 @@ public class GridVisualManager : MonoBehaviour
 
     private GridCellState GetCellState(GridObject gridObject)
     {
+        if (gridObject.IsLocked()) return GridCellState.Locked;
         if (!gridObject.IsBuildable()) return GridCellState.Inactive;
         if (gridObject.IsOccupied()) return GridCellState.Occupied;
         return GridCellState.Active;
     }
 
-    private void SetCellMaterial(int x, int z, GridCellState state)
+    private void SetCellMaterial(GameObject cellVisual, GridCellState state)
     {
-        if (x < 0 || x >= grid.GetWidth() || z < 0 || z >= grid.GetHeight() || cellVisuals[x, z] == null) return;
-        GameObject cellVisual = cellVisuals[x, z];
-        if (cellVisual == null) return;
         MeshRenderer cellRenderer = cellVisual.transform.GetComponentInChildren<MeshRenderer>();
         if (cellRenderer == null) return;
 
@@ -197,11 +224,13 @@ public class GridVisualManager : MonoBehaviour
             GridCellState.Active => activeMaterial,
             GridCellState.Inactive => inactiveMaterial,
             GridCellState.Occupied => occupiedMaterial,
+            GridCellState.Locked => lockedMaterial,
             GridCellState.Hovered => hoveredMaterial,
             GridCellState.InvalidPlacement => invalidPlacementMaterial,
             _ => activeMaterial,
         };
-        if (materialToApply != null)
+
+        if (cellRenderer.sharedMaterial != materialToApply)
         {
             cellRenderer.material = materialToApply;
         }

@@ -24,8 +24,6 @@ public class GameManager : MonoBehaviour
     private GameState _gameState;
 
     private bool _isDebugTextVisible = false;
-
-    // Зберігаємо посилання на поточний активний SO
     private GridDataSO _activeLevelData;
 
     private void Awake()
@@ -94,12 +92,15 @@ public class GameManager : MonoBehaviour
             {
                 CommandHistory.Undo();
                 SaveCurrentProgress();
+                // Примусово оновлюємо візуал після Undo
+                if (GridVisualManager.Instance != null) GridVisualManager.Instance.RefreshAllCellVisuals();
             }
 
             if (Input.GetKeyDown(KeyCode.X))
             {
                 CommandHistory.Redo();
                 SaveCurrentProgress();
+                if (GridVisualManager.Instance != null) GridVisualManager.Instance.RefreshAllCellVisuals();
             }
         }
 
@@ -148,22 +149,26 @@ public class GameManager : MonoBehaviour
         SaveSystem.SaveCurrentLevelIndex(CurrentLevelIndex);
 
         _activeLevelData = levelCollection.levels[CurrentLevelIndex];
-
         _activeLevelData.OnValuesChanged += OnLevelSettingsChanged;
 
+        // 1. Очищаємо все старе
         if (PuzzleManager.Instance != null) PuzzleManager.Instance.ResetState();
+        CommandHistory.Clear();
 
-        // 1. Завантажуємо рівень
+        // 2. Завантажуємо рівень (Це ініціалізує грід)
         levelLoader.LoadLevel(_activeLevelData, loadFromSave);
 
-        // 2. Налаштовуємо камеру та передаємо їй дані для редагування
+        // 3. Примусово оновлюємо GridVisualManager після створення нового гріда
+        if (GridVisualManager.Instance != null)
+        {
+            GridVisualManager.Instance.ReinitializeVisuals();
+        }
+
+        // 4. Налаштовуємо камеру
         if (cameraController != null)
         {
             cameraController.activeGridData = _activeLevelData;
             ApplyCameraSettings();
-
-            // --- ЦЕНТРУЄМО КАМЕРУ НА СТАРТІ ---
-            // false = плавний політ. Якщо хочеш миттєво, став true
             cameraController.FocusOnLevel(false);
         }
 
@@ -235,11 +240,8 @@ public class GameManager : MonoBehaviour
         {
             _gameState = GameState.LevelComplete;
 
-            // --- ЦЕНТРУЄМО КАМЕРУ ПРИ ПЕРЕМОЗІ ---
             if (cameraController != null)
             {
-                // Викликаємо фокусування. 
-                // Оскільки в Update ми тепер дозволяємо Lerp працювати незалежно від IsLevelActive, це спрацює.
                 cameraController.FocusOnLevel(false);
             }
 
