@@ -60,6 +60,10 @@ MonoBehaviour:
   - {x: 7, y: 4}
   - {x: 7, y: 5}
   - {x: 7, y: 6}
+  lockedCells: []
+  cameraBoundsCenter: {x: 0, y: 0}
+  cameraBoundsSize: {x: 20, y: 20}
+  cameraBoundsYRotation: 0
   boardToSpawnPadding: 1
   pieceToPiecePadding: 1
   maxSpawnRadius: 2
@@ -137,326 +141,391 @@ MonoBehaviour:
     requiredCount: 1
     color: {r: 1, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.5, b: 0.7, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 277036584edd59e41ba4f82b07346b00, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.5, g: 0.7, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.7, g: 0.9, b: 0.2, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 650e992d58e274e44b0bb69da2961424, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.6, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.2, g: 0.8, b: 0.6, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 8a6e4eee4b7545d47b82e1d079e4ab02, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.6, b: 0.2, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 07d2348d4a95d2b4fa04f6b97d10d8f3, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: fba45b4fbe2537c48bddeacfb692bbc6, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 8810e947ff0981f4aa5b8480f69fb6c9, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 3b23a39513d08924aba3498b1373b9f0, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.5, b: 0.7, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: e194c500a14d21e4caffb7a2cd8fbcbb, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 743f8deda0044ce4086cbfa4292b9d73, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 1e3401ccdcfd38b43bd2248a2ba75ed4, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 6e8248db431e4574bb561af796676cca, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.5, g: 0.7, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.7, g: 0.9, b: 0.2, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0, g: 0.2749758, b: 0.754717, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.2, g: 0.8, b: 0.6, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: fc4f2de433aeecf4dad1d537ad99f812, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.6, b: 0.2, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: e3b4a7d4c280d3842a0ac0c34fde6b68, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 432237d2998fad0429b1b9e5b3868ed0, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 7a5242c9ac025de43b4c63e7720087ee, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 0c38a8fbd298fc74b85fd1efa661e936, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.5, b: 0.7, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 11756186d557c3b43be1476121536062, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 0384a9fe8a664ce4b8825cdb99837e4f, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 748098dfac0a12e4d9cca08cb16a4fa5, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 6834ae25403700742b84d424d3160110, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.5, g: 0.7, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 92622559682d572449b4fe821070796c, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.7, g: 0.9, b: 0.2, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 96b0eda1fd2594d46afb95d171e21321, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.6, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 67934c842825ba04aa0ce189608a270c, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.2, g: 0.8, b: 0.6, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: a118f7d569340d64991dbb2e1f6d931c, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.6, b: 0.2, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 9472fe8de9cf0e3469f8fb0130b74a1f, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 9db4ccef55845f94b9f138c8dd3ba488, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: d1f4ee20de4e6f14e9e169f9bfbca7fc, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: ecf1d5b5c53778e44a39e47dd4a4ac11, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.5, b: 0.7, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: fc2eca501d221994390dae3fd3d50e78, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: bc415f658d334e943a9b28e1fe366339, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: d88eddf824766f94ba7d1865ec642933, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 6013df31b909117439f727776913f459, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.5, g: 0.7, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 1d9c0cfa7745d0d4b9418f2cf7a02d19, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.7, g: 0.9, b: 0.2, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: e71754ae5755c85438d9db2bdec8a260, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.6, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.2, g: 0.8, b: 0.6, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.6, b: 0.2, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: c563d9cc22a36654d8fea78876ada15b, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: b69a537316040fc4b914d216f5e0e94d, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.26729542, g: 0.26729542, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 05a350977e0816647922a80d01279509, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: c1cbd36cf540a1d4f807d386c84452cd, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.5, b: 0.7, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: a63b407510b1d1d4cba2212feea9cb94, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: f0b384e8ed8126941964ed2bf3335bdc, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 2dbd1f164196e4544b3227cb8cf1be76, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: fee42b0c60cc1aa458db3abb88138313, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.5, g: 0.7, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 36ee96379e7cdd54e8925e33d5e6f92c, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.7, g: 0.9, b: 0.2, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 3b33edf0a8508914d9754a7b046168e0, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.6, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: d25597bb878dd7945a83cb2eee5d4646, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.2, g: 0.8, b: 0.6, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 67a5d2f91fb12354b9d293ee86ed7b5f, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.6, b: 0.2, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: da2762e0e864e4c4bb40843200b44bee, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 46d7825b98b814c4fa7f044e61b6aa7e, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 2ac984abe3e04c24590a349cdf104a6c, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 08496eebca62e724d96dcd0c7600e167, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.5, b: 0.7, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 8c7c5f961d339b549ad986a8437df976, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: e71c481ffab54a24fb643fda4c627b46, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 01290c16b59e86449a0b28798f4fe2b5, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.4, g: 1, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   puzzlePieces:
   - {fileID: 11400000, guid: b69a537316040fc4b914d216f5e0e94d, type: 2}
   - {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
@@ -520,6 +589,7 @@ MonoBehaviour:
   - pieceType: {fileID: 11400000, guid: fba45b4fbe2537c48bddeacfb692bbc6, type: 2}
     position: {x: 4, y: 6}
     direction: 3
+  generatedObstacles: []
   isComplete: 1
   solutionVariantsCount: 960
   allFoundSolutions:

@@ -17,3 +17,10 @@ MonoBehaviour:
   visual: {fileID: 2065049021235378066, guid: a6a57d9f4fe45c94c84e4c20e9c79b06, type: 3}
   relativeOccupiedCells:
   - {x: 0, y: 0}
+  category: 0
+  usageType: 0
+  usePhysics: 0
+  mass: 1
+  bounciness: 0.5
+  throwForceMultiplier: 1
+  unlockRadius: 1

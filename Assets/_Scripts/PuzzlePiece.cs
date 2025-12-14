@@ -1,13 +1,7 @@
 using UnityEngine;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
-/// <summary>
-/// �������� ��������� ������. (LOGIC ONLY)
-/// ������ ����, ���� �� �������� Visuals � Movement.
-/// ����� ������� ������ ��� ��������.
-/// </summary>
 [RequireComponent(typeof(PieceMovement), typeof(PieceVisuals))]
 public class PuzzlePiece : MonoBehaviour
 {
@@ -16,6 +10,10 @@ public class PuzzlePiece : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private FacialExpressionController facialController;
+
+    [Header("Attachment Settings")]
+    [Tooltip("Точка, куди будуть кріпитися іграшки/їжа.")]
+    [SerializeField] private Transform attachmentPoint;
 
     // --- Components ---
     public PieceMovement Movement { get; private set; }
@@ -27,26 +25,34 @@ public class PuzzlePiece : MonoBehaviour
     public PlacedObjectTypeSO PieceTypeSO => pieceTypeSO;
     public FacialExpressionController FacialController => facialController;
     public PlacedObjectTypeSO.Dir CurrentDirection { get; private set; } = PlacedObjectTypeSO.Dir.Down;
+
     public bool IsPlaced { get; private set; } = false;
     public bool IsOffGrid { get; private set; } = false;
     public Vector2Int OffGridOrigin { get; private set; }
     public PlacedObject PlacedObjectComponent { get; private set; }
+    public PlacedObject InfrastructureComponent { get; private set; }
     public bool IsRotating => Movement != null && Movement.IsRotating;
 
-    // ������ ������� ����
+    // --- MOUTH ITEM (Single) ---
+    public PuzzlePiece HeldItem { get; private set; }
+    public bool HasItem => HeldItem != null;
+
+    // --- PASSENGERS (For Tools/Baskets) ---
+    public List<PuzzlePiece> StoredPassengers { get; private set; } = new List<PuzzlePiece>();
+
     public Vector2Int ClickOffset { get; set; }
 
     private void Awake()
     {
         Movement = GetComponent<PieceMovement>();
         Visuals = GetComponent<PieceVisuals>();
-
-        // �������� ������ ��� ������ Rigidbody, ���� �� �������� ��'���
         Rb = GetComponent<Rigidbody>();
         PieceCollider = GetComponent<Collider>();
 
         if (facialController == null)
             facialController = GetComponentInChildren<FacialExpressionController>();
+
+        if (attachmentPoint == null) attachmentPoint = transform;
     }
 
     private void Start()
@@ -67,10 +73,9 @@ public class PuzzlePiece : MonoBehaviour
             if (Rb == null) Rb = gameObject.AddComponent<Rigidbody>();
 
             Rb.mass = pieceTypeSO.mass;
-            Rb.isKinematic = true; // �� ������������� ����������� (���� �� ������)
+            Rb.isKinematic = true;
             Rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
-            // ������������ �������� (Bounciness)
             if (PieceCollider != null)
             {
                 PhysicsMaterial mat = new PhysicsMaterial();
@@ -83,24 +88,22 @@ public class PuzzlePiece : MonoBehaviour
         }
         else
         {
-            // ���� �� �� ��� ��������� ��'���, Rb �� ���� ����������� ��� ��������
             if (Rb != null) Rb.isKinematic = true;
         }
     }
 
-    // --- Physics Controls ---
     public void EnablePhysics(Vector3 initialVelocity)
     {
         if (Rb != null && pieceTypeSO.usePhysics)
         {
-            Movement.enabled = false; // �������� ������ ����, ������ �������� ������
+            Movement.enabled = false;
             Rb.isKinematic = false;
             Rb.linearVelocity = initialVelocity;
             Rb.angularVelocity = new Vector3(
                 UnityEngine.Random.Range(-5f, 5f),
                 UnityEngine.Random.Range(-5f, 5f),
                 UnityEngine.Random.Range(-5f, 5f)
-            ); // ������ ����� ����������� ��������� ��� �����
+            );
         }
     }
 
@@ -112,8 +115,83 @@ public class PuzzlePiece : MonoBehaviour
             Rb.linearVelocity = Vector3.zero;
             Rb.angularVelocity = Vector3.zero;
         }
-        Movement.enabled = true; // ��������� �������� ������� ����
+        Movement.enabled = true;
+
+        float yAngle = transform.eulerAngles.y;
+        float snappedAngle = Mathf.Round(yAngle / 90f) * 90f;
+        transform.rotation = Quaternion.Euler(0, snappedAngle, 0);
+        SyncDirectionFromRotation(transform.rotation);
     }
+
+    // --- Passenger Logic (For Tools) ---
+    public void AddPassenger(PuzzlePiece passenger)
+    {
+        if (!StoredPassengers.Contains(passenger))
+        {
+            StoredPassengers.Add(passenger);
+            passenger.transform.SetParent(transform); // Робимо дитиною тулза
+
+            // Вимикаємо фізику пасажиру
+            passenger.DisablePhysics();
+            if (passenger.Movement) passenger.Movement.enabled = false;
+            if (passenger.PieceCollider) passenger.PieceCollider.enabled = false; // Щоб не заважав рейкастам
+        }
+    }
+
+    public void ReleaseAllPassengers(Transform newRoot)
+    {
+        foreach (var p in StoredPassengers)
+        {
+            if (p != null)
+            {
+                p.transform.SetParent(newRoot);
+                if (p.Movement) p.Movement.enabled = true;
+                if (p.PieceCollider) p.PieceCollider.enabled = true;
+
+                // Оновлюємо напрямок пасажира після обертання разом з тулзом
+                p.SyncDirectionFromRotation(p.transform.rotation);
+            }
+        }
+        StoredPassengers.Clear();
+    }
+
+    // --- Item Attachment Logic (Mouth) ---
+    public void AttachItem(PuzzlePiece item)
+    {
+        if (HasItem || item == null) return;
+
+        HeldItem = item;
+
+        item.DisablePhysics();
+        if (item.Movement != null) item.Movement.enabled = false;
+        if (item.PieceCollider) item.PieceCollider.enabled = false;
+
+        item.transform.SetParent(attachmentPoint);
+        item.transform.localPosition = Vector3.zero;
+        item.transform.localRotation = Quaternion.identity;
+
+        if (item.IsPlaced) GridBuildingSystem.Instance.RemovePieceFromGrid(item);
+        if (item.IsOffGrid) OffGridManager.RemovePiece(item);
+        item.SetOffGrid(false);
+        item.SetPlaced(null);
+    }
+
+    public PuzzlePiece DetachItem()
+    {
+        if (!HasItem) return null;
+
+        PuzzlePiece item = HeldItem;
+        HeldItem = null;
+
+        item.transform.SetParent(null);
+
+        if (item.Movement != null) item.Movement.enabled = true;
+        if (item.PieceCollider) item.PieceCollider.enabled = true;
+
+        return item;
+    }
+
+    public Transform GetAttachmentPoint() => attachmentPoint;
 
     // --- Visual Proxy ---
     public void SetTemperamentMaterial(Material mat)
@@ -133,22 +211,33 @@ public class PuzzlePiece : MonoBehaviour
 
     public void SetInvalidPlacementVisual(bool isInvalid)
     {
-        if (Visuals != null)
-        {
-            Visuals.SetInvalidPlacementVisual(isInvalid);
-        }
+        if (Visuals != null) Visuals.SetInvalidPlacementVisual(isInvalid);
     }
 
     // --- State Management ---
     public void SetPlaced(PlacedObject placedObjectComponent)
     {
         this.PlacedObjectComponent = placedObjectComponent;
+        this.InfrastructureComponent = null;
         IsPlaced = (placedObjectComponent != null);
 
         if (IsPlaced)
         {
             IsOffGrid = false;
-            DisablePhysics(); // �� ��� ������ ��� ������
+            DisablePhysics();
+        }
+    }
+
+    public void SetInfrastructure(PlacedObject infraComponent)
+    {
+        this.InfrastructureComponent = infraComponent;
+        this.PlacedObjectComponent = null;
+        IsPlaced = (infraComponent != null);
+
+        if (IsPlaced)
+        {
+            IsOffGrid = false;
+            DisablePhysics();
         }
     }
 
@@ -156,10 +245,7 @@ public class PuzzlePiece : MonoBehaviour
     {
         IsOffGrid = isOffGrid;
         IsPlaced = false;
-        if (isOffGrid)
-        {
-            OffGridOrigin = origin;
-        }
+        if (isOffGrid) OffGridOrigin = origin;
     }
 
     public void SetInitialRotation(PlacedObjectTypeSO.Dir direction)
@@ -171,7 +257,6 @@ public class PuzzlePiece : MonoBehaviour
     // --- Movement Logic Wrapper ---
     public void UpdateTransform(Vector3 position, Quaternion rotation)
     {
-        // ���� ������ ������, �� �� ������� ������� ����� Movement
         if (Rb != null && !Rb.isKinematic) return;
 
         if (Movement != null && Movement.enabled)
@@ -190,7 +275,6 @@ public class PuzzlePiece : MonoBehaviour
     {
         if (Movement == null || Movement.IsRotating || (Rb != null && !Rb.isKinematic)) return;
 
-        // ���������� ����� ��������� (Pivot)
         Vector2Int currentRotationOffset = pieceTypeSO.GetRotationOffset(CurrentDirection);
         Vector3 currentVisualOffset = new Vector3(currentRotationOffset.x, 0, currentRotationOffset.y) * cellSize;
 
@@ -202,7 +286,6 @@ public class PuzzlePiece : MonoBehaviour
         Vector3 halfCellVector = new Vector3(cellSize * 0.5f, 0, cellSize * 0.5f);
         Vector3 pivotPoint = currentGridOrigin + clickOffsetVector + halfCellVector;
 
-        // ��������� ����� ��������
         PlacedObjectTypeSO.Dir nextDirection = clockwise
             ? PlacedObjectTypeSO.GetNextDirencion(CurrentDirection)
             : PlacedObjectTypeSO.GetPreviousDir(CurrentDirection);
@@ -216,9 +299,11 @@ public class PuzzlePiece : MonoBehaviour
         });
     }
 
-    private void SyncDirectionFromRotation(Quaternion rotation)
+    public void SyncDirectionFromRotation(Quaternion rotation)
     {
         float yAngle = Mathf.Round(rotation.eulerAngles.y);
+        yAngle = (yAngle % 360 + 360) % 360;
+
         if (Mathf.Approximately(yAngle, 0)) CurrentDirection = PlacedObjectTypeSO.Dir.Down;
         else if (Mathf.Approximately(yAngle, 90)) CurrentDirection = PlacedObjectTypeSO.Dir.Left;
         else if (Mathf.Approximately(yAngle, 180)) CurrentDirection = PlacedObjectTypeSO.Dir.Up;

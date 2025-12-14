@@ -9,7 +9,6 @@ using Debug = UnityEngine.Debug;
 [CustomEditor(typeof(GridDataSO))]
 public class GridDataSOEditor : Editor
 {
-    // ... (всі змінні та OnEnable залишаються без змін) ...
     public enum SolutionSelectionCriterion
     {
         FirstFound,
@@ -19,9 +18,11 @@ public class GridDataSOEditor : Editor
     private int generationIterations = 10;
     private SolutionSelectionCriterion selectionCriterion = SolutionSelectionCriterion.FewestPieces;
 
-
     private GridDataSO gridDataSO;
-    private bool[,] editorGridCells;
+
+    // --- Editor Grid State ---
+    private bool[,] editorGridCells;   // Buildable (Green)
+    private bool[,] editorLockedCells; // Locked (Orange)
 
     private bool showRequiredPieces = true;
     private bool showAllPieces = true;
@@ -49,7 +50,6 @@ public class GridDataSOEditor : Editor
     private GUIStyle sequenceLabelStyle;
 
     private bool _calculationStopped;
-
     private int _globalMaxCount = 1;
 
     private static readonly List<Color> colorPalette = new List<Color>
@@ -69,12 +69,12 @@ public class GridDataSOEditor : Editor
     };
     private static int colorIndex = 0;
 
-
     private void OnEnable()
     {
         gridDataSO = (GridDataSO)target;
         if (gridDataSO.width <= 0) gridDataSO.width = 1;
         if (gridDataSO.height <= 0) gridDataSO.height = 1;
+
         InitializeEditorGrid();
         solutionToShowIndex = gridDataSO.currentSolutionIndex + 1;
 
@@ -94,28 +94,23 @@ public class GridDataSOEditor : Editor
         };
     }
 
-    // --- ОНОВЛЕНИЙ SCENE GUI З ПІДТРИМКОЮ ПОВОРОТУ ---
     private void OnSceneGUI()
     {
         if (gridDataSO == null) return;
 
-        // Підготовка даних
         Vector3 center = new Vector3(gridDataSO.cameraBoundsCenter.x, 0, gridDataSO.cameraBoundsCenter.y);
         Quaternion rotation = Quaternion.Euler(0, gridDataSO.cameraBoundsYRotation, 0);
         Vector3 size = new Vector3(gridDataSO.cameraBoundsSize.x, 0, gridDataSO.cameraBoundsSize.y);
 
         Handles.color = Color.yellow;
 
-        // Малюємо повернутий прямокутник за допомогою матриці
         Matrix4x4 oldMatrix = Handles.matrix;
         Handles.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);
         Handles.DrawWireCube(Vector3.zero, size);
-        Handles.matrix = oldMatrix; // Скидаємо матрицю
+        Handles.matrix = oldMatrix;
 
-        // --- 1. HANDLE ПЕРЕМІЩЕННЯ (Position) ---
-        // Малюємо стрілки переміщення в центрі (вони будуть орієнтовані по світу, що зручно)
         EditorGUI.BeginChangeCheck();
-        Vector3 newCenter = Handles.PositionHandle(center, Quaternion.identity); // Або rotation, якщо хочеш локальні стрілки
+        Vector3 newCenter = Handles.PositionHandle(center, Quaternion.identity);
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RecordObject(gridDataSO, "Move Camera Bounds Center");
@@ -123,7 +118,6 @@ public class GridDataSOEditor : Editor
             EditorUtility.SetDirty(gridDataSO);
         }
 
-        // --- 2. HANDLE ПОВОРОТУ (Rotation) ---
         EditorGUI.BeginChangeCheck();
         Quaternion newRotation = Handles.Disc(rotation, center, Vector3.up, Mathf.Max(size.x, size.z) / 2 + 2, false, 0);
         if (EditorGUI.EndChangeCheck())
@@ -133,10 +127,7 @@ public class GridDataSOEditor : Editor
             EditorUtility.SetDirty(gridDataSO);
         }
 
-        // --- 3. HANDLE МАСШТАБУ (Scale/Size) ---
-        // Малюємо скейлер у локальній системі координат бокса
         EditorGUI.BeginChangeCheck();
-        // Скейл хендл малюємо так, щоб він крутився разом з боксом
         Vector3 newSizeVector = Handles.ScaleHandle(
             new Vector3(gridDataSO.cameraBoundsSize.x, 1, gridDataSO.cameraBoundsSize.y),
             center,
@@ -147,25 +138,21 @@ public class GridDataSOEditor : Editor
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RecordObject(gridDataSO, "Resize Camera Bounds");
-            // Беремо абсолютні значення, щоб розмір не став від'ємним
             gridDataSO.cameraBoundsSize = new Vector2(Mathf.Abs(newSizeVector.x), Mathf.Abs(newSizeVector.z));
             EditorUtility.SetDirty(gridDataSO);
         }
 
-        // Лейбл
         Handles.Label(center + rotation * (Vector3.right * (size.x / 2 + 1)), $"Bounds ({gridDataSO.cameraBoundsYRotation:F0}°)");
     }
-    // ---------------------------------------------
 
     public override void OnInspectorGUI()
     {
-        // ... (решта коду OnInspectorGUI залишається такою ж, як в попередньому файлі) ...
         serializedObject.Update();
 
         int oldWidth = gridDataSO.width;
         int oldHeight = gridDataSO.height;
 
-        DrawPropertiesExcluding(serializedObject, "m_Script", "puzzlePieces", "generatedPieceSummary", "puzzleSolution", "availablePieceTypesForGeneration", "generatorPieceConfig", "solutionVariantsCount", "allFoundSolutions", "currentSolutionIndex", "isComplete", "personalityData", "width", "height");
+        DrawPropertiesExcluding(serializedObject, "m_Script", "puzzlePieces", "generatedPieceSummary", "puzzleSolution", "availablePieceTypesForGeneration", "generatorPieceConfig", "solutionVariantsCount", "allFoundSolutions", "currentSolutionIndex", "isComplete", "personalityData", "width", "height", "buildableCells", "lockedCells", "generatedObstacles");
 
         EditorGUILayout.PropertyField(serializedObject.FindProperty("width"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("height"));
@@ -179,9 +166,8 @@ public class GridDataSOEditor : Editor
 
         serializedObject.Update();
 
-
         EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("Buildable Cells Editor", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Buildable & Locked Cells Editor", EditorStyles.boldLabel);
         DrawBuildableCellsEditor();
 
         EditorGUILayout.Space(20);
@@ -192,9 +178,8 @@ public class GridDataSOEditor : Editor
         EditorGUILayout.LabelField("Puzzle Generator", EditorStyles.boldLabel);
 
         EditorGUILayout.PropertyField(serializedObject.FindProperty("availablePieceTypesForGeneration"), true);
-        if (GUILayout.Button(new GUIContent("Update & Manage Generator Pieces", "Синхронізує список фігур нижче з тими, що вказані у 'Available Piece Types'. Додає нові та зберігає налаштування для існуючих."))) UpdateGeneratorPieceConfig();
+        if (GUILayout.Button(new GUIContent("Update & Manage Generator Pieces", "Синхронізує список фігур нижче з тими, що вказані у 'Available Piece Types'."))) UpdateGeneratorPieceConfig();
         if (GUILayout.Button(new GUIContent("Randomize All Colors", "Призначає фігурам нові кольори з палітри у випадковому порядку."))) RandomizeAllColors();
-
 
         DrawMaxCountControls();
 
@@ -274,7 +259,6 @@ public class GridDataSOEditor : Editor
                 }
             }
 
-
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Generated Piece Summary", EditorStyles.boldLabel);
             DrawPieceSummary();
@@ -308,8 +292,6 @@ public class GridDataSOEditor : Editor
 
         serializedObject.ApplyModifiedProperties();
     }
-    // ... решта методів класу GridDataSOEditor (DrawMaxCountControls, DrawPersonalityEditor тощо) залишаються такими ж
-    // ... просто встав весь попередній код класу після OnInspectorGUI
 
     private void DrawMaxCountControls()
     {
@@ -355,7 +337,6 @@ public class GridDataSOEditor : Editor
         EditorGUILayout.EndHorizontal();
     }
 
-
     #region Personality Editor
     private void DrawPersonalityEditor()
     {
@@ -378,7 +359,6 @@ public class GridDataSOEditor : Editor
         SerializedObject personalitySerializedObject = new SerializedObject(personalityData);
         SerializedProperty mappingsProp = personalitySerializedObject.FindProperty("personalityMappings");
 
-        // Використовуємо згенеровані фігури, щоб знати, які характери потрібні
         var requiredPieceTypes = gridDataSO.puzzlePieces.Where(p => p != null).Distinct().ToList();
         var mappedPieceTypes = personalityData.personalityMappings.Where(m => m.pieceType != null).Select(m => m.pieceType).ToList();
 
@@ -455,7 +435,7 @@ public class GridDataSOEditor : Editor
             });
         }
         EditorUtility.SetDirty(pData);
-        AssetDatabase.SaveAssets(); // Зберігаємо, щоб зміни відобразилися
+        AssetDatabase.SaveAssets();
     }
 
     private void RandomizeUnassignedTemperaments(LevelPersonalitySO pData)
@@ -481,16 +461,18 @@ public class GridDataSOEditor : Editor
             }
         }
         EditorUtility.SetDirty(pData);
-        AssetDatabase.SaveAssets(); // Зберігаємо, щоб зміни відобразилися
+        AssetDatabase.SaveAssets();
     }
     #endregion
 
-    #region Buildable Cells Editor
+    #region Buildable & Locked Cells Editor
     private void InitializeEditorGrid()
     {
         if (gridDataSO.width <= 0 || gridDataSO.height <= 0) return;
 
         editorGridCells = new bool[gridDataSO.width, gridDataSO.height];
+        editorLockedCells = new bool[gridDataSO.width, gridDataSO.height];
+
         if (gridDataSO.buildableCells != null)
         {
             foreach (Vector2Int cell in gridDataSO.buildableCells)
@@ -501,15 +483,30 @@ public class GridDataSOEditor : Editor
                 }
             }
         }
+
+        if (gridDataSO.lockedCells != null)
+        {
+            foreach (Vector2Int cell in gridDataSO.lockedCells)
+            {
+                if (cell.x >= 0 && cell.x < gridDataSO.width && cell.y >= 0 && cell.y < gridDataSO.height)
+                {
+                    editorLockedCells[cell.x, cell.y] = true;
+                }
+            }
+        }
     }
 
     private void DrawBuildableCellsEditor()
     {
-        EditorGUILayout.HelpBox("Click cells to toggle their buildable status. Green means buildable, Red means not buildable.", MessageType.Info);
+        EditorGUILayout.HelpBox("LMB to toggle Buildable (Green).\nMiddle Click (Mouse Wheel) to toggle Locked (Orange). Locked cells require an Unlock Tool.", MessageType.Info);
+
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Select All Buildable")) SelectAllBuildableCells(true);
-        if (GUILayout.Button("Deselect All Buildable")) SelectAllBuildableCells(false);
+        if (GUILayout.Button("All Buildable")) SelectAllBuildableCells(true);
+        if (GUILayout.Button("None Buildable")) SelectAllBuildableCells(false);
+        if (GUILayout.Button("All Locked")) SelectAllLockedCells(true);
+        if (GUILayout.Button("None Locked")) SelectAllLockedCells(false);
         GUILayout.EndHorizontal();
+
         EditorGUILayout.Space(5);
         GUILayout.BeginVertical("box");
         for (int z = gridDataSO.height - 1; z >= 0; z--)
@@ -517,38 +514,91 @@ public class GridDataSOEditor : Editor
             GUILayout.BeginHorizontal();
             for (int x = 0; x < gridDataSO.width; x++)
             {
-                GUI.backgroundColor = editorGridCells[x, z] ? Color.green : Color.red;
-                if (GUILayout.Button("", GUILayout.Width(25), GUILayout.Height(25)))
+                // ВАЖЛИВО: Отримати поточний івент
+                Event e = Event.current;
+
+                // Визначаємо колір кнопки
+                Color cellColor = new Color(0.2f, 0.2f, 0.2f); // Dark Grey (Not Buildable)
+                if (editorGridCells[x, z]) cellColor = new Color(0.4f, 1f, 0.4f); // Bright Green (Buildable)
+                if (editorLockedCells[x, z]) cellColor = new Color(1f, 0.5f, 0f); // Bright Orange (Locked)
+
+                // --- МАЛЮВАННЯ ФОНУ ---
+                // Використовуємо GUILayoutUtility.GetRect для резервування місця
+                Rect btnRect = GUILayoutUtility.GetRect(25, 25, GUILayout.Width(25), GUILayout.Height(25));
+
+                // Малюємо кольоровий прямокутник (це ігнорує GUI.backgroundColor і дає чистий колір)
+                EditorGUI.DrawRect(btnRect, cellColor);
+
+                // Малюємо рамку, щоб клітинки не зливалися
+                if (Event.current.type == EventType.Repaint)
                 {
+                    Handles.color = Color.black;
+                    Handles.DrawWireDisc(btnRect.center, Vector3.forward, 0f); // Hack to setup handle color
+                    // Або простіше:
+                    EditorGUI.DrawRect(new Rect(btnRect.x, btnRect.y, btnRect.width, 1), Color.black); // Top
+                    EditorGUI.DrawRect(new Rect(btnRect.x, btnRect.y, 1, btnRect.height), Color.black); // Left
+                    EditorGUI.DrawRect(new Rect(btnRect.xMax - 1, btnRect.y, 1, btnRect.height), Color.black); // Right
+                    EditorGUI.DrawRect(new Rect(btnRect.x, btnRect.yMax - 1, btnRect.width, 1), Color.black); // Bottom
+                }
+
+                // --- CUSTOM EVENT HANDLING ---
+                // 1. Middle Click (Locked Toggle)
+                if (e.type == EventType.MouseDown && e.button == 2 && btnRect.Contains(e.mousePosition))
+                {
+                    Debug.Log($"[GridDataSOEditor] Middle Click detected on cell [{x},{z}]");
+                    editorLockedCells[x, z] = !editorLockedCells[x, z];
+
+                    if (editorLockedCells[x, z]) editorGridCells[x, z] = true;
+
+                    UpdateBuildableCellsList();
+                    e.Use();
+                }
+                // 2. Left Click (Buildable Toggle)
+                else if (e.type == EventType.MouseDown && e.button == 0 && btnRect.Contains(e.mousePosition))
+                {
+                    Debug.Log($"[GridDataSOEditor] Left Click detected on cell [{x},{z}]");
                     editorGridCells[x, z] = !editorGridCells[x, z];
                     UpdateBuildableCellsList();
+                    e.Use();
                 }
             }
             GUILayout.EndHorizontal();
         }
         GUILayout.EndVertical();
-        GUI.backgroundColor = Color.white;
     }
 
     private void UpdateBuildableCellsList()
     {
         var buildableCellsProp = serializedObject.FindProperty("buildableCells");
+        var lockedCellsProp = serializedObject.FindProperty("lockedCells");
+
         buildableCellsProp.ClearArray();
-        int index = 0;
+        lockedCellsProp.ClearArray();
+
+        int bIndex = 0;
+        int lIndex = 0;
+
         for (int x = 0; x < gridDataSO.width; x++)
         {
             for (int z = 0; z < gridDataSO.height; z++)
             {
                 if (editorGridCells[x, z])
                 {
-                    buildableCellsProp.InsertArrayElementAtIndex(index);
-                    buildableCellsProp.GetArrayElementAtIndex(index).vector2IntValue = new Vector2Int(x, z);
-                    index++;
+                    buildableCellsProp.InsertArrayElementAtIndex(bIndex);
+                    buildableCellsProp.GetArrayElementAtIndex(bIndex).vector2IntValue = new Vector2Int(x, z);
+                    bIndex++;
+                }
+
+                if (editorLockedCells[x, z])
+                {
+                    lockedCellsProp.InsertArrayElementAtIndex(lIndex);
+                    lockedCellsProp.GetArrayElementAtIndex(lIndex).vector2IntValue = new Vector2Int(x, z);
+                    lIndex++;
                 }
             }
         }
         serializedObject.ApplyModifiedProperties();
-        UpdatePuzzleState(); // Оновлюємо стан пазла, щоб відобразити зміни в сітці
+        UpdatePuzzleState();
     }
 
     private void SelectAllBuildableCells(bool select)
@@ -558,6 +608,19 @@ public class GridDataSOEditor : Editor
             for (int z = 0; z < gridDataSO.height; z++)
             {
                 editorGridCells[x, z] = select;
+            }
+        }
+        UpdateBuildableCellsList();
+    }
+
+    private void SelectAllLockedCells(bool select)
+    {
+        for (int x = 0; x < gridDataSO.width; x++)
+        {
+            for (int z = 0; z < gridDataSO.height; z++)
+            {
+                editorLockedCells[x, z] = select;
+                if (select) editorGridCells[x, z] = true; // Locked must be buildable
             }
         }
         UpdateBuildableCellsList();
@@ -661,15 +724,10 @@ public class GridDataSOEditor : Editor
         {
             if (pieceCounts[pieceType] > 0)
             {
-                // Для кожного типу фігури, перебираємо всі можливі позиції, де ця фігура
-                // покриває emptyCell.Value
                 foreach (PlacedObjectTypeSO.Dir dir in System.Enum.GetValues(typeof(PlacedObjectTypeSO.Dir)))
                 {
-                    // Отримуємо список всіх клітинок, які належать фігурі, незалежно від її розміру
                     var relativeCells = pieceType.relativeOccupiedCells;
 
-                    // Перебираємо кожну клітинку фігури, щоб знайти її початкову позицію (origin),
-                    // якщо вона має покрити emptyCell.Value
                     foreach (var occupiedCell in relativeCells)
                     {
                         Vector2Int rotatedCell = GetRotatedCell(occupiedCell, dir, pieceType.GetMaxDimensions());
@@ -679,8 +737,6 @@ public class GridDataSOEditor : Editor
 
                         if (CanPlace(currentGrid, piecePositions))
                         {
-                            // Уникнення дублювання при рекурсії, якщо різні відносні клітинки
-                            // дають однаковий startPosition та напрямок
                             bool alreadyProcessed = currentSolution.Any(p =>
                                 p.pieceType == pieceType &&
                                 p.position == startPosition &&
@@ -708,7 +764,6 @@ public class GridDataSOEditor : Editor
 
     private string GenerateSolutionHash(List<GridDataSO.GeneratedPieceData> solution)
     {
-        // Хешування для унікальних рішень
         var sortedPieces = solution.OrderBy(p => p.pieceType.name).ThenBy(p => p.position.x).ThenBy(p => p.position.y);
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -781,8 +836,6 @@ public class GridDataSOEditor : Editor
         UpdatePuzzleState();
         Repaint();
     }
-
-
     #endregion
 
     #region Puzzle Generation Logic
@@ -921,18 +974,14 @@ public class GridDataSOEditor : Editor
         var piecesToTry = new List<PlacedObjectTypeSO>();
         bool tryingRequired = required.Count > 0;
 
-        // Порядок вибору фігур: спочатку всі необхідні (required), потім усі наповнювачі (fillers)
         if (tryingRequired)
         {
-            // Обов'язкові фігури: сортуємо за розміром, щоб спробувати найбільші в першу чергу
             piecesToTry.AddRange(required.Distinct().OrderByDescending(p => p.relativeOccupiedCells.Count));
         }
         else
         {
-            // Наповнювачі: сортуємо випадково, щоб збільшити варіативність
             piecesToTry.AddRange(fillers.OrderBy(p => Random.value));
         }
-
 
         foreach (var pieceType in piecesToTry)
         {
@@ -940,7 +989,6 @@ public class GridDataSOEditor : Editor
 
             if (!tryingRequired)
             {
-                // Перевірка ліміту для наповнювачів
                 var config = gridDataSO.generatorPieceConfig.FirstOrDefault(c => c.pieceType == pieceType);
                 int maxCount = config.pieceType != null ? config.maxCount : int.MaxValue;
                 if (pieceCounts.GetValueOrDefault(pieceType, 0) >= maxCount)
@@ -951,7 +999,6 @@ public class GridDataSOEditor : Editor
 
             var shuffledDirs = System.Enum.GetValues(typeof(PlacedObjectTypeSO.Dir)).Cast<PlacedObjectTypeSO.Dir>().OrderBy(d => Random.value);
 
-            // Перебираємо всі можливі клітинки фігури та напрямки для покриття emptyCell
             foreach (PlacedObjectTypeSO.Dir dir in shuffledDirs)
             {
                 foreach (var occupiedCell in pieceType.relativeOccupiedCells)
@@ -963,8 +1010,6 @@ public class GridDataSOEditor : Editor
 
                     if (CanPlace(currentGrid, piecePositions))
                     {
-                        // Уникнення дублювання при рекурсії, якщо різні відносні клітинки
-                        // дають однаковий startPosition та напрямок
                         bool alreadyProcessed = solution.Any(p =>
                             p.pieceType == pieceType &&
                             p.position == startPosition &&
@@ -1045,10 +1090,8 @@ public class GridDataSOEditor : Editor
         serializedObject.ApplyModifiedProperties();
 
         solutionToShowIndex = 1;
-        UpdatePuzzleState(); // !!! ОНОВЛЮЄМО СТАН ПАЗЛА ПІСЛЯ ЗБЕРЕЖЕННЯ !!!
+        UpdatePuzzleState();
     }
-
-
     #endregion
 
     #region Helper & UI Methods
@@ -1088,7 +1131,6 @@ public class GridDataSOEditor : Editor
         EditorGUILayout.LabelField(new GUIContent("Estimated Complexity", "A rough estimate based on grid size and number of available piece types. High complexity may lead to long generation times."), new GUIContent(levelText, $"Score: {complexityScore:F0}"), style);
     }
 
-
     private void DrawPuzzlePreview()
     {
         float cellSize = 20f;
@@ -1102,8 +1144,11 @@ public class GridDataSOEditor : Editor
         {
             for (int x = 0; x < gridDataSO.width; x++)
             {
-                // Малюємо лише забудовувані клітинки сірого кольору, інші - темно-сірого
-                Color bgColor = gridDataSO.buildableCells.Contains(new Vector2Int(x, z)) ? new Color(0.5f, 0.5f, 0.5f) : new Color(0.2f, 0.2f, 0.2f);
+                // Відображаємо Buildalbe (Яскраво-зелений), Locked (Помаранчевий) або Background (Темний)
+                Color bgColor = new Color(0.2f, 0.2f, 0.2f);
+                if (gridDataSO.buildableCells.Contains(new Vector2Int(x, z))) bgColor = new Color(0.4f, 1f, 0.4f);
+                if (gridDataSO.lockedCells.Contains(new Vector2Int(x, z))) bgColor = new Color(1f, 0.5f, 0f);
+
                 Rect cellRect = new Rect(previewRect.x + x * cellSize, previewRect.y + (gridDataSO.height - 1 - z) * cellSize, cellSize - 1, cellSize - 1);
                 EditorGUI.DrawRect(cellRect, bgColor);
             }
@@ -1111,12 +1156,8 @@ public class GridDataSOEditor : Editor
 
         if (gridDataSO.puzzleSolution != null)
         {
-            // Створюємо мапу, щоб зберігати ID інстансу для кожної фігури
             var pieceInstanceTracker = new Dictionary<PlacedObjectTypeSO, int>();
-
-            // Створюємо копію списку, щоб нумерувати фігури послідовно
             List<GridDataSO.GeneratedPieceData> piecesInOrder = gridDataSO.puzzleSolution.ToList();
-
             int sequenceCounter = 0;
 
             foreach (var pieceData in piecesInOrder)
@@ -1138,13 +1179,11 @@ public class GridDataSOEditor : Editor
                     }
                 }
 
-                // Визначаємо колір тексту (чорний/білий) для контрасту
                 float brightness = (pieceColor.r * 0.299f + pieceColor.g * 0.587f + pieceColor.b * 0.114f);
                 Color textColor = brightness > 0.5f ? Color.black : Color.white;
 
                 if (positions.Count > 0)
                 {
-                    // Обчислюємо ID інстансу
                     if (!pieceInstanceTracker.ContainsKey(pieceData.pieceType))
                     {
                         pieceInstanceTracker[pieceData.pieceType] = 0;
@@ -1152,27 +1191,21 @@ public class GridDataSOEditor : Editor
                     pieceInstanceTracker[pieceData.pieceType]++;
                     int instanceId = pieceInstanceTracker[pieceData.pieceType];
 
-                    // Обчислюємо загальну кількість фігур цього типу
                     var summaryEntry = gridDataSO.generatedPieceSummary.FirstOrDefault(s => s.pieceType == pieceData.pieceType);
                     int totalCount = summaryEntry.count;
 
-
-                    // Виводимо номер у центрі першої клітинки фігури
                     Vector2Int firstCellPos = positions[0];
                     Rect labelCellRect = new Rect(previewRect.x + firstCellPos.x * cellSize, previewRect.y + (gridDataSO.height - 1 - firstCellPos.y) * cellSize, cellSize, cellSize);
 
-                    // Якщо фігура унікальна, виводимо її порядковий номер (sequenceCounter)
-                    // Якщо фігура дублюється (totalCount > 1), виводимо її ID інстансу (1, 2, 3...)
                     string labelText = (totalCount > 1) ? instanceId.ToString() : sequenceCounter.ToString();
 
                     labelStyle.normal.textColor = textColor;
-                    labelStyle.alignment = TextAnchor.MiddleCenter; // Виводимо по центру
+                    labelStyle.alignment = TextAnchor.MiddleCenter;
                     GUI.Label(labelCellRect, labelText, labelStyle);
                 }
             }
         }
     }
-
 
     private void UpdatePuzzleState()
     {
@@ -1230,11 +1263,10 @@ public class GridDataSOEditor : Editor
         serializedObject.FindProperty("isComplete").boolValue = (buildableCellCount == occupiedCellCount);
 
         serializedObject.ApplyModifiedProperties();
-        EditorUtility.SetDirty(gridDataSO); // Позначаємо SO як змінений
-        AssetDatabase.SaveAssets(); // Зберігаємо асет
-        Repaint(); // Забезпечуємо оновлення вікна Інспектора
+        EditorUtility.SetDirty(gridDataSO);
+        AssetDatabase.SaveAssets();
+        Repaint();
     }
-
 
     private Vector2Int? FindFirstEmptyCell(bool[,] grid)
     {
@@ -1261,7 +1293,6 @@ public class GridDataSOEditor : Editor
 
             if (pieceType == null) continue;
 
-            // --- ЗНАХОДИМО ВІДПОВІДНИЙ ЕЛЕМЕНТ КОНФІГУРАЦІЇ ---
             SerializedProperty configElementProp = null;
             for (int j = 0; j < generatorConfigProp.arraySize; j++)
             {
@@ -1279,7 +1310,6 @@ public class GridDataSOEditor : Editor
             {
                 var colorProp = configElementProp.FindPropertyRelative("color");
                 EditorGUI.BeginChangeCheck();
-                // --- ВИКОРИСТОВУЄМО ColorField, АЛЕ ХОВАЄМО ЙОГО МІТКУ ---
                 var newColor = EditorGUILayout.ColorField(GUIContent.none, colorProp.colorValue, true, true, false, GUILayout.Width(40));
                 if (EditorGUI.EndChangeCheck())
                 {
@@ -1289,7 +1319,6 @@ public class GridDataSOEditor : Editor
             }
             else
             {
-                // Fallback, якщо конфігурацію не знайдено
                 Rect colorRect = GUILayoutUtility.GetRect(18, 18, GUILayout.Width(40));
                 EditorGUI.DrawRect(colorRect, Color.magenta);
             }
@@ -1307,6 +1336,91 @@ public class GridDataSOEditor : Editor
         }
     }
 
+    private void RemovePieceByType(PlacedObjectTypeSO pieceType)
+    {
+        var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
+        int pieceIndexToRemove = -1;
+
+        for (int i = 0; i < puzzleSolutionProp.arraySize; i++)
+        {
+            var pieceDataProp = puzzleSolutionProp.GetArrayElementAtIndex(i);
+            var currentPieceType = (PlacedObjectTypeSO)pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue;
+            if (currentPieceType == pieceType)
+            {
+                pieceIndexToRemove = i;
+                break;
+            }
+        }
+
+        if (pieceIndexToRemove != -1)
+        {
+            puzzleSolutionProp.DeleteArrayElementAtIndex(pieceIndexToRemove);
+            UpdatePuzzleState();
+        }
+    }
+
+    private void ClearAllPieces()
+    {
+        serializedObject.FindProperty("puzzleSolution").ClearArray();
+        UpdatePuzzleState();
+        Debug.Log("Усі фігури з рішення очищено.");
+    }
+
+    private void FillEmptySpace()
+    {
+        bool[,] currentGrid = new bool[gridDataSO.width, gridDataSO.height];
+        foreach (var cell in gridDataSO.buildableCells)
+        {
+            currentGrid[cell.x, cell.y] = true;
+        }
+
+        var pieceCountsInSolution = new Dictionary<PlacedObjectTypeSO, int>();
+        foreach (var pieceData in gridDataSO.puzzleSolution)
+        {
+            pieceCountsInSolution[pieceData.pieceType] = pieceCountsInSolution.GetValueOrDefault(pieceData.pieceType, 0) + 1;
+            foreach (var pos in pieceData.pieceType.GetGridPositionsList(pieceData.position, pieceData.direction))
+            {
+                if (pos.x >= 0 && pos.x < gridDataSO.width && pos.y >= 0 && pos.y < gridDataSO.height)
+                {
+                    currentGrid[pos.x, pos.y] = false;
+                }
+            }
+        }
+
+        var existingPieceTypes = new HashSet<PlacedObjectTypeSO>(gridDataSO.puzzleSolution.Select(p => p.pieceType));
+        var allAvailableFillers = gridDataSO.availablePieceTypesForGeneration.Where(p => p != null).ToList();
+
+        var priorityFillers = allAvailableFillers.Where(p => !existingPieceTypes.Contains(p)).OrderByDescending(p => p.relativeOccupiedCells.Count).ToList();
+        var otherFillers = allAvailableFillers.Where(p => existingPieceTypes.Contains(p)).OrderByDescending(p => p.relativeOccupiedCells.Count).ToList();
+
+        var combinedFillers = priorityFillers.Concat(otherFillers).ToList();
+
+        var fillStopwatch = Stopwatch.StartNew();
+        List<GridDataSO.GeneratedPieceData> filledPieces = new List<GridDataSO.GeneratedPieceData>();
+
+        bool success = SolvePuzzleRecursiveGeneration(currentGrid, filledPieces, new List<PlacedObjectTypeSO>(), combinedFillers, pieceCountsInSolution, fillStopwatch);
+
+        if (success)
+        {
+            Debug.Log($"<color=green>Successfully filled empty space in {fillStopwatch.Elapsed.TotalSeconds:F3} seconds!</color>");
+            var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
+            int initialCount = puzzleSolutionProp.arraySize;
+            for (int i = 0; i < filledPieces.Count; i++)
+            {
+                int newIndex = initialCount + i;
+                puzzleSolutionProp.InsertArrayElementAtIndex(newIndex);
+                var pieceDataProp = puzzleSolutionProp.GetArrayElementAtIndex(newIndex);
+                pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue = filledPieces[i].pieceType;
+                pieceDataProp.FindPropertyRelative("position").vector2IntValue = filledPieces[i].position;
+                pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)filledPieces[i].direction;
+            }
+            UpdatePuzzleState();
+        }
+        else
+        {
+            Debug.LogError("Failed to fill the empty space. No solution found with the available pieces.");
+        }
+    }
 
     private bool CanPlace(bool[,] grid, List<Vector2Int> positions)
     {
@@ -1458,7 +1572,6 @@ public class GridDataSOEditor : Editor
     private void HandlePreviewMouseInput(Rect previewRect, float cellSize)
     {
         Event e = Event.current;
-        // !!! ВИДАЛЕННЯ ФІГУРИ ПРАВОЮ КНОПКОЮ МИШІ !!!
         if (e.type == EventType.MouseDown && e.button == 1 && previewRect.Contains(e.mousePosition))
         {
             Vector2 localPos = e.mousePosition - previewRect.position;
@@ -1476,8 +1589,6 @@ public class GridDataSOEditor : Editor
         var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
         int pieceIndexToRemove = -1;
 
-        // Потрібно видалити лише одну фігуру, яка займає цю клітинку. 
-        // Починаємо з кінця, щоб видаляти останні додані елементи.
         for (int i = puzzleSolutionProp.arraySize - 1; i >= 0; i--)
         {
             var pieceDataProp = puzzleSolutionProp.GetArrayElementAtIndex(i);
@@ -1499,100 +1610,13 @@ public class GridDataSOEditor : Editor
         if (pieceIndexToRemove != -1)
         {
             puzzleSolutionProp.DeleteArrayElementAtIndex(pieceIndexToRemove);
-            UpdatePuzzleState(); // Обов'язкове оновлення стану
-            Repaint(); // !!! ПРИМУСОВЕ ПЕРЕМАЛЬОВУВАННЯ ДЛЯ ВИДАЛЕННЯ ВІЗУАЛУ !!!
+            UpdatePuzzleState();
+            Repaint();
             Debug.Log($"Видалено фігуру на позиції {gridPosition}.");
         }
         else
         {
             Debug.LogWarning($"На клітинці {gridPosition} не знайдено фігури для видалення.");
-        }
-    }
-
-    private void RemovePieceByType(PlacedObjectTypeSO pieceType)
-    {
-        var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
-        int pieceIndexToRemove = -1;
-
-        for (int i = 0; i < puzzleSolutionProp.arraySize; i++)
-        {
-            var pieceDataProp = puzzleSolutionProp.GetArrayElementAtIndex(i);
-            var currentPieceType = (PlacedObjectTypeSO)pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue;
-            if (currentPieceType == pieceType)
-            {
-                pieceIndexToRemove = i;
-                break;
-            }
-        }
-
-        if (pieceIndexToRemove != -1)
-        {
-            puzzleSolutionProp.DeleteArrayElementAtIndex(pieceIndexToRemove);
-            UpdatePuzzleState();
-        }
-    }
-
-    private void ClearAllPieces()
-    {
-        serializedObject.FindProperty("puzzleSolution").ClearArray();
-        UpdatePuzzleState();
-        Debug.Log("Усі фігури з рішення очищено.");
-    }
-
-    private void FillEmptySpace()
-    {
-        bool[,] currentGrid = new bool[gridDataSO.width, gridDataSO.height];
-        foreach (var cell in gridDataSO.buildableCells)
-        {
-            currentGrid[cell.x, cell.y] = true;
-        }
-
-        var pieceCountsInSolution = new Dictionary<PlacedObjectTypeSO, int>();
-        foreach (var pieceData in gridDataSO.puzzleSolution)
-        {
-            pieceCountsInSolution[pieceData.pieceType] = pieceCountsInSolution.GetValueOrDefault(pieceData.pieceType, 0) + 1;
-            foreach (var pos in pieceData.pieceType.GetGridPositionsList(pieceData.position, pieceData.direction))
-            {
-                if (pos.x >= 0 && pos.x < gridDataSO.width && pos.y >= 0 && pos.y < gridDataSO.height)
-                {
-                    currentGrid[pos.x, pos.y] = false;
-                }
-            }
-        }
-
-        var existingPieceTypes = new HashSet<PlacedObjectTypeSO>(gridDataSO.puzzleSolution.Select(p => p.pieceType));
-        var allAvailableFillers = gridDataSO.availablePieceTypesForGeneration.Where(p => p != null).ToList();
-
-        var priorityFillers = allAvailableFillers.Where(p => !existingPieceTypes.Contains(p)).OrderByDescending(p => p.relativeOccupiedCells.Count).ToList();
-        var otherFillers = allAvailableFillers.Where(p => existingPieceTypes.Contains(p)).OrderByDescending(p => p.relativeOccupiedCells.Count).ToList();
-
-        var combinedFillers = priorityFillers.Concat(otherFillers).ToList();
-
-        var fillStopwatch = Stopwatch.StartNew();
-        List<GridDataSO.GeneratedPieceData> filledPieces = new List<GridDataSO.GeneratedPieceData>();
-
-        // Використовуємо рекурсивне вирішення, але без обов'язкових фігур (required)
-        bool success = SolvePuzzleRecursiveGeneration(currentGrid, filledPieces, new List<PlacedObjectTypeSO>(), combinedFillers, pieceCountsInSolution, fillStopwatch);
-
-        if (success)
-        {
-            Debug.Log($"<color=green>Successfully filled empty space in {fillStopwatch.Elapsed.TotalSeconds:F3} seconds!</color>");
-            var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
-            int initialCount = puzzleSolutionProp.arraySize;
-            for (int i = 0; i < filledPieces.Count; i++)
-            {
-                int newIndex = initialCount + i;
-                puzzleSolutionProp.InsertArrayElementAtIndex(newIndex);
-                var pieceDataProp = puzzleSolutionProp.GetArrayElementAtIndex(newIndex);
-                pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue = filledPieces[i].pieceType;
-                pieceDataProp.FindPropertyRelative("position").vector2IntValue = filledPieces[i].position;
-                pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)filledPieces[i].direction;
-            }
-            UpdatePuzzleState();
-        }
-        else
-        {
-            Debug.LogError("Failed to fill the empty space. No solution found with the available pieces.");
         }
     }
 

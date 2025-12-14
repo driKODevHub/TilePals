@@ -5,15 +5,23 @@ public class GridObject
     private GridXZ<GridObject> grid;
     private int x;
     private int z;
+
+    // Основний слот для Котів, Іграшок, Перешкод
     private PlacedObject placedObject;
+
+    // Додатковий слот для Тулзів (підложок), які розширюють рівень
+    private PlacedObject infrastructureObject;
+
     private bool isBuildable;
+    private bool isLocked; // Чи потребує клітинка розблокування
 
     public GridObject(GridXZ<GridObject> grid, int x, int z)
     {
         this.grid = grid;
         this.x = x;
         this.z = z;
-        this.isBuildable = true; // Default to buildable
+        this.isBuildable = true;
+        this.isLocked = false;
     }
 
     public void SetPlacedObject(PlacedObject placedObject)
@@ -22,15 +30,24 @@ public class GridObject
         grid.TriggerGridObjectChanged(x, z);
     }
 
-    public PlacedObject GetPlacedObject()
+    public void SetInfrastructureObject(PlacedObject infraObject)
     {
-        return placedObject;
+        this.infrastructureObject = infraObject;
+        grid.TriggerGridObjectChanged(x, z);
     }
+
+    public PlacedObject GetPlacedObject() => placedObject;
+    public PlacedObject GetInfrastructureObject() => infrastructureObject;
 
     public void ClearPlacedObject()
     {
-        if (placedObject != null)
-            placedObject = null;
+        placedObject = null;
+        grid.TriggerGridObjectChanged(x, z);
+    }
+
+    public void ClearInfrastructureObject()
+    {
+        infrastructureObject = null;
         grid.TriggerGridObjectChanged(x, z);
     }
 
@@ -40,42 +57,44 @@ public class GridObject
         grid.TriggerGridObjectChanged(x, z);
     }
 
+    public void SetLocked(bool locked)
+    {
+        isLocked = locked;
+        grid.TriggerGridObjectChanged(x, z);
+    }
+
+    public bool IsLocked() => isLocked;
+
     public bool CanBuild()
     {
-        return placedObject == null && isBuildable;
+        // Можна будувати (ставити кота), якщо:
+        // 1. Основний слот порожній
+        // 2. Клітинка помічена як buildable
+        // 3. Клітинка НЕ заблокована (або розблокована тулзом)
+        return placedObject == null && isBuildable && !isLocked;
     }
 
-    public bool IsOccupied()
+    // Перевірка, чи можна поставити Тулз (розблоковувач)
+    public bool CanPlaceInfrastructure()
     {
-        return placedObject != null;
+        // Тулз можна ставити, якщо тут ще немає іншого тулза і клітинка заблокована
+        return infrastructureObject == null && isLocked;
     }
 
-    public bool IsBuildable()
-    {
-        return isBuildable;
-    }
+    public bool IsOccupied() => placedObject != null;
+    public bool IsBuildable() => isBuildable;
+    public bool HasInfrastructure() => infrastructureObject != null;
 
-    public Vector2Int GetGridPosition()
-    {
-        return new Vector2Int(x, z);
-    }
+    public Vector2Int GetGridPosition() => new Vector2Int(x, z);
 
-    // Метод ToString(), перенесений з GridBuildingSystem
     public override string ToString()
     {
-        string colorTag = placedObject != null ? "<color=red>" : (isBuildable ? "<color=white>" : "<color=black>");
+        string content = "";
+        if (placedObject != null) content += $"<color=red>{placedObject.name}</color>\n";
+        if (infrastructureObject != null) content += $"<color=green>[{infrastructureObject.name}]</color>\n";
 
-        string objectInfo = "";
-        if (placedObject != null)
-        {
-            string objectName = placedObject.name;
-            if (objectName.EndsWith("(Clone)"))
-            {
-                objectName = objectName.Substring(0, objectName.Length - "(Clone)".Length);
-            }
-            objectInfo = $"\n\n<size=40>{objectName}</size>";
-        }
+        string status = isLocked ? "<color=orange>LOCKED</color>" : (isBuildable ? "OK" : "X");
 
-        return $"{colorTag}<size=50>{x}, {z}</size>{objectInfo}</color>";
+        return $"{x}, {z}\n{status}\n{content}";
     }
 }

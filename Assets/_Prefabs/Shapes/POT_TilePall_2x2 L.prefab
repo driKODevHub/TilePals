@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1422113531561620353
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5448211182377249337}
+  m_Layer: 7
+  m_Name: ItemHoldPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 2974397684917235467, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5448211182377249337
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1422113531561620353}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.00000019733845, y: 0.043343924, z: 0.000000074040116, w: 0.9990603}
+  m_LocalPosition: {x: -0.00035, y: 0.00112, z: -0.00435}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 864712951470938431}
+  m_LocalEulerAnglesHint: {x: 0, y: 4.968, z: 0}
 --- !u!1 &7796813191736427576
 GameObject:
   m_ObjectHideFlags: 0
@@ -343,7 +374,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 2150554327006069679, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
+      insertIndex: 0
+      addedObject: {fileID: 5448211182377249337}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 64b400bef5c77594286f9bed892f73c2, type: 3}
 --- !u!4 &864712951470938431 stripped
@@ -633,6 +667,10 @@ PrefabInstance:
       propertyPath: pieceTypeSO
       value: 
       objectReference: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: attachmentPoint
+      value: 
+      objectReference: {fileID: 5448211182377249337}
     - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: outlineSkinnedMeshRenderers.Array.size
       value: 9

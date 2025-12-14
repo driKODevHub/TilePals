@@ -31,6 +31,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4605171191979401752}
   m_LocalEulerAnglesHint: {x: -89.98, y: 0, z: 180}
+--- !u!1 &1041252980639103977
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 469898499212525806}
+  m_Layer: 7
+  m_Name: ItemHoldPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 2974397684917235467, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &469898499212525806
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1041252980639103977}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.00149, z: 0.0027}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8056422891932118546}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2993146300491880103
 GameObject:
   m_ObjectHideFlags: 0
@@ -465,6 +496,9 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -1779161087445500450, guid: 8770d1b15aafaf84d8be53353c245a30, type: 3}
+      insertIndex: 0
+      addedObject: {fileID: 469898499212525806}
     - targetCorrespondingSourceObject: {fileID: 8306139701798937719, guid: 8770d1b15aafaf84d8be53353c245a30, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1173866558215917517}
@@ -975,6 +1009,10 @@ PrefabInstance:
       propertyPath: pieceTypeSO
       value: 
       objectReference: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: attachmentPoint
+      value: 
+      objectReference: {fileID: 469898499212525806}
     - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: outlineSkinnedMeshRenderers.Array.size
       value: 8

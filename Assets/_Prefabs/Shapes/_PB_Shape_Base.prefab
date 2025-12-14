@@ -248,6 +248,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pieceTypeSO: {fileID: 0}
   facialController: {fileID: 8371808012640910952}
+  attachmentPoint: {fileID: 0}
 --- !u!114 &1603072008526361954
 MonoBehaviour:
   m_ObjectHideFlags: 0

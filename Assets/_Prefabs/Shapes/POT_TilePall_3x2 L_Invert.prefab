@@ -31,6 +31,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8721148935675110966}
   m_LocalEulerAnglesHint: {x: -89.98, y: 0, z: 180}
+--- !u!1 &5966623253914580996
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 516428325725494688}
+  m_Layer: 7
+  m_Name: ItemHoldPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 2974397684917235467, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &516428325725494688
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5966623253914580996}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.00067, y: 0.00293, z: 0.00369}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4376973487221585350}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7059997863176862847
 GameObject:
   m_ObjectHideFlags: 0
@@ -567,6 +598,9 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -6224729400028734399, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+      insertIndex: 0
+      addedObject: {fileID: 516428325725494688}
     - targetCorrespondingSourceObject: {fileID: -5089347184313971125, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       insertIndex: 0
       addedObject: {fileID: 6384624048745536560}
@@ -1017,6 +1051,10 @@ PrefabInstance:
       propertyPath: pieceTypeSO
       value: 
       objectReference: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
+    - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: attachmentPoint
+      value: 
+      objectReference: {fileID: 516428325725494688}
     - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: outlineSkinnedMeshRenderers.Array.size
       value: 9

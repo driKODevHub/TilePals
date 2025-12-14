@@ -21,15 +21,12 @@ public class PuzzleManager : MonoBehaviour
     [SerializeField] private Material invalidPlacementMaterial;
 
     [Header("Physics Throw Settings")]
-    [Tooltip("Множник сили кидка для фізичних об'єктів.")]
-    [SerializeField] private float throwForceMultiplier = 5f;
-    [SerializeField] private float maxThrowVelocity = 20f;
+    [SerializeField] private float throwForceMultiplier = 0.5f;
+    [SerializeField] private float maxThrowVelocity = 15f;
+    [SerializeField] private float minThrowVelocity = 2f;
 
     [Header("Interaction Settings")]
-    [Tooltip("Мінімальна відстань (у пікселях), яку треба пройти мишкою з затиснутою кнопкою, щоб це вважалося Петінгом.")]
     [SerializeField] private float dragThreshold = 20f;
-
-    [Tooltip("Максимальний час (у секундах) для швидкого кліку.")]
     [SerializeField] private float clickTimeThreshold = 0.25f;
 
     [Header("Layers")]
@@ -40,27 +37,23 @@ public class PuzzleManager : MonoBehaviour
     private PuzzlePiece _heldPiece;
     private PuzzlePiece _hoveredPiece;
 
-    // Interaction State
     private PuzzlePiece _potentialInteractionPiece;
     private Vector2 _clickStartPos;
     private float _clickStartTime;
     private bool _isPettingActive;
 
-    // Logic Variables
     private Vector3 _initialPiecePosition;
     private Quaternion _initialPieceRotation;
     private bool _isLevelComplete = false;
     private List<PuzzlePiece> _piecesBeingFlownOver = new List<PuzzlePiece>();
     private List<PiecePersonality> _allPersonalities = new List<PiecePersonality>();
 
-    // Mouse Velocity Calculation
+    // Mouse Velocity
     private Vector2 _lastMousePos;
-    private Vector3 _worldMousePos;
     private Vector3 _lastWorldMousePos;
-    private Vector3 _currentThrowVelocity; // Вектор швидкості для кидка
+    private Vector3 _currentThrowVelocity;
     private float _currentMouseSpeed;
 
-    // --- SNAP STATE TRACKING ---
     private Vector2Int? _lastSnappedGridOrigin = null;
 
     public event Action<PuzzlePiece> OnPiecePickedUp;
@@ -117,12 +110,6 @@ public class PuzzleManager : MonoBehaviour
     {
         CalculateMouseVelocity();
 
-        // Use Item Input (Right Click або клавіша) - простий приклад
-        if (Input.GetMouseButtonDown(1)) // Right Click
-        {
-            TryUseHoveredItem();
-        }
-
         if (_heldPiece == null)
         {
             HandleHoverLogic();
@@ -139,13 +126,11 @@ public class PuzzleManager : MonoBehaviour
     {
         if (inputReader == null) return;
 
-        // 2D Screen Velocity
         Vector2 currentPos = inputReader.MousePosition;
         float dist = (currentPos - _lastMousePos).magnitude;
         _currentMouseSpeed = dist / Time.deltaTime;
         _lastMousePos = currentPos;
 
-        // 3D World Velocity (для кидка)
         Ray ray = Camera.main.ScreenPointToRay(currentPos);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
         {
@@ -153,18 +138,9 @@ public class PuzzleManager : MonoBehaviour
             if (_lastWorldMousePos != Vector3.zero)
             {
                 Vector3 velocity = (currentWorldPos - _lastWorldMousePos) / Time.deltaTime;
-                // Згладжування вектора швидкості для меншої дриганини
                 _currentThrowVelocity = Vector3.Lerp(_currentThrowVelocity, velocity, Time.deltaTime * 10f);
             }
             _lastWorldMousePos = currentWorldPos;
-        }
-    }
-
-    private void TryUseHoveredItem()
-    {
-        if (_hoveredPiece != null && ItemUsageManager.Instance != null)
-        {
-            ItemUsageManager.Instance.TryUseItem(_hoveredPiece);
         }
     }
 
@@ -174,28 +150,54 @@ public class PuzzleManager : MonoBehaviour
     {
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
         if (_isLevelComplete) return;
-
         if (_potentialInteractionPiece != null) return;
 
         Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
-        // Враховуємо і шар фігур, і шар фізичних предметів (якщо вони різні, але зазвичай один)
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
+        RaycastHit[] hits = Physics.RaycastAll(ray, 100f, pieceLayer);
+        PuzzlePiece bestCandidate = null;
+
+        if (hits.Length > 0)
         {
-            PuzzlePiece piece = hit.collider.GetComponentInParent<PuzzlePiece>();
-            if (piece != _hoveredPiece)
+            float bestScore = -1f;
+
+            foreach (var hit in hits)
             {
-                if (_hoveredPiece != null) _hoveredPiece.SetOutline(false);
-                _hoveredPiece = piece;
-                if (_hoveredPiece != null) _hoveredPiece.SetOutline(true);
+                PuzzlePiece p = hit.collider.GetComponentInParent<PuzzlePiece>();
+                if (p == null) continue;
+
+                float score = 0f;
+                var cat = p.PieceTypeSO.category;
+
+                if (p.transform.parent != null && p.transform.parent.GetComponentInParent<PuzzlePiece>() != null)
+                {
+                    score = 100f; // У роті/пасажир - макс пріоритет
+                }
+                else if (cat == PlacedObjectTypeSO.ItemCategory.Toy ||
+                         cat == PlacedObjectTypeSO.ItemCategory.Food ||
+                         cat == PlacedObjectTypeSO.ItemCategory.Tool)
+                {
+                    score = 50f;
+                }
+                else
+                {
+                    score = 10f;
+                }
+
+                score -= hit.distance * 0.1f;
+
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestCandidate = p;
+                }
             }
         }
-        else
+
+        if (bestCandidate != _hoveredPiece)
         {
-            if (_hoveredPiece != null)
-            {
-                _hoveredPiece.SetOutline(false);
-                _hoveredPiece = null;
-            }
+            if (_hoveredPiece != null) _hoveredPiece.SetOutline(false);
+            _hoveredPiece = bestCandidate;
+            if (_hoveredPiece != null) _hoveredPiece.SetOutline(true);
         }
     }
 
@@ -203,11 +205,25 @@ public class PuzzleManager : MonoBehaviour
     {
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
         if (_isLevelComplete) return;
-
         if (Keyboard.current != null && Keyboard.current.altKey.isPressed) return;
 
         if (_heldPiece == null && _hoveredPiece != null)
         {
+            // Перевірка: чи можна підняти (специфічно для тулзів)
+            if (GridBuildingSystem.Instance != null)
+            {
+                // Якщо це Тулз, перевіряємо чи можна його взяти (або з котами, або без)
+                if (_hoveredPiece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
+                {
+                    if (!GridBuildingSystem.Instance.CanPickUpToolWithPassengers(_hoveredPiece, out _))
+                    {
+                        // Якщо функція повернула false, значить коти стоять "криво" і блокують
+                        if (_hoveredPiece.Visuals != null) _hoveredPiece.Visuals.PlayPlaceFailed();
+                        return;
+                    }
+                }
+            }
+
             _potentialInteractionPiece = _hoveredPiece;
             _clickStartPos = inputReader.MousePosition;
             _clickStartTime = Time.time;
@@ -238,6 +254,7 @@ public class PuzzleManager : MonoBehaviour
     {
         if (_heldPiece != null && !_heldPiece.IsRotating)
         {
+            if (TryGiveHeldItemToHoveredCat()) return;
             TryToPlaceOrDropPiece();
             return;
         }
@@ -250,25 +267,12 @@ public class PuzzleManager : MonoBehaviour
             if (isFastClick)
             {
                 if (_isPettingActive) StopPetting();
-
-                if (_hoveredPiece == _potentialInteractionPiece)
-                {
-                    PickUpPiece(_potentialInteractionPiece);
-                }
+                if (_hoveredPiece == _potentialInteractionPiece) PickUpPiece(_potentialInteractionPiece);
             }
             else
             {
-                if (_isPettingActive)
-                {
-                    StopPetting();
-                }
-                else
-                {
-                    if (_hoveredPiece == _potentialInteractionPiece)
-                    {
-                        PickUpPiece(_potentialInteractionPiece);
-                    }
-                }
+                if (_isPettingActive) StopPetting();
+                else if (_hoveredPiece == _potentialInteractionPiece) PickUpPiece(_potentialInteractionPiece);
             }
 
             _potentialInteractionPiece = null;
@@ -293,94 +297,135 @@ public class PuzzleManager : MonoBehaviour
 
     #endregion
 
-    #region Game Logic (PickUp, Drop, Move)
+    #region Game Logic
+
+    private bool TryGiveHeldItemToHoveredCat()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
+        RaycastHit[] hits = Physics.RaycastAll(ray, 100f, pieceLayer);
+
+        foreach (var hit in hits)
+        {
+            PuzzlePiece targetPiece = hit.collider.GetComponentInParent<PuzzlePiece>();
+            if (targetPiece != null && targetPiece != _heldPiece)
+            {
+                if (targetPiece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Character)
+                {
+                    var personality = targetPiece.GetComponent<PiecePersonality>();
+                    if (personality != null)
+                    {
+                        var itemType = _heldPiece.PieceTypeSO.category;
+                        if (itemType == PlacedObjectTypeSO.ItemCategory.Toy || itemType == PlacedObjectTypeSO.ItemCategory.Food)
+                        {
+                            if (personality.TryReceiveItem(_heldPiece))
+                            {
+                                _heldPiece.SetOutlineLocked(false);
+                                _heldPiece = null;
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     private void PickUpPiece(PuzzlePiece piece)
     {
-        Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
-        Vector3 hitPoint;
-
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
+        if (piece.transform.parent != null)
         {
-            hitPoint = GetSmartClickPosition(piece, hit.point);
-        }
-        else
-        {
-            hitPoint = piece.transform.position;
-        }
-
-        DoPickUpLogic(piece, hitPoint);
-    }
-
-    private Vector3 GetSmartClickPosition(PuzzlePiece piece, Vector3 rawHitPoint)
-    {
-        if (!piece.IsPlaced && !piece.IsOffGrid) return rawHitPoint;
-
-        Vector2Int origin = piece.IsPlaced ? piece.PlacedObjectComponent.Origin : piece.OffGridOrigin;
-        var occupiedCells = piece.PieceTypeSO.GetGridPositionsList(origin, piece.CurrentDirection);
-
-        var grid = GridBuildingSystem.Instance.GetGrid();
-        float cellSize = grid.GetCellSize();
-
-        Vector3 bestCandidate = rawHitPoint;
-        float minDstSq = float.MaxValue;
-
-        foreach (var cell in occupiedCells)
-        {
-            Vector3 cellWorldPos = grid.GetWorldPosition(cell.x, cell.y);
-            Vector3 cellCenter = cellWorldPos + new Vector3(cellSize * 0.5f, 0, cellSize * 0.5f);
-
-            float distSq = (rawHitPoint.x - cellCenter.x) * (rawHitPoint.x - cellCenter.x) +
-                           (rawHitPoint.z - cellCenter.z) * (rawHitPoint.z - cellCenter.z);
-
-            if (distSq < minDstSq)
+            // Якщо це предмет у роті або пасажир
+            PuzzlePiece parentPiece = piece.transform.parent.GetComponentInParent<PuzzlePiece>();
+            if (parentPiece != null)
             {
-                minDstSq = distSq;
-                bestCandidate = cellCenter;
+                // Спочатку пробуємо DetachItem (рот)
+                PuzzlePiece detached = parentPiece.DetachItem();
+
+                // Якщо це не в роті, можливо це пасажир тулза?
+                // Поки що не дозволяємо знімати окремо кота з тулза, який ми несемо?
+                // Або якщо тулз стоїть, ми можемо взяти кота.
+                // GridBuildingSystem це контролює (якщо кіт на гріді, він окремий об'єкт).
+                // Але якщо кіт вже "всередині" тулза (в списку пасажирів), він не на гріді.
+                // В поточній логіці: пасажири з'являються ТІЛЬКИ коли ми несемо тулз. 
+                // Коли тулз ставиться, пасажири стають звичайними об'єктами на гріді.
+                // Тому тут detached буде null для пасажирів, і це ОК.
+
+                if (detached == piece) piece = detached;
             }
         }
-        return bestCandidate;
-    }
 
-    private void DoPickUpLogic(PuzzlePiece piece, Vector3 hitPoint)
-    {
         if (piece == null) return;
         if (lockPiecesOnLevelComplete && _isLevelComplete && piece.IsPlaced) return;
+        if (GridBuildingSystem.Instance == null || GridBuildingSystem.Instance.GetGrid() == null) return;
 
-        if (GridBuildingSystem.Instance == null || GridBuildingSystem.Instance.GetGrid() == null)
+        // --- ЛОГІКА ТУЛЗА З ПАСАЖИРАМИ ---
+        if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid && piece.IsPlaced)
         {
-            Debug.LogError("Grid not initialized!");
-            return;
+            if (GridBuildingSystem.Instance.CanPickUpToolWithPassengers(piece, out List<PuzzlePiece> passengers))
+            {
+                foreach (var passenger in passengers)
+                {
+                    GridBuildingSystem.Instance.RemovePieceFromGrid(passenger);
+                    passenger.SetPlaced(null);
+                    piece.AddPassenger(passenger);
+                }
+            }
+            else
+            {
+                // Не можна підняти (хтось вилазить)
+                if (piece.Visuals != null) piece.Visuals.PlayPlaceFailed();
+                return;
+            }
         }
+        // ---------------------------------
 
         _heldPiece = piece;
         _heldPiece.SetOutlineLocked(true);
-
-        // Вимикаємо фізику при піднятті (стає кінематичним, контролюється кодом)
         _heldPiece.DisablePhysics();
 
         if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayPickup();
 
         _initialPiecePosition = piece.transform.position;
         _initialPieceRotation = piece.transform.rotation;
-
         _lastSnappedGridOrigin = null;
 
-        float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
-        Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection);
-        Vector3 pieceOriginWorld = piece.transform.position - new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
+        Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
+        Vector3 hitPoint = Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer) ? hit.point : piece.transform.position;
 
-        GridBuildingSystem.Instance.GetGrid().GetXZ(hitPoint, out int clickX, out int clickZ);
-        GridBuildingSystem.Instance.GetGrid().GetXZ(pieceOriginWorld, out int originX, out int originZ);
+        if (piece.IsPlaced || piece.IsOffGrid)
+        {
+            float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
+            Vector2Int origin = Vector2Int.zero;
+            if (piece.IsPlaced)
+            {
+                origin = piece.PlacedObjectComponent != null ? piece.PlacedObjectComponent.Origin : piece.InfrastructureComponent.Origin;
+            }
+            else
+            {
+                origin = piece.OffGridOrigin;
+            }
 
-        piece.ClickOffset = new Vector2Int(clickX - originX, clickZ - originZ);
+            Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection);
+            Vector3 pieceOriginWorld = piece.transform.position - new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
+
+            GridBuildingSystem.Instance.GetGrid().GetXZ(hitPoint, out int clickX, out int clickZ);
+            GridBuildingSystem.Instance.GetGrid().GetXZ(pieceOriginWorld, out int originX, out int originZ);
+
+            piece.ClickOffset = new Vector2Int(clickX - originX, clickZ - originZ);
+        }
+        else
+        {
+            piece.ClickOffset = Vector2Int.zero;
+        }
 
         if (piece.IsPlaced)
         {
             GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
             piece.SetPlaced(null);
+            piece.SetInfrastructure(null);
         }
-        else
+        else if (piece.IsOffGrid)
         {
             OffGridManager.RemovePiece(piece);
             piece.SetOffGrid(false);
@@ -398,7 +443,6 @@ public class PuzzleManager : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
         {
             if (GridBuildingSystem.Instance == null) return;
-
             var grid = GridBuildingSystem.Instance.GetGrid();
             if (grid == null) return;
 
@@ -412,16 +456,13 @@ public class PuzzleManager : MonoBehaviour
             Vector2Int rotationOffset = _heldPiece.PieceTypeSO.GetRotationOffset(_heldPiece.CurrentDirection);
             Vector3 rotationVisualOffset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
 
-            // --- ЛОГІКА ПОЗИЦІОНУВАННЯ ---
             if (isMouseOverGrid || !smoothMovementOffGrid)
             {
-                // Снепінг до гріда
                 Vector3 snappedGridPos = grid.GetWorldPosition(logicalOrigin.x, logicalOrigin.y);
                 targetPosition = snappedGridPos + rotationVisualOffset;
             }
             else
             {
-                // Вільний рух off-grid
                 Vector3 mouseWorldPos = hit.point;
                 mouseWorldPos.y = 0;
                 Vector3 clickOffsetVector = new Vector3(_heldPiece.ClickOffset.x, 0, _heldPiece.ClickOffset.y) * cellSize;
@@ -432,11 +473,9 @@ public class PuzzleManager : MonoBehaviour
 
             targetPosition.y = pieceHeightWhenHeld;
 
-            // --- ЗАСТОСУВАННЯ РУХУ ---
             if (_heldPiece.Movement != null)
             {
                 _heldPiece.Movement.SetTargetPosition(targetPosition);
-
                 if (_heldPiece.Movement.CurrentVelocity > shakenVelocityThreshold)
                 {
                     PersonalityEventManager.RaisePieceShaken(_heldPiece, _heldPiece.Movement.CurrentVelocity);
@@ -447,9 +486,7 @@ public class PuzzleManager : MonoBehaviour
                 _heldPiece.transform.position = Vector3.Lerp(_heldPiece.transform.position, targetPosition, Time.deltaTime * 25f);
             }
 
-            // --- ПЕРЕВІРКА ВАЛІДНОСТІ ---
             CanPlaceHeldPiece(logicalOrigin, out bool canOnGrid, out bool canOffGrid);
-
             bool isValid = canOnGrid || canOffGrid;
             _heldPiece.SetInvalidPlacementVisual(!isValid);
 
@@ -480,18 +517,30 @@ public class PuzzleManager : MonoBehaviour
 
         CanPlaceHeldPiece(origin, out bool canOnGrid, out bool canOffGrid);
 
-        // 1. Спроба поставити НА ГРІД (снепінг, без фізики)
         if (canOnGrid)
         {
+            // --- ТУТ ЗМІНИ ДЛЯ ПАСАЖИРІВ ---
+            // Команда PlaceCommand виконає постановку Тулза.
+            // Нам треба вручну обробити пасажирів після цього.
+            // Для повноцінного Undo треба складнішу команду, але поки що зробимо базово.
+
             ICommand cmd = new PlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
             if (cmd.Execute())
             {
                 if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayPlaceSuccess();
+
+                if (_heldPiece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
+                {
+                    _heldPiece.SetInfrastructure(_heldPiece.GetComponent<PlacedObject>());
+
+                    // Розпаковуємо пасажирів на грід
+                    PlacePassengersOnGrid(_heldPiece);
+                }
+
                 FinalizeDrop(cmd);
                 CheckForWin();
             }
         }
-        // 2. Спроба кинути ПОЗА ГРІДОМ
         else if (canOffGrid)
         {
             ICommand cmd = new OffGridPlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation);
@@ -501,14 +550,21 @@ public class PuzzleManager : MonoBehaviour
             {
                 if (droppedPiece.Visuals != null) droppedPiece.Visuals.PlayDrop();
 
-                // --- PHYSICS THROW LOGIC ---
-                // Якщо це фізичний об'єкт (м'яч), надаємо йому прискорення
-                if (droppedPiece.PieceTypeSO.usePhysics)
+                // Якщо це тулз з пасажирами, вони залишаються на ньому (в OffGridManager немає поняття стеку, але візуально вони діти)
+                // Оскільки вони діти, вони їздять разом з тулзом.
+
+                float speed = _currentThrowVelocity.magnitude;
+                bool shouldThrow = speed > minThrowVelocity && droppedPiece.PieceTypeSO.usePhysics;
+
+                if (shouldThrow)
                 {
                     Vector3 throwVel = Vector3.ClampMagnitude(_currentThrowVelocity * throwForceMultiplier, maxThrowVelocity);
-                    // Додаємо трохи "вгору", щоб об'єкт не провалювався
                     throwVel.y = Mathf.Abs(throwVel.y) + 2f;
                     droppedPiece.EnablePhysics(throwVel);
+                }
+                else
+                {
+                    if (droppedPiece.PieceTypeSO.usePhysics) droppedPiece.EnablePhysics(Vector3.zero);
                 }
 
                 FinalizeDrop(cmd);
@@ -518,11 +574,65 @@ public class PuzzleManager : MonoBehaviour
         else
         {
             Debug.Log("Invalid placement position.");
-            if (_heldPiece.Visuals != null)
+            if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayPlaceFailed();
+        }
+    }
+
+    // Допоміжний метод для висадки пасажирів
+    private void PlacePassengersOnGrid(PuzzlePiece tool)
+    {
+        if (tool.StoredPassengers.Count == 0) return;
+
+        var grid = GridBuildingSystem.Instance.GetGrid();
+        float cellSize = grid.GetCellSize();
+
+        // 1. Створюємо список, бо будемо змінювати колекцію
+        List<PuzzlePiece> passengers = new List<PuzzlePiece>(tool.StoredPassengers);
+
+        foreach (var p in passengers)
+        {
+            // 2. Обчислюємо світову позицію
+            Vector3 worldPos = p.transform.position;
+            grid.GetXZ(worldPos, out int x, out int z);
+            Vector2Int pOrigin = new Vector2Int(x, z);
+
+            // 3. Обчислюємо коректний Origin фігури (враховуючи її власний офсет повороту)
+            // p.CurrentDirection вже актуальний (бо обертався разом з тулзом)
+            Vector2Int rotOffset = p.PieceTypeSO.GetRotationOffset(p.CurrentDirection);
+
+            // Світова позиція - це візуальний центр (або півот). Нам треба знайти Origin (0,0) клітинки.
+            // Оскільки ми вже "стоїмо" там де треба візуально, найпростіше знайти найближчу клітинку до півота
+            // і відняти візуальне зміщення.
+
+            // Спроба знайти Origin через зворотній розрахунок:
+            // WorldPos = Origin * CellSize + RotOffset * CellSize
+            // Origin * CellSize = WorldPos - RotOffset * CellSize
+            // Origin = (WorldPos / CellSize) - RotOffset
+
+            Vector2Int calculatedOrigin = pOrigin - rotOffset;
+
+            // 4. Реєструємо на гріді
+            if (GridBuildingSystem.Instance.CanPlacePiece(p, calculatedOrigin, p.CurrentDirection))
             {
-                _heldPiece.Visuals.PlayPlaceFailed();
+                // Важливо: PlacePieceOnGrid додає PlacedObject компонент
+                GridBuildingSystem.Instance.PlacePieceOnGrid(p, calculatedOrigin, p.CurrentDirection);
+                p.SetPlaced(p.GetComponent<PlacedObject>());
+
+                // 5. Від'єднуємо від тулза (в ієрархію Level/Pieces)
+                p.transform.SetParent(tool.transform.parent);
+
+                // Вирівнюємо точно по центру клітинки
+                Vector3 finalPos = grid.GetWorldPosition(calculatedOrigin.x, calculatedOrigin.y) +
+                                   new Vector3(rotOffset.x, 0, rotOffset.y) * cellSize;
+                p.UpdateTransform(finalPos, p.transform.rotation);
+            }
+            else
+            {
+                Debug.LogError($"Error placing passenger {p.name} at {calculatedOrigin}. Tool placed, but cat is invalid!");
             }
         }
+
+        tool.StoredPassengers.Clear();
     }
 
     private void FinalizeDrop(ICommand command)
@@ -542,7 +652,6 @@ public class PuzzleManager : MonoBehaviour
         if (_heldPiece != null && !_heldPiece.IsRotating)
         {
             if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayRotate();
-
             float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
             _heldPiece.RotatePiece(clockwise, cellSize);
         }
@@ -590,6 +699,9 @@ public class PuzzleManager : MonoBehaviour
             if (p == null) continue;
             PuzzlePiece piece = p.GetComponent<PuzzlePiece>();
             if (piece == _heldPiece) continue;
+
+            // Ігноруємо пасажирів, які їдуть разом з нами
+            if (_heldPiece.StoredPassengers.Contains(piece)) continue;
 
             Vector3 otherPos = piece.transform.position; otherPos.y = 0;
             if (Vector3.Distance(heldPos, otherPos) < p.GetFlyOverRadius())
