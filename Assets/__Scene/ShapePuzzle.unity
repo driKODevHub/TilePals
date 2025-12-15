@@ -3433,6 +3433,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b199f48cf45a78d4abe98b50233f5ca1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  minFollowOffsetY: 2
+  maxFollowOffsetY: 30
   cinemachineCamera: {fileID: 8434513683717558060}
   enableRotation: 0
   moveSpeed: 15
@@ -3442,6 +3444,8 @@ MonoBehaviour:
   movementSmoothing: 10
   focusSmoothing: 5
   enableBounds: 1
+  limitByFieldOfView: 1
+  viewBoundsMarginFactor: 0.1
   showDebugLogs: 1
   activeGridData: {fileID: 0}
 --- !u!4 &1353730456

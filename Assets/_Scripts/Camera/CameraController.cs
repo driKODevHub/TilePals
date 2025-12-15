@@ -5,8 +5,8 @@ using UnityEngine.EventSystems;
 
 public class CameraController : MonoBehaviour
 {
-    private const float MIN_FOLLOW_Y_OFFSET = 2f;
-    private const float MAX_FOLLOW_Y_OFFSET = 50f;
+    [SerializeField]private float minFollowOffsetY = 2f;
+    [SerializeField]private float maxFollowOffsetY = 50f;
 
     [SerializeField] CinemachineCamera cinemachineCamera;
 
@@ -35,6 +35,12 @@ public class CameraController : MonoBehaviour
     [Header("Bounds Settings")]
     [Tooltip("Вмикає обмеження руху камери.")]
     [SerializeField] private bool enableBounds = true;
+
+    [Tooltip("Якщо увімкнено, межі руху розраховуються динамічно на основі зуму (поля зору), щоб не бачити 'пустоту' за межами карти.")]
+    [SerializeField] private bool limitByFieldOfView = true;
+
+    [Tooltip("Множник відступу від країв при динамічному обмеженні. Збільште, якщо камера бачить за межі карти при віддаленні.")]
+    [SerializeField] private float viewBoundsMarginFactor = 1.0f;
 
     [Header("Debug")]
     [SerializeField] private bool showDebugLogs = true; // Вимкни, коли знайдеш проблему
@@ -140,18 +146,43 @@ public class CameraController : MonoBehaviour
 
     private Vector3 ClampPositionToOBB(Vector3 targetPos, Vector2 center, Vector2 size, float angle)
     {
+        // 1. Calculate Dynamic Margin based on Zoom
+        float marginX = 0f;
+        float marginZ = 0f;
+
+        if (limitByFieldOfView)
+        {
+            // Беремо поточну висоту камери (zoom)
+            float currentHeight = cinemachineFollow.FollowOffset.y;
+
+            // Розраховуємо приблизний радіус видиміості на землі
+            // Чим вище камера -> тим більше ми бачимо -> тим більший відступ треба зробити від краю карти
+            float visibleRadius = currentHeight * viewBoundsMarginFactor;
+
+            // Aspect ratio correction (ширина зазвичай більша за висоту)
+            float aspect = Camera.main != null ? Camera.main.aspect : 1.77f;
+
+            marginX = visibleRadius * aspect; // Ширина
+            marginZ = visibleRadius;          // Висота (глибина)
+        }
+
         Vector3 worldCenter = new Vector3(center.x, 0, center.y);
         Vector3 dir = targetPos - worldCenter;
 
+        // Rotate into local space of the OBB
         Quaternion inverseRot = Quaternion.Euler(0, -angle, 0);
         Vector3 localPos = inverseRot * dir;
 
-        float extentsX = size.x / 2f;
-        float extentsZ = size.y / 2f;
+        // Calculate extents (half-sizes) minus the visual margin
+        // Ми віднімаємо margin, щоб центр камери не міг підійти до краю настільки близько, 
+        // щоб "виглянути" за межі visual bounds.
+        float allowedExtentX = Mathf.Max(0, (size.x / 2f) - marginX);
+        float allowedExtentZ = Mathf.Max(0, (size.y / 2f) - marginZ);
 
-        localPos.x = Mathf.Clamp(localPos.x, -extentsX, extentsX);
-        localPos.z = Mathf.Clamp(localPos.z, -extentsZ, extentsZ);
+        localPos.x = Mathf.Clamp(localPos.x, -allowedExtentX, allowedExtentX);
+        localPos.z = Mathf.Clamp(localPos.z, -allowedExtentZ, allowedExtentZ);
 
+        // Rotate back to world space
         Quaternion rot = Quaternion.Euler(0, angle, 0);
         Vector3 resultPos = worldCenter + (rot * localPos);
 
@@ -170,24 +201,20 @@ public class CameraController : MonoBehaviour
 
     private void HandleDragPan()
     {
-        // 1. Перевіряємо, чи затиснута ЛКМ
         if (!IsLeftMouseButtonHeld())
         {
             isDragPanning = false;
             return;
         }
 
-        // 2. Якщо ми ще не почали драг (тільки натиснули), перевіряємо чи можна почати
         if (!isDragPanning)
         {
-            // ПЕРЕВІРКА 1: UI
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             {
                 if (showDebugLogs) Debug.Log("Camera Drag Blocked: Pointer is over UI");
                 return;
             }
 
-            // ПЕРЕВІРКА 2: Взаємодія з грою (кіт, тулз)
             if (PuzzleManager.Instance != null && PuzzleManager.Instance.IsInteracting)
             {
                 if (showDebugLogs) Debug.Log("Camera Drag Blocked: Interacting with Puzzle Piece");
@@ -195,7 +222,6 @@ public class CameraController : MonoBehaviour
             }
         }
 
-        // 3. Логіка драгу
         isDragPanning = true;
         _isFocusing = false;
 
@@ -248,11 +274,10 @@ public class CameraController : MonoBehaviour
             _isFocusing = false;
             float zoomIncreaseAmount = 1f;
             targetFollowOffset.y += zoomAmount * zoomIncreaseAmount;
-            targetFollowOffset.y = Mathf.Clamp(targetFollowOffset.y, MIN_FOLLOW_Y_OFFSET, MAX_FOLLOW_Y_OFFSET);
+            targetFollowOffset.y = Mathf.Clamp(targetFollowOffset.y, minFollowOffsetY, maxFollowOffsetY);
         }
     }
 
-    // --- HELPER METHODS ---
     private bool IsLeftMouseButtonHeld()
     {
 #if ENABLE_INPUT_SYSTEM

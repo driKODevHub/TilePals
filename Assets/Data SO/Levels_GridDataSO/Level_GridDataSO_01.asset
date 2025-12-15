@@ -32,8 +32,9 @@ MonoBehaviour:
   - {x: 3, y: 1}
   - {x: 3, y: 2}
   - {x: 3, y: 3}
-  cameraBoundsCenter: {x: 3.2906642, y: 8.8282385}
-  cameraBoundsSize: {x: 2.9190042, y: 2.924864}
+  lockedCells: []
+  cameraBoundsCenter: {x: 3.4742436, y: 10.363298}
+  cameraBoundsSize: {x: 17.283184, y: 14.711206}
   cameraBoundsYRotation: 0
   boardToSpawnPadding: 1
   pieceToPiecePadding: 1
@@ -52,26 +53,32 @@ MonoBehaviour:
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 0.4, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.2, g: 0.8, b: 0.6, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.6, b: 0.2, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 1, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.6, g: 0.4, b: 1, a: 1}
     maxCount: 1
+    isObstacle: 0
+  levelItems: []
   puzzlePieces:
   - {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
   - {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
