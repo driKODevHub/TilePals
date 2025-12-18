@@ -779,6 +779,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: POT_TilePall_2x2 L
       objectReference: {fileID: 0}
+    - target: {fileID: 8586401819141459116, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.274
+      objectReference: {fileID: 0}
+    - target: {fileID: 8586401819141459116, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.668
+      objectReference: {fileID: 0}
+    - target: {fileID: 8586401819141459116, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.45
+      objectReference: {fileID: 0}
     - target: {fileID: 8696789976044802504, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: managedReferences[4777019893878620234].BoundParticleSystem
       value: 

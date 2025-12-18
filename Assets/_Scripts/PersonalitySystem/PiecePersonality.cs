@@ -475,7 +475,7 @@ public class PiecePersonality : MonoBehaviour
                         if (hasNeighbors)
                         {
                             PiecePersonality targetPiece = allPieces[Random.Range(0, allPieces.Count)];
-                            facialController.LookAt(targetPiece.transform.position);
+                            facialController.LookAt(targetPiece.GetFocusPoint().transform.position);
                         }
                         break;
 
@@ -493,4 +493,7 @@ public class PiecePersonality : MonoBehaviour
             _isLookingRandomly = false;
         }
     }
+
+    public Transform GetFocusPoint() => facialController != null ? facialController.GetFacialFocusPoint() : transform;
+
 }

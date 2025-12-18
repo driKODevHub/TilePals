@@ -43,6 +43,7 @@ public class FacialExpressionController : MonoBehaviour
     public class FaceRig
     {
         [Header("References")]
+        public Transform facialFocusPoint;
         public Transform referencePivot; // Точка, відносно якої рухаємось (центр голови або носа)
         public Transform rootBone;       // Кістка, яку рухаємо (мордочка)
 
@@ -373,6 +374,9 @@ public class FacialExpressionController : MonoBehaviour
         // Важливо: rootBone.position = pivot + localOffset (rotated by pivot)
         rig.rootBone.position = rig.referencePivot.TransformPoint(rig.currentLocalPosition);
     }
+
+    public Transform GetFacialFocusPoint() => faceRig.facialFocusPoint;
+    
 
     // ===================================================================================
     // LOGIC: BLINKING
