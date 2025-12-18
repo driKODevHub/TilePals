@@ -33,8 +33,8 @@ MonoBehaviour:
   - {x: 3, y: 2}
   - {x: 3, y: 3}
   lockedCells: []
-  cameraBoundsCenter: {x: 3.4742436, y: 10.363298}
-  cameraBoundsSize: {x: 17.283184, y: 14.711206}
+  cameraBoundsCenter: {x: 2.3010714, y: 8.713812}
+  cameraBoundsSize: {x: 17.283184, y: 11.412235}
   cameraBoundsYRotation: 0
   boardToSpawnPadding: 1
   pieceToPiecePadding: 1

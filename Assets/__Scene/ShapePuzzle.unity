@@ -3446,7 +3446,7 @@ MonoBehaviour:
   enableBounds: 1
   limitByFieldOfView: 1
   viewBoundsMarginFactor: 0.1
-  showDebugLogs: 1
+  showDebugLogs: 0
   activeGridData: {fileID: 0}
 --- !u!4 &1353730456
 Transform:
