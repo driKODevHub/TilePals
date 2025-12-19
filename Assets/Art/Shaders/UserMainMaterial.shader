@@ -211,6 +211,7 @@ Shader "Toony Colors Pro 2/User/MainMaterial"
 
 			#pragma multi_compile _ LIGHTMAP_SHADOW_MIXING
 			#pragma multi_compile _ SHADOWS_SHADOWMASK
+			#pragma multi_compile_fragment _ _LIGHT_COOKIES
 			#pragma multi_compile _ _CLUSTER_LIGHT_LOOP
 			#include_with_pragmas "Packages/com.unity.render-pipelines.core/ShaderLibrary/FoveatedRenderingKeywords.hlsl"
 
@@ -872,5 +873,5 @@ Shader "Toony Colors Pro 2/User/MainMaterial"
 	CustomEditor "ToonyColorsPro.ShaderGenerator.MaterialInspector_SG2"
 }
 
-/* TCP_DATA u config(ver:"2.9.20";unity:"6000.3.0f1";tmplt:"SG2_Template_URP";features:list["UNITY_5_4","UNITY_5_5","UNITY_5_6","UNITY_2017_1","UNITY_2018_1","UNITY_2018_2","UNITY_2018_3","UNITY_2019_1","UNITY_2019_2","UNITY_2019_3","UNITY_2019_4","UNITY_2020_1","UNITY_2021_1","UNITY_2021_2","UNITY_2022_2","UNITY_6000_2","UNITY_6000_1","UNITY_6000_0","ENABLE_DEPTH_NORMALS_PASS","ENABLE_FORWARD_PLUS","TEXBLEND_NORMALIZE","SHADOW_LINE","SHADOW_LINE_CRISP_AA","ALBEDO_HSV_SATURATION","TEXTURED_THRESHOLD","TT_SHADER_FEATURE","DIFFUSE_TINT","DIFFUSE_TINT_MASK","OUTLINE_URP_FEATURE","OUTLINE_CONSTANT_SIZE","WRAPPED_LIGHTING_HALF","RIM","SPECULAR_NO_ATTEN","SPECULAR_SHADER_FEATURE","SPECULAR","SPEC_LEGACY","SPECULAR_TOON_BAND","TEMPLATE_LWRP"];flags:list[];flags_extra:dict[];keywords:dict[RENDER_TYPE="Opaque",RampTextureDrawer="[TCP2Gradient]",RampTextureLabel="Ramp Texture",SHADER_TARGET="3.0",RIM_LABEL="Rim Lighting"];shaderProperties:list[];customTextures:list[];codeInjection:codeInjection(injectedFiles:list[];mark:False);matLayers:list[]) */
-/* TCP_HASH 8ccb749b9afa90e1a8ee18b15d10ba5c */
+/* TCP_DATA u config(ver:"2.9.20";unity:"6000.3.0f1";tmplt:"SG2_Template_URP";features:list["UNITY_5_4","UNITY_5_5","UNITY_5_6","UNITY_2017_1","UNITY_2018_1","UNITY_2018_2","UNITY_2018_3","UNITY_2019_1","UNITY_2019_2","UNITY_2019_3","UNITY_2019_4","UNITY_2020_1","UNITY_2021_1","UNITY_2021_2","UNITY_2022_2","UNITY_6000_2","UNITY_6000_1","UNITY_6000_0","ENABLE_DEPTH_NORMALS_PASS","ENABLE_FORWARD_PLUS","TEXBLEND_NORMALIZE","SHADOW_LINE","SHADOW_LINE_CRISP_AA","ALBEDO_HSV_SATURATION","TEXTURED_THRESHOLD","TT_SHADER_FEATURE","DIFFUSE_TINT","DIFFUSE_TINT_MASK","OUTLINE_URP_FEATURE","OUTLINE_CONSTANT_SIZE","WRAPPED_LIGHTING_HALF","RIM","SPECULAR_NO_ATTEN","SPECULAR_SHADER_FEATURE","SPECULAR","SPEC_LEGACY","SPECULAR_TOON_BAND","TEMPLATE_LWRP","ENABLE_COOKIES"];flags:list[];flags_extra:dict[];keywords:dict[RENDER_TYPE="Opaque",RampTextureDrawer="[TCP2Gradient]",RampTextureLabel="Ramp Texture",SHADER_TARGET="3.0",RIM_LABEL="Rim Lighting"];shaderProperties:list[];customTextures:list[];codeInjection:codeInjection(injectedFiles:list[];mark:False);matLayers:list[]) */
+/* TCP_HASH 805cae6aa526e8857fb04dfed767e93c */
