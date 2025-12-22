@@ -658,7 +658,6 @@ MonoBehaviour:
     referencePivot: {fileID: 0}
     eyeBone: {fileID: 0}
     blinkObject: {fileID: 0}
-    scaleMultiplier: 0.001
     useEllipticalClamp: 1
     limitLeft: 0.5
     limitRight: 0.5
@@ -666,11 +665,12 @@ MonoBehaviour:
     limitDown: 0.5
     restPosition: {x: 0, y: 0}
     currentWorldRotation: {x: 0, y: 0, z: 0, w: 0}
+    autoScale: 0
+    scaleMultiplier: 0.001
   rightEye:
     referencePivot: {fileID: 0}
     eyeBone: {fileID: 0}
     blinkObject: {fileID: 0}
-    scaleMultiplier: 0.001
     useEllipticalClamp: 1
     limitLeft: 0.5
     limitRight: 0.5
@@ -678,14 +678,15 @@ MonoBehaviour:
     limitDown: 0.5
     restPosition: {x: 0, y: 0}
     currentWorldRotation: {x: 0, y: 0, z: 0, w: 0}
+    autoScale: 0
+    scaleMultiplier: 0.001
   faceRig:
-    facialFocusPoint: {fileID: 8586401819141459116}
     referencePivot: {fileID: 0}
     rootBone: {fileID: 0}
+    facialFocusPoint: {fileID: 8586401819141459116}
     facingDirection: 0
     moveSensitivity: 1
     smoothTime: 0.2
-    scaleMultiplier: 0.001
     useEllipticalClamp: 1
     limitLeft: 0.9
     limitRight: 0.9
@@ -694,10 +695,13 @@ MonoBehaviour:
     restPosition: {x: 0, y: 0}
     currentLocalPosition: {x: 0, y: 0, z: 0}
     currentVelocity: {x: 0, y: 0, z: 0}
+    autoScale: 0
+    scaleMultiplier: 0.001
   blinkIntervalMin: 4
   blinkIntervalMax: 12
   blinkDuration: 0.1
   hideObjectOnBlink: 1
+  featureBindings: []
   gizmoScaleRest: 0.0005
   gizmoScaleCurrent: 0.02
   showGizmos: 1

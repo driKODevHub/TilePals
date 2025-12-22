@@ -1,18 +1,16 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// ScriptableObject, що описує повну емоцію, комбінуючи стани різних рис обличчя.
+/// ScriptableObject, СЏРєРёР№ РІРёР·РЅР°С‡Р°С” РїСЂРѕС„С–Р»СЊ РµРјРѕС†С–С—.
+/// Р—РІ'СЏР·СѓС” РЅР°Р·РІСѓ РµРјРѕС†С–С— Р· РЅР°Р±РѕСЂРѕРј РІС–Р·СѓР°Р»СЊРЅРёС… СЃС‚Р°РЅС–РІ (CatFeatureType).
 /// </summary>
 [CreateAssetMenu(fileName = "E_", menuName = "Puzzle/Personality/Emotion Profile")]
 public class EmotionProfileSO : ScriptableObject
 {
-    [Header("Налаштування Емоції")]
-    public string emotionName = "Нова емоція";
+    [Header("Р’С–Р·СѓР°Р»СЊРЅС– РЅР°Р»Р°С€С‚СѓРІР°РЅРЅСЏ")]
+    public string emotionName = "РќР°Р·РІР° РµРјРѕС†С–С—";
 
-    [Tooltip("Стан очей для цієї емоції (асет EyeStateSO).")]
-    public EyeStateSO eyeState;
-
-    [Tooltip("Список станів інших рис обличчя (рот, брови і т.д.). Перетягніть сюди асети FeatureStateSO.")]
+    [Tooltip("РЎРїРёСЃРѕРє С‡Р°СЃС‚РёРЅ РѕР±Р»РёС‡С‡СЏ, СЏРєС– Р°РєС‚РёРІСѓСЋС‚СЊСЃСЏ РґР»СЏ С†С–С”С— РµРјРѕС†С–С—.")]
     public List<FeatureStateSO> featureStates;
 }

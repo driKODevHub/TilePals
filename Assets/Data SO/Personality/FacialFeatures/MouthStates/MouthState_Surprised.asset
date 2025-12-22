@@ -12,5 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5c2c392ef5d77f488599aecd558acc7, type: 3}
   m_Name: MouthState_Surprised
   m_EditorClassIdentifier: 
-  feature: 0
-  expressionSprite: {fileID: 21300000, guid: 532540ab4fa339a4a912a63c01e21579, type: 3}
+  featureType: 1

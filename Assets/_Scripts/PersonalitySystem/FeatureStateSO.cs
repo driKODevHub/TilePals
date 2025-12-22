@@ -1,22 +1,12 @@
-using UnityEngine;
+п»їusing UnityEngine;
 
 /// <summary>
-/// Універсальний ScriptableObject для опису стану однієї риси обличчя (рот, брови і т.д.).
-/// Тепер використовує спрайти замість текстур.
+/// РћРєСЂРµРјРёР№ РІС–Р·СѓР°Р»СЊРЅРёР№ СЃС‚Р°РЅ РґР»СЏ С‡Р°СЃС‚РёРЅРё РѕР±Р»РёС‡С‡СЏ (РЅР°РїСЂРёРєР»Р°Рґ, "Р РѕС‚ СЃРјС–С”С‚СЊСЃСЏ" Р°Р±Рѕ "РћС‡С– Р·Р°РїР»СЋС‰РµРЅС–").
+/// Р’РёР±РёСЂР°С”С‚СЊСЃСЏ С‡РµСЂРµР· РіР»РѕР±Р°Р»СЊРЅРёР№ Enum CatFeatureType.
 /// </summary>
 [CreateAssetMenu(fileName = "FeatureState_", menuName = "Puzzle/Personality/Feature State")]
 public class FeatureStateSO : ScriptableObject
 {
-    public enum FeatureType
-    {
-        Mouth,
-        Brows,
-        Blush
-    }
-
-    [Tooltip("Тип риси, яку описує цей стан (напр., Рот).")]
-    public FeatureType feature;
-
-    [Tooltip("Спрайт для цього конкретного виразу (напр., спрайт усмішки).")]
-    public Sprite expressionSprite;
+    [Tooltip("Р’РёР±РµСЂС–С‚СЊ С‚РёРї С‡Р°СЃС‚РёРЅРё РѕР±Р»РёС‡С‡СЏ Р· РіР»РѕР±Р°Р»СЊРЅРѕРіРѕ СЃРїРёСЃРєСѓ.")]
+    public CatFeatureType featureType;
 }
