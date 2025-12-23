@@ -451,15 +451,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   neutralEmotion: {fileID: 11400000, guid: 2912e4acf3f0a434781bce12b9ec625c, type: 2}
-  sleepingEmotion: {fileID: 11400000, guid: 2912e4acf3f0a434781bce12b9ec625c, type: 2}
-  pickedUpEmotion: {fileID: 11400000, guid: bf4c2b01c4f9c5b4fad1ce32570500f8, type: 2}
-  droppedEmotion: {fileID: 11400000, guid: bf4c2b01c4f9c5b4fad1ce32570500f8, type: 2}
-  shakenEmotion: {fileID: 11400000, guid: 6842745b8c3fadd40bbc5c2aee971caa, type: 2}
+  sleepingEmotion: {fileID: 11400000, guid: a62e4a4c5246934479f6d9fab611b709, type: 2}
+  pickedUpEmotion: {fileID: 11400000, guid: d01bfbdbebae9744a8de50451b319b23, type: 2}
+  droppedEmotion: {fileID: 11400000, guid: 1017e418c9b669c49b242d49acdb0385, type: 2}
+  shakenEmotion: {fileID: 11400000, guid: eb3ba6aa2f4a97a4bb4d82b50b67789b, type: 2}
   pettingGentleEmotion: {fileID: 11400000, guid: bf4c2b01c4f9c5b4fad1ce32570500f8, type: 2}
-  pettingTickleEmotion: {fileID: 11400000, guid: 6842745b8c3fadd40bbc5c2aee971caa, type: 2}
+  pettingTickleEmotion: {fileID: 11400000, guid: 8467d7e97f673df47b705962bfe6b991, type: 2}
   pettingAnnoyedEmotion: {fileID: 11400000, guid: 86e8b4b56a620034080bdb0b8cd84384, type: 2}
-  curiousEmotion: {fileID: 11400000, guid: 1017e418c9b669c49b242d49acdb0385, type: 2}
-  excitedEmotion: {fileID: 0}
+  curiousEmotion: {fileID: 11400000, guid: c8b37f0ff372ddc47a71f937e51d37a5, type: 2}
+  excitedEmotion: {fileID: 11400000, guid: 8467d7e97f673df47b705962bfe6b991, type: 2}
   timeToSleepMin: 15
   timeToSleepMax: 30
   timeToWakeMin: 10
@@ -701,7 +701,84 @@ MonoBehaviour:
   blinkIntervalMax: 12
   blinkDuration: 0.1
   hideObjectOnBlink: 1
-  featureBindings: []
+  featureBindings:
+  - featureType: 1
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 2
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 3
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 4
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 5
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 6
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 7
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 8
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 9
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 10
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 11
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 12
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 13
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 14
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 15
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 16
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 17
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 18
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 22
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 23
+    targetObjects:
+    - {fileID: 0}
+  - featureType: 24
+    targetObjects:
+    - {fileID: 0}
+  boneBindings:
+  - featureType: 20
+    boneStates: []
+  - featureType: 20
+    boneStates: []
+  - featureType: 21
+    boneStates: []
+  particleBindings:
+  - featureType: 26
+    particlePrefab: {fileID: 0}
+    sceneParticle: {fileID: 0}
+    instantiate: 0
+    spawnOffset: {x: 0, y: 0, z: 0}
+    shouldLoop: 1
   gizmoScaleRest: 0.0005
   gizmoScaleCurrent: 0.02
   showGizmos: 1
@@ -733,7 +810,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 7144345532127014257}
   m_Father: {fileID: 3719631435110820396}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8889187421889094917
@@ -770,6 +848,64 @@ Transform:
   - {fileID: 3665529704493006550}
   m_Father: {fileID: 6920300426415250255}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1170743290549997279
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 3665529704493006550}
+    m_Modifications:
+    - target: {fileID: 3322298390831984898, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3322298390831984898, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.76604444
+      objectReference: {fileID: 0}
+    - target: {fileID: 3322298390831984898, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.6427877
+      objectReference: {fileID: 0}
+    - target: {fileID: 5322011367894228084, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5322011367894228084, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.76604444
+      objectReference: {fileID: 0}
+    - target: {fileID: 5322011367894228084, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.6427877
+      objectReference: {fileID: 0}
+    - target: {fileID: 5514744674135102481, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+      propertyPath: m_Name
+      value: Sleeping
+      objectReference: {fileID: 0}
+    - target: {fileID: 8294083197414925230, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8294083197414925230, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8294083197414925230, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+--- !u!4 &7144345532127014257 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8294083197414925230, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+  m_PrefabInstance: {fileID: 1170743290549997279}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2143099452246868823
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -23,6 +23,7 @@ public enum CatFeatureType
     Eye_Wide,
     Eye_Squint,
     Eye_Sad,
+    Eye_Crying,
     Eye_Happy,
     Eye_Annoyed,
     Eye_Shocked,
@@ -36,5 +37,6 @@ public enum CatFeatureType
     // --- Extra ---
     Tears,
     Blush,
-    Sweat
+    Sweat,
+    Zzzz_Sleep
 }

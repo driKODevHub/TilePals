@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using EZhex1991.EZSoftBone; // NEW: Physics bones support
 
 public class FacialExpressionController : MonoBehaviour
 {
@@ -71,6 +72,33 @@ public class FacialExpressionController : MonoBehaviour
         public List<GameObject> targetObjects;
     }
 
+    [System.Serializable]
+    public class BoneState
+    {
+        public Transform boneTransform;
+        public Vector3 targetPosition;
+        public Vector3 targetEulerAngles;
+        public Vector3 targetScale = Vector3.one;
+    }
+
+    [System.Serializable]
+    public class BoneBinding
+    {
+        public CatFeatureType featureType;
+        public List<BoneState> boneStates;
+    }
+
+    [System.Serializable]
+    public class ParticleBinding
+    {
+        public CatFeatureType featureType;
+        public ParticleSystem particlePrefab; // For instantiation
+        public ParticleSystem sceneParticle;  // For existing scene object
+        public bool instantiate = true;
+        public Vector3 spawnOffset;           // Offset relative to this controller/head
+        public bool shouldLoop = false;
+    }
+
     // --- CONFIGURATION ---
 
     [Header("--- EYES CONFIGURATION ---")]
@@ -95,6 +123,8 @@ public class FacialExpressionController : MonoBehaviour
     [Header("--- 3D FEATURES BINDING ---")]
     [Tooltip("Прив'язка типів до конкретних об'єктів на сцені.")]
     public List<FeatureBinding> featureBindings;
+    public List<BoneBinding> boneBindings;         // NEW
+    public List<ParticleBinding> particleBindings; // NEW
 
     [Header("--- DEBUG / GIZMOS ---")]
     [Range(0.00001f, 2f)][SerializeField] private float gizmoScaleRest = 0.0005f;
@@ -105,6 +135,7 @@ public class FacialExpressionController : MonoBehaviour
     private Coroutine _blinkingCoroutine;
     private Vector3 _currentWorldLookTarget;
     private bool _isLookingAtSomething = false;
+    private List<GameObject> _activeInstantiatedParticles = new List<GameObject>(); // NEW: Track particles
 
     public bool IsLookingAtSomething => _isLookingAtSomething;
 
@@ -195,7 +226,9 @@ public class FacialExpressionController : MonoBehaviour
     {
         if (emotionProfileSO == null) return;
 
-        // 1. Reset: Disable ALL registered feature objects
+        // 1. Reset Everything
+        ClearParticles(); // NEW: Destroy/Stop particles
+        
         if (featureBindings != null)
         {
             foreach (var binding in featureBindings)
@@ -210,15 +243,14 @@ public class FacialExpressionController : MonoBehaviour
             }
         }
 
-        // 2. Apply: Enable objects for current emotion
-        if (emotionProfileSO.featureStates != null)
+        // 2. Apply New Emotion
+        if (emotionProfileSO.activeFeatures != null)
         {
-            foreach (var featureState in emotionProfileSO.featureStates)
+            foreach (var featureType in emotionProfileSO.activeFeatures)
             {
-                if (featureState != null)
-                {
-                    ActivateFeature(featureState.featureType);
-                }
+                ActivateFeature(featureType);
+                ActivateBoneFeatures(featureType);     // NEW
+                ActivateParticleFeatures(featureType); // NEW
             }
         }
     }
@@ -234,6 +266,99 @@ public class FacialExpressionController : MonoBehaviour
                 foreach (var obj in binding.targetObjects)
                 {
                     if (obj != null) obj.SetActive(true);
+                }
+            }
+        }
+    }
+
+    private void ActivateBoneFeatures(CatFeatureType type)
+    {
+        if (boneBindings == null || type == CatFeatureType.None) return;
+
+        // Find bindings for this type
+        var activeBindings = boneBindings.FindAll(b => b.featureType == type);
+        if (activeBindings.Count == 0) return;
+
+        // 1. Disable Physics (EZSoftBone)
+        var softBones = GetComponentsInChildren<EZSoftBone>();
+        foreach (var sb in softBones) sb.enabled = false;
+
+        // 2. Apply Transforms
+        foreach (var binding in activeBindings)
+        {
+            if (binding.boneStates != null)
+            {
+                foreach (var state in binding.boneStates)
+                {
+                    if (state.boneTransform != null)
+                    {
+                        state.boneTransform.localPosition = state.targetPosition;
+                        state.boneTransform.localEulerAngles = state.targetEulerAngles;
+                        state.boneTransform.localScale = state.targetScale;
+                    }
+                }
+            }
+        }
+
+        // 3. Re-Enable Physics (Sync Rest State)
+        foreach (var sb in softBones)
+        {
+            sb.InitStructures(); // Captures current pose as rest pose
+            sb.enabled = true;
+        }
+    }
+
+    private void ActivateParticleFeatures(CatFeatureType type)
+    {
+        if (particleBindings == null || type == CatFeatureType.None) return;
+
+        foreach (var binding in particleBindings)
+        {
+            if (binding.featureType == type)
+            {
+                // Option A: Instantiate
+                if (binding.instantiate && binding.particlePrefab != null)
+                {
+                    // Calculate Spawn Position (Relative to head/controller)
+                    Vector3 spawnPos = transform.TransformPoint(binding.spawnOffset);
+                    Quaternion spawnRot = transform.rotation; // Aligned with head
+
+                    var p = Instantiate(binding.particlePrefab, spawnPos, spawnRot, transform);
+                    _activeInstantiatedParticles.Add(p.gameObject);
+                    p.Play();
+                }
+                // Option B: Scene Object
+                else if (!binding.instantiate && binding.sceneParticle != null)
+                {
+                    binding.sceneParticle.gameObject.SetActive(true);
+                    binding.sceneParticle.Play();
+                }
+            }
+        }
+    }
+
+    private void ClearParticles()
+    {
+        // 1. Destroy Instantiated
+        foreach (var p in _activeInstantiatedParticles)
+        {
+            if (p != null) Destroy(p);
+        }
+        _activeInstantiatedParticles.Clear();
+
+        // 2. Stop Scene Particles
+        if (particleBindings != null)
+        {
+            foreach (var binding in particleBindings)
+            {
+                if (!binding.instantiate && binding.sceneParticle != null)
+                {
+                    // If looping, we might want to stop/disable
+                    if (binding.shouldLoop || binding.sceneParticle.gameObject.activeSelf)
+                    {
+                        binding.sceneParticle.Stop();
+                        binding.sceneParticle.gameObject.SetActive(false);
+                    }
                 }
             }
         }
@@ -470,6 +595,21 @@ public class FacialExpressionController : MonoBehaviour
             if (leftEye.referencePivot) Gizmos.DrawLine(leftEye.referencePivot.position, _currentWorldLookTarget);
             if (rightEye.referencePivot) Gizmos.DrawLine(rightEye.referencePivot.position, _currentWorldLookTarget);
             if (faceRig.referencePivot) Gizmos.DrawLine(faceRig.referencePivot.position, _currentWorldLookTarget);
+        }
+
+        // NEW: Draw Particle Spawn Points
+        if (particleBindings != null)
+        {
+            Gizmos.color = new Color(1f, 0.5f, 0f, 0.7f); // Orange
+            foreach (var pb in particleBindings)
+            {
+                if (pb.instantiate)
+                {
+                    Vector3 spawnPos = transform.TransformPoint(pb.spawnOffset);
+                    Gizmos.DrawWireSphere(spawnPos, gizmoScaleRest * 200f); // Make it visible
+                    Gizmos.DrawSphere(spawnPos, gizmoScaleRest * 50f);
+                }
+            }
         }
     }
 

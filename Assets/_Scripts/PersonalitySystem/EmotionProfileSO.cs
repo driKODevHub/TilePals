@@ -8,9 +8,9 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "E_", menuName = "Puzzle/Personality/Emotion Profile")]
 public class EmotionProfileSO : ScriptableObject
 {
-    [Header("Візуальні налаштування")]
+    [Header("Налаштування емоції")]
     public string emotionName = "Назва емоції";
 
-    [Tooltip("Список частин обличчя, які активуються для цієї емоції.")]
-    public List<FeatureStateSO> featureStates;
+    [Tooltip("Список частин тіла/обличчя, які мають бути активні для цієї емоції.")]
+    public List<CatFeatureType> activeFeatures;
 }

@@ -9,8 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e5c2c392ef5d77f488599aecd558acc7, type: 3}
-  m_Name: MouthState_Sad
+  m_Script: {fileID: 11500000, guid: 67f8ce8b2be636e408a414d461c4c6b1, type: 3}
+  m_Name: E_Crying
   m_EditorClassIdentifier: 
-  feature: 0
-  expressionSprite: {fileID: 21300000, guid: e4ec2e65b352fef488cecc03ab8dbdda, type: 3}
+  emotionName: "\u041F\u043B\u0430\u0447\u0435"
+  activeFeatures: 0f00000008000000

@@ -12,7 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67f8ce8b2be636e408a414d461c4c6b1, type: 3}
   m_Name: E_Dropped
   m_EditorClassIdentifier: 
-  emotionName: "\u041D\u0435\u0439\u0442\u0440\u0430\u043B\u044C\u043D\u0430"
-  eyeState: {fileID: 11400000, guid: d545791e56a6095439caac75f1b2b2b8, type: 2}
-  featureStates:
-  - {fileID: 11400000, guid: ff9f8312d47309942817bdc4274ea61c, type: 2}
+  emotionName: "\u041F\u043E\u0441\u0442\u0430\u0432\u043B\u0435\u043D\u0438\u0439"
+  activeFeatures: 1200000005000000

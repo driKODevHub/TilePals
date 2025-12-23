@@ -9,7 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e5c2c392ef5d77f488599aecd558acc7, type: 3}
-  m_Name: MouthState_Surprised
+  m_Script: {fileID: 11500000, guid: 67f8ce8b2be636e408a414d461c4c6b1, type: 3}
+  m_Name: E_Excited
   m_EditorClassIdentifier: 
-  featureType: 1
+  emotionName: "\u0412 \u0437\u0430\u0445\u0432\u0430\u0442\u0456"
+  activeFeatures: 0c00000004000000

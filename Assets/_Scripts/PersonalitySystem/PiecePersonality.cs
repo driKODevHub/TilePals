@@ -8,7 +8,7 @@ public class PiecePersonality : MonoBehaviour
 {
     private TemperamentSO _temperament;
 
-    [Header("Профілі Емоцій")]
+    [Header("Р’С–Р·СѓР°Р»СЊРЅС– РґР°РЅС–")]
     [SerializeField] private EmotionProfileSO neutralEmotion;
     [SerializeField] private EmotionProfileSO sleepingEmotion;
     [SerializeField] private EmotionProfileSO pickedUpEmotion;
@@ -20,7 +20,7 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private EmotionProfileSO curiousEmotion;
     [SerializeField] private EmotionProfileSO excitedEmotion;
 
-    [Header("Налаштування Поведінки")]
+    [Header("Р§Р°СЃРѕРІС– РїР°СЂР°РјРµС‚СЂРё")]
     [SerializeField] private float timeToSleepMin = 15f;
     [SerializeField] private float timeToSleepMax = 30f;
     [SerializeField] private float timeToWakeMin = 10f;
@@ -29,7 +29,7 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private float gentlePettingSpeedThreshold = 200f;
     [SerializeField] private float tickleSpeedThreshold = 800f;
 
-    [Header("Налаштування погляду (Idle Gaze)")]
+    [Header("РџРѕРіР»СЏРґ С– СѓРІР°РіР° (Idle Gaze)")]
     [SerializeField] private float lookPlaneHeight = 0.5f;
     [SerializeField] private Vector3 lookAreaOffset = Vector3.zero;
     [SerializeField] private float idleLookIntervalMin = 1.5f;
@@ -39,7 +39,7 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private float idleLookRadius = 3f;
     [SerializeField] private float flyOverReactionRadius = 2.5f;
 
-    [Header("Посилання на Компоненти")]
+    [Header("РџРѕСЃРёР»Р°РЅРЅСЏ РЅР° РєРѕРјРїРѕРЅРµРЅС‚Рё")]
     [SerializeField] private FacialExpressionController facialController;
 
     private float _currentFatigue, _currentIrritation, _currentTrust;
@@ -49,6 +49,13 @@ public class PiecePersonality : MonoBehaviour
     private EmotionProfileSO _lastPettingEmotion;
     private bool _isLookingRandomly = false;
     private PuzzlePiece _attentionTarget;
+
+    // --- DEBUG LOGIC VARIABLES ---
+    private bool _isDebugStatsActive = false;
+    private Coroutine _debugStatsCoroutine;
+    
+    // NEW: Track active emotion for debug
+    private EmotionProfileSO _currentActiveEmotion; 
 
     private enum IdleGazeState { LookAtRandom, LookAtNeighbor, LookAtPlayer, Wait, LookAtToy }
 
@@ -105,14 +112,10 @@ public class PiecePersonality : MonoBehaviour
     public bool TryReceiveItem(PuzzlePiece item)
     {
         if (_isSleeping) return false;
-        if (_puzzlePiece.HasItem) return false; // Вже щось тримає
+        if (_puzzlePiece.HasItem) return false;
 
         _puzzlePiece.AttachItem(item);
-
-        // Емоція радості або цікавості
         SetEmotion(excitedEmotion != null ? excitedEmotion : curiousEmotion);
-
-        // Можна додати анімацію (через FacialController або звук)
         return true;
     }
 
@@ -127,12 +130,13 @@ public class PiecePersonality : MonoBehaviour
 
     private void Update()
     {
+        // --- NEW: Handle Debug Input (Alt + Click) ---
+        HandleDebugInput();
+
         if (!_isHeld && !_isSleeping && !_isBeingPetted && facialController != null)
         {
-            // Якщо кіт тримає щось, він може дивитись на це (трохи вниз)
             if (_puzzlePiece.HasItem)
             {
-                // Дивимось на предмет у роті/лапах
                 facialController.LookAt(_puzzlePiece.GetAttachmentPoint().position);
             }
             else if (_attentionTarget != null)
@@ -147,6 +151,72 @@ public class PiecePersonality : MonoBehaviour
             {
                 LookAtCursor();
             }
+        }
+    }
+
+    // --- DEBUG METHODS ---
+    private void HandleDebugInput()
+    {
+        // Check for Alt + Left Click
+        if (Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButtonDown(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                // Check if we clicked on this cat or its children
+                if (hit.transform == transform || hit.transform.IsChildOf(transform))
+                {
+                    ToggleDebugStats();
+                }
+            }
+        }
+    }
+
+    private void ToggleDebugStats()
+    {
+        _isDebugStatsActive = !_isDebugStatsActive;
+
+        if (_isDebugStatsActive)
+        {
+            if (_debugStatsCoroutine != null) StopCoroutine(_debugStatsCoroutine);
+            _debugStatsCoroutine = StartCoroutine(DebugStatsRoutine());
+            Debug.Log($"<color=green><b>[DEBUG] Stats ENABLED for {name}</b></color>");
+        }
+        else
+        {
+            if (_debugStatsCoroutine != null) StopCoroutine(_debugStatsCoroutine);
+            Debug.Log($"<color=red><b>[DEBUG] Stats DISABLED for {name}</b></color>");
+        }
+    }
+
+    private IEnumerator DebugStatsRoutine()
+    {
+        while (_isDebugStatsActive)
+        {
+            float irritationPercent = _currentIrritation * 100f;
+            float fatiguePercent = _currentFatigue * 100f;
+            float trustPercent = _currentTrust * 100f;
+
+            // Determine color based on status
+            string statusColor = "white";
+            string statusText = "Idle";
+
+            if (_isSleeping) { statusColor = "blue"; statusText = "Sleeping"; }
+            else if (_isHeld) { statusColor = "yellow"; statusText = "Held"; }
+            else if (_isBeingPetted) { statusColor = "green"; statusText = "Being Petted"; }
+
+            string emotionName = _currentActiveEmotion != null ? _currentActiveEmotion.emotionName : "None";
+
+            string log = $"<color=cyan><b>[{name}]</b></color> " +
+                         $"Status: <color={statusColor}><b>{statusText}</b></color> | " +
+                         $"Emotion: <b>{emotionName}</b> | " +
+                         $"Fatigue: <b>{fatiguePercent:F0}%</b> | " +
+                         $"Irritation: <b>{irritationPercent:F0}%</b> | " +
+                         $"Trust: <b>{trustPercent:F0}%</b>";
+
+            Debug.Log(log);
+
+            yield return new WaitForSeconds(1.0f);
         }
     }
 
@@ -212,20 +282,6 @@ public class PiecePersonality : MonoBehaviour
         {
             _attentionTarget = null;
             ReturnToNeutralState();
-        }
-    }
-
-    public void TriggerExternalReaction(EmotionProfileSO reactionEmotion, float duration)
-    {
-        if (_reactionCoroutine != null) StopCoroutine(_reactionCoroutine);
-        _reactionCoroutine = StartCoroutine(ShowReactionEmotion(reactionEmotion, duration));
-    }
-
-    public void SetEmotion(EmotionProfileSO emotion)
-    {
-        if (facialController != null && emotion != null)
-        {
-            facialController.ApplyEmotion(emotion);
         }
     }
 
@@ -427,6 +483,21 @@ public class PiecePersonality : MonoBehaviour
         SetEmotion(shakenEmotion);
         yield return new WaitForSeconds(shakenEmotionDuration);
         if (_isHeld) SetEmotion(pickedUpEmotion);
+    }
+
+    public void TriggerExternalReaction(EmotionProfileSO reactionEmotion, float duration)
+    {
+        if (_reactionCoroutine != null) StopCoroutine(_reactionCoroutine);
+        _reactionCoroutine = StartCoroutine(ShowReactionEmotion(reactionEmotion, duration));
+    }
+
+    public void SetEmotion(EmotionProfileSO emotion)
+    {
+        if (facialController != null && emotion != null)
+        {
+            _currentActiveEmotion = emotion;
+            facialController.ApplyEmotion(emotion);
+        }
     }
 
     private void LookAtCursor()
