@@ -52,7 +52,6 @@ public class PuzzleManager : MonoBehaviour
     private Vector2 _lastMousePos;
     private Vector3 _lastWorldMousePos;
     private Vector3 _currentThrowVelocity;
-    private Vector3 _lastWorldMousePos;
     private Vector3 _currentWorldMouseDelta;
     private Vector3 _lastHitPoint;
     private float _currentMouseSpeed;
@@ -150,8 +149,6 @@ public class PuzzleManager : MonoBehaviour
             if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer | pieceLayer))
             {
                 Vector3 currentWorldPos = hit.point;
-                _currentWorldMouseDelta = currentWorldPos - _lastWorldMousePos;
-                _lastWorldMousePos = currentWorldPos;
                 _lastHitPoint = currentWorldPos;
             }
         _lastMousePos = currentPos;
@@ -160,8 +157,6 @@ public class PuzzleManager : MonoBehaviour
             if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer | pieceLayer))
             {
                 Vector3 currentWorldPos = hit.point;
-                _currentWorldMouseDelta = currentWorldPos - _lastWorldMousePos;
-                _lastWorldMousePos = currentWorldPos;
                 _lastHitPoint = currentWorldPos;
             }
 
@@ -169,12 +164,9 @@ public class PuzzleManager : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
         {
             Vector3 currentWorldPos = hit.point;
-            if (_lastWorldMousePos != Vector3.zero)
             {
-                Vector3 velocity = (currentWorldPos - _lastWorldMousePos) / Time.deltaTime;
                 _currentThrowVelocity = Vector3.Lerp(_currentThrowVelocity, velocity, Time.deltaTime * 10f);
             }
-            _lastWorldMousePos = currentWorldPos;
         }
     }
 
@@ -735,3 +727,4 @@ public class PuzzleManager : MonoBehaviour
     public void SaveCurrentProgress() => GameManager.Instance.SaveCurrentProgress();
     public void OnLevelComplete() => GameManager.Instance.OnLevelComplete();
 }
+
