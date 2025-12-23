@@ -463,11 +463,11 @@ MonoBehaviour:
   timeToSleepMin: 15
   timeToSleepMax: 30
   timeToWakeMin: 10
-  timeToWakeMax: 20
+  timeToWakeMax: 300
   shakenEmotionDuration: 1
   gentlePettingSpeedThreshold: 200
   tickleSpeedThreshold: 800
-  sleepBlinkCount: 3
+  sleepBlinkCount: 2
   sleepBlinkClosedDuration: 0.3
   sleepBlinkOpenDuration: 0.2
   lookPlaneHeight: 1
@@ -478,6 +478,7 @@ MonoBehaviour:
   idleLookDurationMax: 2.5
   idleLookRadius: 3
   flyOverReactionRadius: 2.5
+  lookAtCameraChance: 0.2
   facialController: {fileID: 8371808012640910952}
 --- !u!114 &1545702117781013090
 MonoBehaviour:
@@ -659,7 +660,8 @@ MonoBehaviour:
   eyesDamping: 0.1
   leftEye:
     referencePivot: {fileID: 0}
-    eyeBone: {fileID: 0}
+    pupilBone: {fileID: 0}
+    eyeOuterBone: {fileID: 0}
     blinkObject: {fileID: 0}
     useEllipticalClamp: 1
     limitLeft: 0.5
@@ -672,7 +674,8 @@ MonoBehaviour:
     scaleMultiplier: 0.001
   rightEye:
     referencePivot: {fileID: 0}
-    eyeBone: {fileID: 0}
+    pupilBone: {fileID: 0}
+    eyeOuterBone: {fileID: 0}
     blinkObject: {fileID: 0}
     useEllipticalClamp: 1
     limitLeft: 0.5
@@ -771,6 +774,7 @@ MonoBehaviour:
   - featureType: 24
     targetObjects:
     - {fileID: 0}
+  boneTransitionSpeed: 5
   boneBindings:
   - featureType: 20
     boneStates: []
@@ -787,8 +791,9 @@ MonoBehaviour:
     instantiate: 0
     spawnOffset: {x: 0, y: 0, z: 0}
     shouldLoop: 1
+  blinkSquashSpeed: 35
+  blinkStretchAmount: 0.2
   gizmoScaleRest: 0.0005
-  gizmoScaleCurrent: 0.02
   showGizmos: 1
 --- !u!1 &8387494866364699507
 GameObject:

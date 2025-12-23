@@ -387,6 +387,14 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: -1782745666538891541, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1782745666538891541, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: -1706441006455349572, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_Layer
       value: 7
@@ -408,12 +416,24 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: -1018072169396446347, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1018072169396446347, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1018072169396446347, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1018072169396446347, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.00038457487
+      value: 0.00038457493
       objectReference: {fileID: 0}
     - target: {fileID: -1018072169396446347, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.00055245333
+      value: 0.0005524535
       objectReference: {fileID: 0}
     - target: {fileID: -1018072169396446347, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.z
@@ -472,16 +492,20 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 108581064612644291, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 108581064612644291, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.00037776434
       objectReference: {fileID: 0}
     - target: {fileID: 108581064612644291, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.00055245653
+      value: 0.0005524567
       objectReference: {fileID: 0}
     - target: {fileID: 108581064612644291, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.0000567148
+      value: 0.00005671481
       objectReference: {fileID: 0}
     - target: {fileID: 108581064612644291, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalRotation.x
@@ -494,6 +518,14 @@ PrefabInstance:
     - target: {fileID: 108581064612644291, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_LocalRotation.z
       value: -0.00000029802317
+      objectReference: {fileID: 0}
+    - target: {fileID: 415740185329688843, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 415740185329688843, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 801130577476482461, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
       propertyPath: m_Layer
@@ -612,6 +644,11 @@ PrefabInstance:
       addedObject: {fileID: 4699889010335769795}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+--- !u!4 &1217787036322236556 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 415740185329688843, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+  m_PrefabInstance: {fileID: 1523188253392267655}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1344828993072991852 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
@@ -685,6 +722,11 @@ SkinnedMeshRenderer:
 --- !u!137 &7753285700420815849 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -91681808587120018, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
+  m_PrefabInstance: {fileID: 1523188253392267655}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8241897275348713324 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -1782745666538891541, guid: 6b44688726bb9ae43ac6559218fe9f2b, type: 3}
   m_PrefabInstance: {fileID: 1523188253392267655}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &8721148935675110966 stripped
@@ -1220,6 +1262,10 @@ PrefabInstance:
       value: 0.66
       objectReference: {fileID: 0}
     - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: leftEye.pupilBone
+      value: 
+      objectReference: {fileID: 1486946825015159876}
+    - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: faceRig.limitRight
       value: 0.7
       objectReference: {fileID: 0}
@@ -1236,6 +1282,10 @@ PrefabInstance:
       value: 1.36
       objectReference: {fileID: 0}
     - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: rightEye.pupilBone
+      value: 
+      objectReference: {fileID: 7276804781179908850}
+    - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: leftEye.blinkObject
       value: 
       objectReference: {fileID: 5280211133620230673}
@@ -1244,9 +1294,17 @@ PrefabInstance:
       value: 0.66
       objectReference: {fileID: 0}
     - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: leftEye.eyeOuterBone
+      value: 
+      objectReference: {fileID: 1217787036322236556}
+    - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: rightEye.blinkObject
       value: 
       objectReference: {fileID: 5280211133620230673}
+    - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: rightEye.eyeOuterBone
+      value: 
+      objectReference: {fileID: 8241897275348713324}
     - target: {fileID: 8371808012640910952, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: faceRig.referencePivot
       value: 

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq; // NEW: Added to fix Any() compilation error
+using UnityEngine.Serialization; // NEW: For refactoring data preservation
 using EZhex1991.EZSoftBone; // NEW: Physics bones support
 
 public class FacialExpressionController : MonoBehaviour
@@ -13,7 +14,11 @@ public class FacialExpressionController : MonoBehaviour
     public class EyeRig
     {
         public Transform referencePivot; // Корінь (Pivot), відносно якого все обертається
-        public Transform eyeBone;        // Сама кістка ока
+        
+        [FormerlySerializedAs("eyeBone")]
+        public Transform pupilBone;      // Сама кістка зіниці (яка рухається поглядом)
+        public Transform eyeOuterBone;   // Зовнішня кістка ока (яка скейлиться при морганні)
+
         public GameObject blinkObject;   // Об'єкт повіки (якщо є)
 
         [Header("Limits")]
@@ -29,7 +34,6 @@ public class FacialExpressionController : MonoBehaviour
         // Runtime State
         [HideInInspector] public Quaternion currentWorldRotation;
         
-        [Header("Scaling")]
         public bool autoScale = true;
         public float scaleMultiplier = 1.0f;
     }
@@ -130,11 +134,16 @@ public class FacialExpressionController : MonoBehaviour
     [Header("--- BONES & PHYSICS ---")]
     [SerializeField] private float boneTransitionSpeed = 5f; // Speed of transitioning between bone poses
     public List<BoneBinding> boneBindings; // NEW
-    public List<ParticleBinding> particleBindings; // NEW
+    [SerializeField] private List<ParticleBinding> particleBindings; // NEW
+    
+    [Header("--- SQUASH & STRETCH BLINK ---")]
+    [Tooltip("Швидкість 'сплющення' ока при морганні.")]
+    [SerializeField] private float blinkSquashSpeed = 25f;
+    [Tooltip("Сила розтягування по горизонталі для компенсації об'єму (0 = без розтягування).")]
+    [Range(0f, 1f)][SerializeField] private float blinkStretchAmount = 0.2f;
 
     [Header("--- DEBUG / GIZMOS ---")]
     [Range(0.00001f, 2f)][SerializeField] private float gizmoScaleRest = 0.0005f;
-    [Range(0.00001f, 2f)][SerializeField] private float gizmoScaleCurrent = 0.0005f;
     [SerializeField] private bool showGizmos = true;
 
     // --- STATE ---
@@ -146,6 +155,8 @@ public class FacialExpressionController : MonoBehaviour
     private List<GameObject> _activeInstantiatedParticles = new List<GameObject>(); // NEW: Track particles
     private CatFeatureType _currentEyeFeature = CatFeatureType.None; // NEW: Track active eye for blinking
     private Coroutine _manualBlinkCoroutine;
+    private Coroutine _blinkAnimationCoroutine; // NEW
+    private float _currentBlinkScale = 1f; // NEW
     private List<BoneBinding> _activeBoneBindings = new List<BoneBinding>(); // NEW: To persist poses across Animator updates
     
     private struct BoneTransformData
@@ -211,6 +222,10 @@ public class FacialExpressionController : MonoBehaviour
     {
         if (!Application.isPlaying)
         {
+            // Auto-assign eyeOuterBone if it's the parent of pupilBone (Eye.L is usually parent of Pupil.L)
+            AutoAssignEyeBones(leftEye);
+            AutoAssignEyeBones(rightEye);
+
             ForceUpdateEyeInEditor(leftEye);
             ForceUpdateEyeInEditor(rightEye);
             
@@ -224,9 +239,20 @@ public class FacialExpressionController : MonoBehaviour
 
     private void ForceUpdateEyeInEditor(EyeRig rig)
     {
-        if (rig.referencePivot == null || rig.eyeBone == null) return;
+        if (rig.referencePivot == null || rig.pupilBone == null) return;
         rig.currentWorldRotation = GetRestingRotation(rig);
         ApplyEyePosition(rig);
+    }
+
+    private void AutoAssignEyeBones(EyeRig rig)
+    {
+        if (rig.pupilBone != null && rig.eyeOuterBone == null)
+        {
+            if (rig.pupilBone.parent != null && (rig.pupilBone.parent.name.Contains("Eye") || rig.pupilBone.parent.name.Contains("Bone")))
+            {
+                rig.eyeOuterBone = rig.pupilBone.parent;
+            }
+        }
     }
 
     private void InitializeEyeRotation(EyeRig rig)
@@ -566,7 +592,7 @@ public class FacialExpressionController : MonoBehaviour
 
     private void UpdateEye(EyeRig rig)
     {
-        if (rig.eyeBone == null || rig.referencePivot == null) return;
+        if (rig.pupilBone == null || rig.referencePivot == null) return;
 
         Quaternion targetRotation;
 
@@ -654,11 +680,33 @@ public class FacialExpressionController : MonoBehaviour
         else
             finalLocalPos = new Vector3(x, 0, y);
 
-        rig.eyeBone.position = rig.referencePivot.TransformPoint(finalLocalPos);
+        rig.pupilBone.position = rig.referencePivot.TransformPoint(finalLocalPos);
+        
+        // --- NEW: Squash & Stretch Scaling ---
+        // Скейлимо зовнішню кістку ока
+        if (rig.eyeOuterBone != null)
+        {
+            float squashX = 1f + (1f - _currentBlinkScale) * blinkStretchAmount;
+            float squashZ = _currentBlinkScale;
+            rig.eyeOuterBone.localScale = new Vector3(squashX, 1f, squashZ);
+            
+            // --- Pupil Scale Compensation ---
+            // Сама зіниця (pupilBone) має лишатись круглою
+            float invSquashX = 1f / Mathf.Max(0.01f, squashX);
+            float invSquashZ = 1f / Mathf.Max(0.01f, squashZ);
+            rig.pupilBone.localScale = new Vector3(invSquashX, 1f, invSquashZ);
+        }
+        else
+        {
+            // Fallback: якщо нема зовнішньої кістки, скейлимо саму зіницю (стара логіка)
+            float squashX = 1f + (1f - _currentBlinkScale) * blinkStretchAmount;
+            float squashZ = _currentBlinkScale;
+            rig.pupilBone.localScale = new Vector3(squashX, 1f, squashZ);
+        }
         
         // Reverting to referencePivot.rotation because the model uses position for pupil tracking.
         // Rotating the bone leads to pupil flipping/skipping on the surface.
-        rig.eyeBone.rotation = rig.referencePivot.rotation;
+        rig.pupilBone.rotation = rig.referencePivot.rotation;
     }
 
     // ===================================================================================
@@ -750,15 +798,38 @@ public class FacialExpressionController : MonoBehaviour
 
     public void TriggerBlink(float customDuration = -1f)
     {
-        if (_manualBlinkCoroutine != null) StopCoroutine(_manualBlinkCoroutine);
-        _manualBlinkCoroutine = StartCoroutine(ManualBlinkRoutine(customDuration > 0 ? customDuration : blinkDuration));
+        if (_blinkAnimationCoroutine != null) StopCoroutine(_blinkAnimationCoroutine);
+        _blinkAnimationCoroutine = StartCoroutine(PerformBlinkAnimation(customDuration > 0 ? customDuration : blinkDuration));
     }
 
-    private IEnumerator ManualBlinkRoutine(float duration)
+    private IEnumerator PerformBlinkAnimation(float duration)
     {
+        // 1. Closing Squash
+        while (_currentBlinkScale > 0.05f)
+        {
+            _currentBlinkScale = Mathf.MoveTowards(_currentBlinkScale, 0f, Time.deltaTime * blinkSquashSpeed);
+            yield return null;
+        }
+        _currentBlinkScale = 0f;
+
+        // 2. Swap Visuals
         SetBlinkState(true);
+        _currentBlinkScale = 1f; // Reset scale for "closed" visual objects
+
+        // 3. Wait in closed state
         yield return new WaitForSeconds(duration);
+
+        // 4. Opening Stretch
+        _currentBlinkScale = 0f; // Start from zero for "open" visual
         SetBlinkState(false);
+
+        while (_currentBlinkScale < 0.95f)
+        {
+            _currentBlinkScale = Mathf.MoveTowards(_currentBlinkScale, 1f, Time.deltaTime * blinkSquashSpeed);
+            yield return null;
+        }
+        _currentBlinkScale = 1f;
+        _blinkAnimationCoroutine = null;
     }
     
 
@@ -780,9 +851,9 @@ public class FacialExpressionController : MonoBehaviour
                 continue;
             }
 
-            SetBlinkState(true);
-            yield return new WaitForSeconds(blinkDuration);
-            SetBlinkState(false);
+            TriggerBlink();
+            // Wait for blink to roughly finish to not overlay timers
+            yield return new WaitForSeconds(blinkDuration + 0.2f); 
 
             // NEW: Randomly reset gaze to forward/neutral after a blink
             if (_isLookingAtSomething && Random.value < resetGazeOnBlinkChance)
