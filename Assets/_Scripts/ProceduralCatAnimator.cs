@@ -14,12 +14,14 @@ public class ProceduralCatAnimator : MonoBehaviour
     [SerializeField] [Range(0f, 1f)] private float sleepMotionMultiplier = 0.5f;
 
     [Header("Налаштування Петтингу (Погладжування)")]
-    [Tooltip("Сила фізичного відклику тіла на рух мишки.")]
-    [SerializeField] private float pettingImpactStrength = 0.5f;
+    [Tooltip("Сила фізичного зсуву тіла.")]
+    [SerializeField] private float pettingImpactStrength = 0.1f; // Reduced from 0.5
+    [Tooltip("Максимальний кут нахилу при погладжуванні.")]
+    [SerializeField] private float maxPettingTilt = 8f; // Subtle default
     [Tooltip("Сила, яка передається в SoftBones хвоста.")]
-    [SerializeField] private float pettingTailForceMultiplier = 2.0f;
+    [SerializeField] private float pettingTailForceMultiplier = 1.5f;
     [Tooltip("Швидкість повернення тіла в нейтральний стан.")]
-    [SerializeField] private float pettingReturnSpeed = 5f;
+    [SerializeField] private float pettingReturnSpeed = 4f;
 
     [Header("Параметри Idle руху (Breathing)")]
     [SerializeField] private float idleSpeed = 0.5f;
@@ -48,6 +50,7 @@ public class ProceduralCatAnimator : MonoBehaviour
 
     private Vector3 _pettingPosOffset;
     private Quaternion _pettingRotOffset = Quaternion.identity;
+    private Quaternion _targetPettingRot = Quaternion.identity;
     private Vector3 _externalTailForce;
     
     // Lerping multipliers
@@ -56,6 +59,29 @@ public class ProceduralCatAnimator : MonoBehaviour
     private void Awake()
     {
         _timeOffset = Random.Range(0f, 100f);
+
+        // NEW: Auto-detect bodyRoot if missing
+        if (bodyRoot == null)
+        {
+            // 1. Try common names
+            bodyRoot = transform.Find("Armature");
+            if (bodyRoot == null) bodyRoot = transform.Find("Skeleton");
+            
+            // 2. Try the root bone of the first SkinnedMeshRenderer
+            if (bodyRoot == null)
+            {
+                var smr = GetComponentInChildren<SkinnedMeshRenderer>();
+                if (smr != null) bodyRoot = smr.rootBone;
+            }
+
+            // 3. Fallback to first child
+            if (bodyRoot == null && transform.childCount > 0)
+                bodyRoot = transform.GetChild(0);
+
+            if (bodyRoot != null)
+                Debug.Log($"[ProceduralCatAnimator] Auto-set BodyRoot to {bodyRoot.name} on {name}", gameObject);
+        }
+
         if (bodyRoot)
         {
             _startLocalPos = bodyRoot.localPosition;
@@ -101,21 +127,41 @@ public class ProceduralCatAnimator : MonoBehaviour
         float sineWave = Mathf.Sin(time * idleSpeed);
         float cosWave = Mathf.Cos(time * idleSpeed);
 
-        // Idle movement
-        Vector3 idlePos = bodyPosAxis * (sineWave * bodyPosAmount * _currentMotionScale);
-        Quaternion idleRot = Quaternion.AngleAxis(cosWave * bodyRotAmount * _currentMotionScale, bodyRotAxis);
-        Vector3 idleScale = bodyScaleAxis * (sineWave * bodyScaleAmount * _currentMotionScale);
+        // 1. Position with Scale Compensation
+        // Offset is calculated in "Unity World Meters" relative to the script host
+        Vector3 worldIdlePos = bodyPosAxis * (sineWave * bodyPosAmount * _currentMotionScale);
+        Vector3 totalOffset = worldIdlePos + _pettingPosOffset;
 
-        // Combine with Petting Impact
-        bodyRoot.localPosition = _startLocalPos + idlePos + _pettingPosOffset;
+        // CRITICAL: Convert offset to bodyRoot.parent's local space.
+        // If parent has scale 100 (Skeleton/Armature), this divides the offset by 100, 
+        // preventing the "crazy jump" issue.
+        if (bodyRoot.parent != null)
+        {
+            bodyRoot.localPosition = _startLocalPos + bodyRoot.parent.InverseTransformVector(transform.TransformVector(totalOffset));
+        }
+        else
+        {
+            bodyRoot.localPosition = _startLocalPos + totalOffset;
+        }
+
+        // 2. Rotation (Angles are scale-independent in local space)
+        Quaternion idleRot = Quaternion.AngleAxis(cosWave * bodyRotAmount * _currentMotionScale, bodyRotAxis);
         bodyRoot.localRotation = _startLocalRot * idleRot * _pettingRotOffset;
+
+        // 3. Scale
+        Vector3 idleScale = bodyScaleAxis * (sineWave * bodyScaleAmount * _currentMotionScale);
         bodyRoot.localScale = _startLocalScale + idleScale;
     }
 
     private void ResetPettingImpact()
     {
         _pettingPosOffset = Vector3.Lerp(_pettingPosOffset, Vector3.zero, Time.deltaTime * pettingReturnSpeed);
-        _pettingRotOffset = Quaternion.Slerp(_pettingRotOffset, Quaternion.identity, Time.deltaTime * pettingReturnSpeed);
+        
+        // Return target to identity
+        _targetPettingRot = Quaternion.Slerp(_targetPettingRot, Quaternion.identity, Time.deltaTime * pettingReturnSpeed);
+        // Smoothly follow the target
+        _pettingRotOffset = Quaternion.Slerp(_pettingRotOffset, _targetPettingRot, Time.deltaTime * pettingReturnSpeed * 1.5f);
+        
         _externalTailForce = Vector3.Lerp(_externalTailForce, Vector3.zero, Time.deltaTime * pettingReturnSpeed);
     }
 
@@ -125,15 +171,31 @@ public class ProceduralCatAnimator : MonoBehaviour
 
         // 1. Body Shift
         Vector3 localDelta = transform.InverseTransformDirection(worldDelta);
-        _pettingPosOffset += localDelta * pettingImpactStrength;
+        _pettingPosOffset += localDelta * (pettingImpactStrength * 0.5f);
+        
+        // Clamp translation (max 10cm)
         _pettingPosOffset = Vector3.ClampMagnitude(_pettingPosOffset, 0.1f);
+        _pettingPosOffset.y = Mathf.Clamp(_pettingPosOffset.y, -0.03f, 0.03f);
 
-        // 2. Body Tilt (Rotate away from/with movement)
-        float tiltAngle = localDelta.x * 20f; // Tilt based on horizontal movement
-        _pettingRotOffset *= Quaternion.Euler(0, 0, -tiltAngle);
+        // 2. Axis-Agnostic Body Tilt
+        // We find the local axes of the bone that correspond to the Cat's logic "Forward" and "Right"
+        Vector3 boneLocalForward = bodyRoot.InverseTransformDirection(transform.forward);
+        Vector3 boneLocalRight = bodyRoot.InverseTransformDirection(transform.right);
+
+        // Calculate pitch (X) and roll (Z) targets based on movement
+        float rollTarget = -localDelta.x * maxPettingTilt * 2f;
+        float pitchTarget = localDelta.z * maxPettingTilt * 2f;
+
+        // Create target rotation relative to bone's current orientation
+        Quaternion rollQ = Quaternion.AngleAxis(rollTarget, boneLocalForward);
+        Quaternion pitchQ = Quaternion.AngleAxis(pitchTarget, boneLocalRight);
+        
+        // Set target (not multiplying to avoid 'spinning out of control')
+        _targetPettingRot = rollQ * pitchQ;
 
         // 3. Tail Force
         _externalTailForce += worldDelta * pettingTailForceMultiplier;
+        _externalTailForce = Vector3.ClampMagnitude(_externalTailForce, 8f);
     }
 
     private Vector3 GetCombinedTailForce(float normalizedLength)

@@ -8,7 +8,7 @@ public class PiecePersonality : MonoBehaviour
 {
     private TemperamentSO _temperament;
 
-    [Header("Р’С–Р·СѓР°Р»СЊРЅС– РґР°РЅС–")]
+    [Header("Візуальні дані")]
     [SerializeField] private EmotionProfileSO neutralEmotion;
     [SerializeField] private EmotionProfileSO sleepingEmotion;
     [SerializeField] private EmotionProfileSO pickedUpEmotion;
@@ -20,7 +20,7 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private EmotionProfileSO curiousEmotion;
     [SerializeField] private EmotionProfileSO excitedEmotion;
 
-    [Header("Р§Р°СЃРѕРІС– РїР°СЂР°РјРµС‚СЂРё")]
+    [Header("Часові параметри")]
     [SerializeField] private float timeToSleepMin = 15f;
     [SerializeField] private float timeToSleepMax = 30f;
     [SerializeField] private float timeToWakeMin = 10f;
@@ -29,12 +29,12 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private float gentlePettingSpeedThreshold = 200f;
     [SerializeField] private float tickleSpeedThreshold = 800f;
 
-    [Header("РЎРѕРЅ (Р•С„РµРєС‚Рё)")]
+    [Header("Сон (Ефекти)")]
     [SerializeField] private int sleepBlinkCount = 4;
     [SerializeField] private float sleepBlinkClosedDuration = 0.8f;
     [SerializeField] private float sleepBlinkOpenDuration = 0.4f;
 
-    [Header("РџРѕРіР»СЏРґ С– СѓРІР°РіР° (Idle Gaze)")]
+    [Header("Погляд і увага (Idle Gaze)")]
     [SerializeField] private float lookPlaneHeight = 0.5f;
     [SerializeField] private Vector3 lookAreaOffset = Vector3.zero;
     [SerializeField] private float idleLookIntervalMin = 1.5f;
@@ -45,7 +45,7 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private float flyOverReactionRadius = 2.5f;
     [Range(0f, 1f)][SerializeField] private float lookAtCameraChance = 0.5f;
 
-    [Header("РџРѕСЃРёР»Р°РЅРЅСЏ РЅР° РєРѕРјРїРѕРЅРµРЅС‚Рё")]
+    [Header("Посилання на компоненти")]
     [SerializeField] private FacialExpressionController facialController;
     [SerializeField] private ProceduralCatAnimator catAnimator; // NEW
 

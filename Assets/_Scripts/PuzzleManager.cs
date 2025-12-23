@@ -149,13 +149,22 @@ public class PuzzleManager : MonoBehaviour
             _lastMousePos = currentPos;
 
             Ray ray = Camera.main.ScreenPointToRay(currentPos);
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer | pieceLayer))
+            
+            // Stable horizontal plane at Y=0 (or cat's base) for movement delta calculation
+            Plane horizontalPlane = new Plane(Vector3.up, Vector3.zero);
+            if (horizontalPlane.Raycast(ray, out float enter))
             {
-                Vector3 currentWorldPos = hit.point;
-                // Calculate world delta
+                Vector3 currentWorldPos = ray.GetPoint(enter);
+                
+                // Calculate world delta from stable plane
                 _currentWorldMouseDelta = currentWorldPos - _lastWorldMousePos;
                 _lastWorldMousePos = currentWorldPos;
-                _lastHitPoint = currentWorldPos;
+                
+                // Update hit point for visuals (still use raycast for depth/mesh)
+                if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer | pieceLayer))
+                {
+                    _lastHitPoint = hit.point;
+                }
                 
                 // For legacy throw velocity
                 _currentThrowVelocity = Vector3.Lerp(_currentThrowVelocity, _currentWorldMouseDelta / Time.deltaTime, Time.deltaTime * 10f);

@@ -648,6 +648,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
+      propertyPath: bodyRoot
+      value: 
+      objectReference: {fileID: 3560667179643671351}
+    - target: {fileID: 2580341700186099159, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: softBoneController
       value: 
       objectReference: {fileID: 7625210259633581759}

@@ -480,6 +480,7 @@ MonoBehaviour:
   flyOverReactionRadius: 2.5
   lookAtCameraChance: 0.2
   facialController: {fileID: 8371808012640910952}
+  catAnimator: {fileID: 2580341700186099159}
 --- !u!114 &1545702117781013090
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -552,7 +553,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ProceduralCatAnimator
   bodyRoot: {fileID: 0}
   softBoneController: {fileID: 0}
-  _isShowPettingState: 0
+  sleepMotionMultiplier: 0.5
+  pettingImpactStrength: 0.05
+  maxPettingTilt: 5
+  pettingTailForceMultiplier: 2
+  pettingReturnSpeed: 5
   idleSpeed: 0.5
   bodyPosAxis: {x: 0, y: 1, z: 0}
   bodyPosAmount: 0
@@ -566,11 +571,6 @@ MonoBehaviour:
   wagStrength: 3
   tailWaviness: 2
   forceDistribution: 3
-  petBodySpeedMult: 5
-  petBodyAmpMult: 1.5
-  petTailSpeedMult: 10
-  petTailAmpMult: 1.2
-  transitionSpeed: 200
 --- !u!1 &7258113813301745620
 GameObject:
   m_ObjectHideFlags: 0
