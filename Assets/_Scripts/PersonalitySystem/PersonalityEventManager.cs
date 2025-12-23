@@ -1,9 +1,9 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 
 public static class PersonalityEventManager
 {
-    // --- ²ÑÍÓŞ×² ÏÎÄ²¯ ---
+    // --- ĞŸĞ•Ğ Ğ•ĞœĞ†Ğ©Ğ•ĞĞĞ¯ Ğ¢Ğ Ğ’Ğ—ĞĞ„ĞœĞĞ”Ğ†Ğ¯ ---
     public static event Action<PuzzlePiece> OnPiecePickedUp;
     public static void RaisePiecePickedUp(PuzzlePiece piece) => OnPiecePickedUp?.Invoke(piece);
 
@@ -16,17 +16,17 @@ public static class PersonalityEventManager
     public static event Action<PuzzlePiece> OnPiecePlaced;
     public static void RaisePiecePlaced(PuzzlePiece piece) => OnPiecePlaced?.Invoke(piece);
 
-    // --- ÄÎÄÀÍ² ÏÎÄ²¯ ÄËß "ÃËÀÄÆÅÍÍß" ---
+    // --- ĞŸĞ•Ğ¢Ğ¢Ğ˜ĞĞ“ (Ğ“Ğ›ĞĞ”Ğ–Ğ•ĞĞĞ¯) ---
     public static event Action<PuzzlePiece> OnPettingStart;
     public static void RaisePettingStart(PuzzlePiece piece) => OnPettingStart?.Invoke(piece);
 
-    public static event Action<PuzzlePiece, float> OnPettingUpdate;
-    public static void RaisePettingUpdate(PuzzlePiece piece, float mouseSpeed) => OnPettingUpdate?.Invoke(piece, mouseSpeed);
+    public static event Action<PuzzlePiece, float, Vector3, Vector3> OnPettingUpdate;
+    public static void RaisePettingUpdate(PuzzlePiece piece, float mouseSpeed, Vector3 worldDelta, Vector3 hitPoint) => OnPettingUpdate?.Invoke(piece, mouseSpeed, worldDelta, hitPoint);
 
     public static event Action<PuzzlePiece> OnPettingEnd;
     public static void RaisePettingEnd(PuzzlePiece piece) => OnPettingEnd?.Invoke(piece);
 
-    // --- ÍÎÂÀ ÏÎÄ²ß ÄËß ĞÅÀÊÖ²¯ ÍÀ ÏĞÎË²ÒÀŞ×Ó Ô²ÃÓĞÓ ---
+    // --- Ğ”Ğ˜Ğ¡Ğ¢ĞĞĞ¦Ğ†Ğ™ĞĞ† Ğ Ğ•ĞĞšĞ¦Ğ†Ğ‡ (ĞŸĞ ĞĞ›Ğ†Ğ¢ ĞĞĞ” ĞšĞĞ¢ĞĞœ) ---
     public static event Action<PuzzlePiece> OnPieceFlyOver;
     public static void RaisePieceFlyOver(PuzzlePiece stationaryPiece) => OnPieceFlyOver?.Invoke(stationaryPiece);
 }

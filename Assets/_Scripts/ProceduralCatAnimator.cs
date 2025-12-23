@@ -1,97 +1,61 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using EZhex1991.EZSoftBone;
 
 public class ProceduralCatAnimator : MonoBehaviour
 {
-    [Header("Ãîëîâí³ Ïîñèëàííÿ (Main References)")]
-    [Tooltip("Ãîëîâíà ê³ñòêà ò³ëà (Spine/Pelvis), ÿêó áóäåìî õèòàòè.")]
+    [Header("Ğ“Ğ¾Ğ»Ğ¾Ğ²Ğ½Ñ– Ğ¿Ğ¾ÑĞ¸Ğ»Ğ°Ğ½Ğ½Ñ (Main References)")]
+    [Tooltip("Ğ“Ğ¾Ğ»Ğ¾Ğ²Ğ½Ğ° ĞºÑ–ÑÑ‚ĞºĞ° Ñ‚Ñ–Ğ»Ğ° (Spine/Pelvis), ÑĞºĞ° Ğ±ÑƒĞ´Ğµ Ñ€ÑƒÑ…Ğ°Ñ‚Ğ¸ÑÑŒ.")]
     [SerializeField] private Transform bodyRoot;
-    [Tooltip("SoftBone êîìïîíåíò öüîãî êîòà (äëÿ ô³çèêè õâîñòà).")]
+    [Tooltip("SoftBone ĞºĞ¾Ğ½Ñ‚Ñ€Ğ¾Ğ»ĞµÑ€ Ğ´Ğ»Ñ Ñ…Ğ²Ğ¾ÑÑ‚Ğ°.")]
     [SerializeField] private EZSoftBone softBoneController;
 
-    [Header("Ñòàí (Debug State)")]
-    [Tooltip("×è ãëàäÿòü çàğàç êîòà?")]
-    [SerializeField] private bool _isShowPettingState;
+    [Header("ĞĞ°Ğ»Ğ°ÑˆÑ‚ÑƒĞ²Ğ°Ğ½Ğ½Ñ Ğ¡Ğ½Ñƒ")]
+    [Tooltip("ĞšĞ¾ĞµÑ„Ñ–Ñ†Ñ–Ñ”Ğ½Ñ‚ Ñ–Ğ½Ñ‚ĞµĞ½ÑĞ¸Ğ²Ğ½Ğ¾ÑÑ‚Ñ– Ğ´Ğ¸Ñ…Ğ°Ğ½Ğ½Ñ Ğ¿Ñ–Ğ´ Ñ‡Ğ°Ñ ÑĞ½Ñƒ.")]
+    [SerializeField] [Range(0f, 1f)] private float sleepMotionMultiplier = 0.5f;
 
-    // --- IDLE (ÑÏÎÊ²É) ---
-    [Header("Àí³ìàö³ÿ Ò³ëà (Idle Body Motion)")]
-    [Tooltip("Øâèäê³ñòü äèõàííÿ/õèòàííÿ ó ñïîê³éíîìó ñòàí³.")]
+    [Header("ĞĞ°Ğ»Ğ°ÑˆÑ‚ÑƒĞ²Ğ°Ğ½Ğ½Ñ ĞŸĞµÑ‚Ñ‚Ğ¸Ğ½Ğ³Ñƒ (ĞŸĞ¾Ğ³Ğ»Ğ°Ğ´Ğ¶ÑƒĞ²Ğ°Ğ½Ğ½Ñ)")]
+    [Tooltip("Ğ¡Ğ¸Ğ»Ğ° Ñ„Ñ–Ğ·Ğ¸Ñ‡Ğ½Ğ¾Ğ³Ğ¾ Ğ²Ñ–Ğ´ĞºĞ»Ğ¸ĞºÑƒ Ñ‚Ñ–Ğ»Ğ° Ğ½Ğ° Ñ€ÑƒÑ… Ğ¼Ğ¸ÑˆĞºĞ¸.")]
+    [SerializeField] private float pettingImpactStrength = 0.5f;
+    [Tooltip("Ğ¡Ğ¸Ğ»Ğ°, ÑĞºĞ° Ğ¿ĞµÑ€ĞµĞ´Ğ°Ñ”Ñ‚ÑŒÑÑ Ğ² SoftBones Ñ…Ğ²Ğ¾ÑÑ‚Ğ°.")]
+    [SerializeField] private float pettingTailForceMultiplier = 2.0f;
+    [Tooltip("Ğ¨Ğ²Ğ¸Ğ´ĞºÑ–ÑÑ‚ÑŒ Ğ¿Ğ¾Ğ²ĞµÑ€Ğ½ĞµĞ½Ğ½Ñ Ñ‚Ñ–Ğ»Ğ° Ğ² Ğ½ĞµĞ¹Ñ‚Ñ€Ğ°Ğ»ÑŒĞ½Ğ¸Ğ¹ ÑÑ‚Ğ°Ğ½.")]
+    [SerializeField] private float pettingReturnSpeed = 5f;
+
+    [Header("ĞŸĞ°Ñ€Ğ°Ğ¼ĞµÑ‚Ñ€Ğ¸ Idle Ñ€ÑƒÑ…Ñƒ (Breathing)")]
     [SerializeField] private float idleSpeed = 0.5f;
-
-    [Space(5)]
-    [Tooltip("Â³ñü ĞÓÕÓ (Position). Y=1 îçíà÷àº ğóõ âãîğó-âíèç.")]
     [SerializeField] private Vector3 bodyPosAxis = Vector3.up;
-    [Tooltip("Ñèëà ĞÓÕÓ (â ìåòğàõ). 0 = íå ğóõàòè.")]
-    [SerializeField] private float bodyPosAmount = 0f;
-
-    [Space(5)]
-    [Tooltip("Â³ñü ÎÁÅĞÒÀÍÍß (Rotation). Z=1 îçíà÷àº õèòàííÿ âë³âî-âïğàâî.")]
+    [SerializeField] private float bodyPosAmount = 0.02f;
     [SerializeField] private Vector3 bodyRotAxis = new Vector3(0, 0, 1);
-    [Tooltip("Ñèëà ÎÁÅĞÒÀÍÍß (â ãğàäóñàõ).")]
-    [SerializeField] private float bodyRotAmount = 3f;
-
-    [Space(5)]
-    [Tooltip("Â³ñü ÌÀÑØÒÀÁÓ (Scale). (1,1,1) = ğ³âíîì³ğíå çá³ëüøåííÿ.")]
+    [SerializeField] private float bodyRotAmount = 2f;
     [SerializeField] private Vector3 bodyScaleAxis = Vector3.one;
-    [Tooltip("Ñèëà ÌÀÑØÒÀÁÓÂÀÍÍß. 0 = âèìêíåíî. 0.02 = 2% çì³íè ğîçì³ğó ïğè äèõàíí³.")]
-    [SerializeField] private float bodyScaleAmount = 0f;
+    [SerializeField] private float bodyScaleAmount = 0.01f;
 
-    // --- TAIL (ÕÂ²ÑÒ) ---
-    [Header("Ô³çèêà Õâîñòà (Tail Physics Wag)")]
+    [Header("Ğ¥Ğ²Ñ–ÑÑ‚ (Tail Physics)")]
     [SerializeField] private bool enableTailWag = true;
-
-    [Tooltip("Íàïğÿìîê ñèëè âèëÿííÿ. X=1 (âë³âî-âïğàâî), Y=1 (âãîğó-âíèç).")]
     [SerializeField] private Vector3 wagLocalAxis = Vector3.right;
-
-    [Tooltip("Øâèäê³ñòü ìàõàííÿ õâîñòîì.")]
     [SerializeField] private float wagSpeed = 3f;
-
-    [Tooltip("Ñèëà ïîøòîâõó õâîñòà. ×èì á³ëüøå, òèì ñèëüí³øå éîãî çàíîñèòü.")]
     [SerializeField] private float wagStrength = 3f;
+    [Range(0f, 10f)] [SerializeField] private float tailWaviness = 2f;
+    [Range(0.1f, 5f)] [SerializeField] private float forceDistribution = 3f;
 
-    [Tooltip("Åôåêò 'çì³éêè'. 0 = ïğÿìèé õâ³ñò. Á³ëüøå çíà÷åííÿ = õâ³ñò éäå õâèëåş.")]
-    [Range(0f, 10f)]
-    [SerializeField] private float tailWaviness = 2f;
-
-    [Tooltip("Êóäè ïğèêëàäàòè ñèëó. 1 = ğ³âíîì³ğíî. 3 = ò³ëüêè ê³í÷èê.")]
-    [Range(0.1f, 5f)]
-    [SerializeField] private float forceDistribution = 3f;
-
-    // --- PETTING (ÃËÀÄÆÅÍÍß) ---
-    [Header("Ğåàêö³ÿ íà Ãëàäæåííÿ (Petting Reaction)")]
-    [Tooltip("Ó ñê³ëüêè ğàç³â øâèäøå ğóõàºòüñÿ Ò²ËÎ.")]
-    [SerializeField] private float petBodySpeedMult = 5f;
-    [Tooltip("Ó ñê³ëüêè ğàç³â ñèëüí³øà àìïë³òóäà Ò²ËÀ.")]
-    [SerializeField] private float petBodyAmpMult = 1.5f;
-    [Space(5)]
-    [Tooltip("Ó ñê³ëüêè ğàç³â øâèäøå ìàõàº ÕÂ²ÑÒ.")]
-    [SerializeField] private float petTailSpeedMult = 10f;
-    [Tooltip("Ó ñê³ëüêè ğàç³â ñèëüí³øå ìàõàº ÕÂ²ÑÒ.")]
-    [SerializeField] private float petTailAmpMult = 1.2f;
-    [Space(5)]
-    [Tooltip("ßê øâèäêî çì³íşºòüñÿ ñòàí (200 = ìàéæå ìèòòºâî).")]
-    [SerializeField] private float transitionSpeed = 200f;
-
-    // Âíóòğ³øí³ çì³íí³
     private float _timeOffset;
     private bool _isPetting;
     private bool _isSleeping;
 
-    // Çãëàäæåí³ ìíîæíèêè
-    private float _curBodySpeedM = 1f;
-    private float _curBodyAmpM = 1f;
-    private float _curTailSpeedM = 1f;
-    private float _curTailAmpM = 1f;
-
-    // Ïî÷àòêîâ³ òğàíñôîğìè
     private Vector3 _startLocalPos;
     private Quaternion _startLocalRot;
     private Vector3 _startLocalScale;
 
+    private Vector3 _pettingPosOffset;
+    private Quaternion _pettingRotOffset = Quaternion.identity;
+    private Vector3 _externalTailForce;
+    
+    // Lerping multipliers
+    private float _currentMotionScale = 1f;
+
     private void Awake()
     {
         _timeOffset = Random.Range(0f, 100f);
-
         if (bodyRoot)
         {
             _startLocalPos = bodyRoot.localPosition;
@@ -102,113 +66,102 @@ public class ProceduralCatAnimator : MonoBehaviour
 
     private void OnEnable()
     {
-        PersonalityEventManager.OnPettingStart += OnPettingStart;
-        PersonalityEventManager.OnPettingEnd += OnPettingEnd;
-
         if (softBoneController != null)
         {
-            softBoneController.customForce += CalculateWagForce;
+            softBoneController.customForce += GetCombinedTailForce;
         }
     }
 
     private void OnDisable()
     {
-        PersonalityEventManager.OnPettingStart -= OnPettingStart;
-        PersonalityEventManager.OnPettingEnd -= OnPettingEnd;
-
         if (softBoneController != null)
         {
-            softBoneController.customForce -= CalculateWagForce;
+            softBoneController.customForce -= GetCombinedTailForce;
         }
     }
 
     private void Update()
     {
-        _isShowPettingState = _isPetting;
-
-        if (_isSleeping) return;
-
-        UpdateStateValues();
+        UpdateMotionScale();
         AnimateBody();
+        ResetPettingImpact();
     }
 
-    private void UpdateStateValues()
+    private void UpdateMotionScale()
     {
-        float dt = Time.deltaTime * transitionSpeed;
-
-        float targetBodySpeed = _isPetting ? petBodySpeedMult : 1f;
-        float targetBodyAmp = _isPetting ? petBodyAmpMult : 1f;
-
-        float targetTailSpeed = _isPetting ? petTailSpeedMult : 1f;
-        float targetTailAmp = _isPetting ? petTailAmpMult : 1f;
-
-        _curBodySpeedM = Mathf.Lerp(_curBodySpeedM, targetBodySpeed, dt);
-        _curBodyAmpM = Mathf.Lerp(_curBodyAmpM, targetBodyAmp, dt);
-
-        _curTailSpeedM = Mathf.Lerp(_curTailSpeedM, targetTailSpeed, dt);
-        _curTailAmpM = Mathf.Lerp(_curTailAmpM, targetTailAmp, dt);
+        float targetScale = _isSleeping ? sleepMotionMultiplier : 1f;
+        _currentMotionScale = Mathf.MoveTowards(_currentMotionScale, targetScale, Time.deltaTime * 2f);
     }
 
     private void AnimateBody()
     {
         if (bodyRoot == null) return;
 
-        float time = Time.time + _timeOffset;
+        float time = (Time.time + _timeOffset) * _currentMotionScale;
+        float sineWave = Mathf.Sin(time * idleSpeed);
+        float cosWave = Mathf.Cos(time * idleSpeed);
 
-        float sineWave = Mathf.Sin(time * idleSpeed * _curBodySpeedM);
-        float cosWave = Mathf.Cos(time * idleSpeed * _curBodySpeedM);
+        // Idle movement
+        Vector3 idlePos = bodyPosAxis * (sineWave * bodyPosAmount * _currentMotionScale);
+        Quaternion idleRot = Quaternion.AngleAxis(cosWave * bodyRotAmount * _currentMotionScale, bodyRotAxis);
+        Vector3 idleScale = bodyScaleAxis * (sineWave * bodyScaleAmount * _currentMotionScale);
 
-        // 1. Ïîçèö³ÿ
-        Vector3 posOffset = bodyPosAxis * (sineWave * bodyPosAmount * _curBodyAmpM);
-        bodyRoot.localPosition = _startLocalPos + posOffset;
-
-        // 2. Îáåğòàííÿ
-        Quaternion rotOffset = Quaternion.AngleAxis(cosWave * bodyRotAmount * _curBodyAmpM, bodyRotAxis);
-        bodyRoot.localRotation = _startLocalRot * rotOffset;
-
-        // 3. Ìàñøòàá (Scale) - Íîâå
-        // Âèêîğèñòîâóºìî (sineWave + 1) / 2, ùîá ñêåéë áóâ â³ä 1.0 äî 1.X, à íå çìåíøóâàâñÿ
-        // Àáî ïğîñòèé sineWave, ÿêùî õî÷åìî ñòèñíåííÿ ³ ğîçòÿãíåííÿ
-        Vector3 scaleOffset = bodyScaleAxis * (sineWave * bodyScaleAmount * _curBodyAmpM);
-        bodyRoot.localScale = _startLocalScale + scaleOffset;
+        // Combine with Petting Impact
+        bodyRoot.localPosition = _startLocalPos + idlePos + _pettingPosOffset;
+        bodyRoot.localRotation = _startLocalRot * idleRot * _pettingRotOffset;
+        bodyRoot.localScale = _startLocalScale + idleScale;
     }
 
-    // --- Ô³çèêà Õâîñòà ---
+    private void ResetPettingImpact()
+    {
+        _pettingPosOffset = Vector3.Lerp(_pettingPosOffset, Vector3.zero, Time.deltaTime * pettingReturnSpeed);
+        _pettingRotOffset = Quaternion.Slerp(_pettingRotOffset, Quaternion.identity, Time.deltaTime * pettingReturnSpeed);
+        _externalTailForce = Vector3.Lerp(_externalTailForce, Vector3.zero, Time.deltaTime * pettingReturnSpeed);
+    }
+
+    public void ApplyPettingImpact(Vector3 worldDelta, Vector3 hitPoint)
+    {
+        if (_isSleeping) return;
+
+        // 1. Body Shift
+        Vector3 localDelta = transform.InverseTransformDirection(worldDelta);
+        _pettingPosOffset += localDelta * pettingImpactStrength;
+        _pettingPosOffset = Vector3.ClampMagnitude(_pettingPosOffset, 0.1f);
+
+        // 2. Body Tilt (Rotate away from/with movement)
+        float tiltAngle = localDelta.x * 20f; // Tilt based on horizontal movement
+        _pettingRotOffset *= Quaternion.Euler(0, 0, -tiltAngle);
+
+        // 3. Tail Force
+        _externalTailForce += worldDelta * pettingTailForceMultiplier;
+    }
+
+    private Vector3 GetCombinedTailForce(float normalizedLength)
+    {
+        Vector3 wag = CalculateWagForce(normalizedLength);
+        
+        // Distribution of petting force (more at the tip)
+        float distribution = Mathf.Pow(normalizedLength, forceDistribution);
+        Vector3 petting = _externalTailForce * distribution;
+
+        return wag + petting;
+    }
+
     private Vector3 CalculateWagForce(float normalizedLength)
     {
-        if (!enableTailWag || _isSleeping) return Vector3.zero;
+        if (!enableTailWag) return Vector3.zero;
 
-        float time = Time.time + _timeOffset;
-
-        // Õâèëÿñò³ñòü
+        float time = (Time.time + _timeOffset) * _currentMotionScale;
         float phaseOffset = normalizedLength * tailWaviness;
+        float wave = Mathf.Sin((time * wagSpeed) - phaseOffset);
 
-        float wave = Mathf.Sin((time * wagSpeed * _curTailSpeedM) - phaseOffset);
-
-        // Íàïğÿìîê
         Vector3 worldDirection = transform.TransformDirection(wagLocalAxis);
-
-        // Ñèëà
-        Vector3 force = worldDirection * (wave * wagStrength * _curTailAmpM);
-
-        // Ğîçïîä³ë ñèëè
+        Vector3 force = worldDirection * (wave * wagStrength * _currentMotionScale);
         float distributionFactor = Mathf.Pow(normalizedLength, forceDistribution);
 
         return force * distributionFactor;
     }
 
-    private void OnPettingStart(PuzzlePiece piece)
-    {
-        if (piece.gameObject == gameObject) _isPetting = true;
-    }
-
-    private void OnPettingEnd(PuzzlePiece piece)
-    {
-        if (piece.gameObject == gameObject) _isPetting = false;
-    }
-
-    public void SetSleeping(bool sleeping)
-    {
-        _isSleeping = sleeping;
-    }
+    public void SetSleeping(bool sleeping) => _isSleeping = sleeping;
+    public void SetPetting(bool petting) => _isPetting = petting;
 }

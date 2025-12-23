@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using System;
@@ -52,6 +52,9 @@ public class PuzzleManager : MonoBehaviour
     private Vector2 _lastMousePos;
     private Vector3 _lastWorldMousePos;
     private Vector3 _currentThrowVelocity;
+    private Vector3 _lastWorldMousePos;
+    private Vector3 _currentWorldMouseDelta;
+    private Vector3 _lastHitPoint;
     private float _currentMouseSpeed;
 
     private Vector2Int? _lastSnappedGridOrigin = null;
@@ -62,9 +65,9 @@ public class PuzzleManager : MonoBehaviour
     public event Action<PuzzlePiece> OnPiecePickedUp;
     public event Action<PuzzlePiece> OnPieceDropped;
 
-    // --- ПУБЛІЧНА ВЛАСТИВІСТЬ ДЛЯ КАМЕРИ ---
-    // Повертає true, якщо гравець зараз взаємодіє з фігурою або нависає над нею.
-    // Це потрібно, щоб камера не перехоплювала клік ЛКМ.
+    // --- РџРЈР‘Р›Р†Р§РќРђ Р’Р›РђРЎРўРР’Р†РЎРўР¬ Р”Р›РЇ РљРђРњР•Р Р ---
+    // РџРѕРІРµСЂС‚Р°С” true, СЏРєС‰Рѕ РіСЂР°РІРµС†СЊ Р·Р°СЂР°Р· РІР·Р°С”РјРѕРґС–С” Р· С„С–РіСѓСЂРѕСЋ Р°Р±Рѕ РЅР°РІРёСЃР°С” РЅР°Рґ РЅРµСЋ.
+    // Р¦Рµ РїРѕС‚СЂС–Р±РЅРѕ, С‰РѕР± РєР°РјРµСЂР° РЅРµ РїРµСЂРµС…РѕРїР»СЋРІР°Р»Р° РєР»С–Рє Р›РљРњ.
     public bool IsInteracting =>
         _heldPiece != null ||
         _hoveredPiece != null ||
@@ -141,7 +144,26 @@ public class PuzzleManager : MonoBehaviour
         Vector2 currentPos = inputReader.MousePosition;
         float dist = (currentPos - _lastMousePos).magnitude;
         _currentMouseSpeed = dist / Time.deltaTime;
+                _lastMousePos = currentPos;
+
+            Ray ray = Camera.main.ScreenPointToRay(currentPos);
+            if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer | pieceLayer))
+            {
+                Vector3 currentWorldPos = hit.point;
+                _currentWorldMouseDelta = currentWorldPos - _lastWorldMousePos;
+                _lastWorldMousePos = currentWorldPos;
+                _lastHitPoint = currentWorldPos;
+            }
         _lastMousePos = currentPos;
+
+            Ray ray = Camera.main.ScreenPointToRay(currentPos);
+            if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer | pieceLayer))
+            {
+                Vector3 currentWorldPos = hit.point;
+                _currentWorldMouseDelta = currentWorldPos - _lastWorldMousePos;
+                _lastWorldMousePos = currentWorldPos;
+                _lastHitPoint = currentWorldPos;
+            }
 
         Ray ray = Camera.main.ScreenPointToRay(currentPos);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
@@ -252,7 +274,7 @@ public class PuzzleManager : MonoBehaviour
 
         if (_isPettingActive)
         {
-            PersonalityEventManager.RaisePettingUpdate(_potentialInteractionPiece, _currentMouseSpeed);
+            PersonalityEventManager.RaisePettingUpdate(_potentialInteractionPiece, _currentMouseSpeed, _currentWorldMouseDelta, _lastHitPoint);
         }
     }
 
@@ -378,7 +400,7 @@ public class PuzzleManager : MonoBehaviour
                     {
                         GridBuildingSystem.Instance.RemovePieceFromGrid(passenger);
                         passenger.SetPlaced(null);
-                        piece.AddPassenger(passenger); // Фізично і логічно додаємо в тулз
+                        piece.AddPassenger(passenger); // Р¤С–Р·РёС‡РЅРѕ С– Р»РѕРіС–С‡РЅРѕ РґРѕРґР°С”РјРѕ РІ С‚СѓР»Р·
                         _initialPassengersSnapshot.Add(passenger);
                     }
                 }
@@ -390,7 +412,7 @@ public class PuzzleManager : MonoBehaviour
             }
             else
             {
-                // Якщо піднімаємо з OffGrid або повітря, пасажири вже в StoredPassengers
+                // РЇРєС‰Рѕ РїС–РґРЅС–РјР°С”РјРѕ Р· OffGrid Р°Р±Рѕ РїРѕРІС–С‚СЂСЏ, РїР°СЃР°Р¶РёСЂРё РІР¶Рµ РІ StoredPassengers
                 _initialPassengersSnapshot.AddRange(piece.StoredPassengers);
             }
         }
@@ -574,8 +596,8 @@ public class PuzzleManager : MonoBehaviour
 
         if (canOnGrid)
         {
-            // Передаємо збережений список пасажирів (той що був при Pickup або поточний, якщо не змінювався)
-            // Але оскільки ми могли додати когось під час утримання, беремо поточний StoredPassengers
+            // РџРµСЂРµРґР°С”РјРѕ Р·Р±РµСЂРµР¶РµРЅРёР№ СЃРїРёСЃРѕРє РїР°СЃР°Р¶РёСЂС–РІ (С‚РѕР№ С‰Рѕ Р±СѓРІ РїСЂРё Pickup Р°Р±Рѕ РїРѕС‚РѕС‡РЅРёР№, СЏРєС‰Рѕ РЅРµ Р·РјС–РЅСЋРІР°РІСЃСЏ)
+            // РђР»Рµ РѕСЃРєС–Р»СЊРєРё РјРё РјРѕРіР»Рё РґРѕРґР°С‚Рё РєРѕРіРѕСЃСЊ РїС–Рґ С‡Р°СЃ СѓС‚СЂРёРјР°РЅРЅСЏ, Р±РµСЂРµРјРѕ РїРѕС‚РѕС‡РЅРёР№ StoredPassengers
             ICommand cmd = new PlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation, _heldPiece.StoredPassengers);
 
             if (cmd.Execute())

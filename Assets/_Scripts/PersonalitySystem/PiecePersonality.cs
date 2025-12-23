@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ public class PiecePersonality : MonoBehaviour
 {
     private TemperamentSO _temperament;
 
-    [Header("Візуальні дані")]
+    [Header("Р’С–Р·СѓР°Р»СЊРЅС– РґР°РЅС–")]
     [SerializeField] private EmotionProfileSO neutralEmotion;
     [SerializeField] private EmotionProfileSO sleepingEmotion;
     [SerializeField] private EmotionProfileSO pickedUpEmotion;
@@ -20,7 +20,7 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private EmotionProfileSO curiousEmotion;
     [SerializeField] private EmotionProfileSO excitedEmotion;
 
-    [Header("Часові параметри")]
+    [Header("Р§Р°СЃРѕРІС– РїР°СЂР°РјРµС‚СЂРё")]
     [SerializeField] private float timeToSleepMin = 15f;
     [SerializeField] private float timeToSleepMax = 30f;
     [SerializeField] private float timeToWakeMin = 10f;
@@ -29,12 +29,12 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private float gentlePettingSpeedThreshold = 200f;
     [SerializeField] private float tickleSpeedThreshold = 800f;
 
-    [Header("Сон (Ефекти)")]
+    [Header("РЎРѕРЅ (Р•С„РµРєС‚Рё)")]
     [SerializeField] private int sleepBlinkCount = 4;
     [SerializeField] private float sleepBlinkClosedDuration = 0.8f;
     [SerializeField] private float sleepBlinkOpenDuration = 0.4f;
 
-    [Header("Погляд і увага (Idle Gaze)")]
+    [Header("РџРѕРіР»СЏРґ С– СѓРІР°РіР° (Idle Gaze)")]
     [SerializeField] private float lookPlaneHeight = 0.5f;
     [SerializeField] private Vector3 lookAreaOffset = Vector3.zero;
     [SerializeField] private float idleLookIntervalMin = 1.5f;
@@ -45,8 +45,9 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private float flyOverReactionRadius = 2.5f;
     [Range(0f, 1f)][SerializeField] private float lookAtCameraChance = 0.5f;
 
-    [Header("Посилання на компоненти")]
+    [Header("РџРѕСЃРёР»Р°РЅРЅСЏ РЅР° РєРѕРјРїРѕРЅРµРЅС‚Рё")]
     [SerializeField] private FacialExpressionController facialController;
+    [SerializeField] private ProceduralCatAnimator catAnimator; // NEW
 
     private float _currentFatigue, _currentIrritation, _currentTrust;
     private bool _isHeld, _isSleeping, _isBeingPetted;
@@ -73,6 +74,13 @@ public class PiecePersonality : MonoBehaviour
         _puzzlePiece = GetComponent<PuzzlePiece>();
         if (facialController == null)
             facialController = GetComponentInChildren<FacialExpressionController>();
+
+        // NEW: Auto-detect animator
+        if (catAnimator == null) catAnimator = GetComponent<ProceduralCatAnimator>();
+        
+        // NEW: Auto-detect animator
+        // Handled in replace_file_content hopefully, but let's be safe
+            catAnimator = GetComponent<ProceduralCatAnimator>();
     }
 
     private void OnEnable()
@@ -255,6 +263,7 @@ public class PiecePersonality : MonoBehaviour
             StopAllBehaviorCoroutines();
             _isBeingPetted = true;
             _isSleeping = false;
+        if (catAnimator != null) catAnimator.SetSleeping(false);
             _isLookingRandomly = false;
             SetEmotion(neutralEmotion);
         }
@@ -301,6 +310,7 @@ public class PiecePersonality : MonoBehaviour
         {
             if (!_isBeingPetted) return;
             _isBeingPetted = false;
+            if (catAnimator != null) catAnimator.SetPetting(false);
             _lastPettingEmotion = null;
             ReturnToNeutralState();
         }
@@ -318,7 +328,9 @@ public class PiecePersonality : MonoBehaviour
             StopAllBehaviorCoroutines();
             _isHeld = true;
             _isSleeping = false;
+        if (catAnimator != null) catAnimator.SetSleeping(false);
             _isBeingPetted = false;
+            if (catAnimator != null) catAnimator.SetPetting(false);
             _isLookingRandomly = false;
             _wantsToLookAtCamera = Random.value < lookAtCameraChance;
             SetEmotion(pickedUpEmotion);
@@ -391,6 +403,7 @@ public class PiecePersonality : MonoBehaviour
         {
             StopAllBehaviorCoroutines();
             _isSleeping = false;
+        if (catAnimator != null) catAnimator.SetSleeping(false);
             StartCoroutine(ShowReactionEmotion(curiousEmotion, 2.0f));
         }
         else if (!_isLookingRandomly)
@@ -471,6 +484,7 @@ public class PiecePersonality : MonoBehaviour
     {
         StopAllBehaviorCoroutines();
         _isSleeping = false;
+        if (catAnimator != null) catAnimator.SetSleeping(false);
         _isLookingRandomly = false;
 
         SetEmotion(neutralEmotion);
@@ -520,6 +534,7 @@ public class PiecePersonality : MonoBehaviour
 
         // Finally sleep
         _isSleeping = true;
+        if (catAnimator != null) catAnimator.SetSleeping(true);
         SetEmotion(sleepingEmotion);
         _wakeUpCoroutine = StartCoroutine(WakeUpTimer(Random.Range(timeToWakeMin, timeToWakeMax)));
         _fallingAsleepCoroutine = null;
@@ -624,3 +639,4 @@ public class PiecePersonality : MonoBehaviour
     public Transform GetFocusPoint() => facialController != null ? facialController.GetFacialFocusPoint() : transform;
 
 }
+
