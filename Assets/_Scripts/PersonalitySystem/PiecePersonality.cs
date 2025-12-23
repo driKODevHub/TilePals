@@ -29,6 +29,11 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private float gentlePettingSpeedThreshold = 200f;
     [SerializeField] private float tickleSpeedThreshold = 800f;
 
+    [Header("Сон (Ефекти)")]
+    [SerializeField] private int sleepBlinkCount = 4;
+    [SerializeField] private float sleepBlinkClosedDuration = 0.8f;
+    [SerializeField] private float sleepBlinkOpenDuration = 0.4f;
+
     [Header("Погляд і увага (Idle Gaze)")]
     [SerializeField] private float lookPlaneHeight = 0.5f;
     [SerializeField] private Vector3 lookAreaOffset = Vector3.zero;
@@ -44,7 +49,7 @@ public class PiecePersonality : MonoBehaviour
 
     private float _currentFatigue, _currentIrritation, _currentTrust;
     private bool _isHeld, _isSleeping, _isBeingPetted;
-    private Coroutine _sleepCoroutine, _shakenCoroutine, _reactionCoroutine, _idleLookCoroutine, _wakeUpCoroutine;
+    private Coroutine _sleepCoroutine, _shakenCoroutine, _reactionCoroutine, _idleLookCoroutine, _wakeUpCoroutine, _fallingAsleepCoroutine;
     private PuzzlePiece _puzzlePiece;
     private EmotionProfileSO _lastPettingEmotion;
     private bool _isLookingRandomly = false;
@@ -121,11 +126,12 @@ public class PiecePersonality : MonoBehaviour
 
     private void StopAllBehaviorCoroutines()
     {
-        if (_sleepCoroutine != null) StopCoroutine(_sleepCoroutine);
-        if (_idleLookCoroutine != null) StopCoroutine(_idleLookCoroutine);
-        if (_wakeUpCoroutine != null) StopCoroutine(_wakeUpCoroutine);
-        if (_shakenCoroutine != null) StopCoroutine(_shakenCoroutine);
-        if (_reactionCoroutine != null) StopCoroutine(_reactionCoroutine);
+        if (_sleepCoroutine != null) { StopCoroutine(_sleepCoroutine); _sleepCoroutine = null; }
+        if (_idleLookCoroutine != null) { StopCoroutine(_idleLookCoroutine); _idleLookCoroutine = null; }
+        if (_wakeUpCoroutine != null) { StopCoroutine(_wakeUpCoroutine); _wakeUpCoroutine = null; }
+        if (_shakenCoroutine != null) { StopCoroutine(_shakenCoroutine); _shakenCoroutine = null; }
+        if (_reactionCoroutine != null) { StopCoroutine(_reactionCoroutine); _reactionCoroutine = null; }
+        if (_fallingAsleepCoroutine != null) { StopCoroutine(_fallingAsleepCoroutine); _fallingAsleepCoroutine = null; }
     }
 
     private void Update()
@@ -133,15 +139,18 @@ public class PiecePersonality : MonoBehaviour
         // --- NEW: Handle Debug Input (Alt + Click) ---
         HandleDebugInput();
 
-        if (!_isHeld && !_isSleeping && !_isBeingPetted && facialController != null)
+        // BLOCK: Do not look around if sleeping or in the process of falling asleep
+        if (_isSleeping || _fallingAsleepCoroutine != null) return;
+
+        if (!_isHeld && !_isBeingPetted && facialController != null)
         {
             if (_puzzlePiece.HasItem)
             {
-                facialController.LookAt(_puzzlePiece.GetAttachmentPoint().position);
+                facialController.LookAt(_puzzlePiece.GetAttachmentPoint().position, false);
             }
             else if (_attentionTarget != null)
             {
-                facialController.LookAt(_attentionTarget.transform.position);
+                facialController.LookAt(_attentionTarget.transform.position, false);
             }
             else if (_isLookingRandomly)
             {
@@ -462,11 +471,39 @@ public class PiecePersonality : MonoBehaviour
     {
         yield return new WaitForSeconds(time);
         if (_isBeingPetted || _isHeld || _attentionTarget != null || _puzzlePiece.HasItem) yield break;
+        
         StopAllBehaviorCoroutines();
-        _isLookingRandomly = false;
+        _fallingAsleepCoroutine = StartCoroutine(SleepBlinkSequence());
+    }
+
+    private IEnumerator SleepBlinkSequence()
+    {
+        _isLookingRandomly = false; // Stop looking around while falling asleep
+        if (facialController != null) facialController.ResetPupilPosition(); // Center eyes at start
+        
+        for (int i = 0; i < sleepBlinkCount; i++)
+        {
+            // Close eyes slowly
+            if (facialController != null) 
+                facialController.TriggerBlink(sleepBlinkClosedDuration * (1f + (float)i/sleepBlinkCount));
+            
+            yield return new WaitForSeconds(sleepBlinkClosedDuration * (1f + (float)i/sleepBlinkCount));
+            
+            // Short interval open eyes
+            yield return new WaitForSeconds(sleepBlinkOpenDuration);
+            
+            // Randomly reset gaze while falling asleep (eyes "wander" to center)
+            if (facialController != null && Random.value < 0.5f) 
+                facialController.ResetPupilPosition();
+
+            if (_isHeld || _isBeingPetted || _attentionTarget != null) yield break;
+        }
+
+        // Finally sleep
         _isSleeping = true;
         SetEmotion(sleepingEmotion);
         _wakeUpCoroutine = StartCoroutine(WakeUpTimer(Random.Range(timeToWakeMin, timeToWakeMax)));
+        _fallingAsleepCoroutine = null;
     }
 
     private IEnumerator WakeUpTimer(float time)
@@ -509,7 +546,7 @@ public class PiecePersonality : MonoBehaviour
         if (plane.Raycast(ray, out float distance))
         {
             Vector3 targetPoint = ray.GetPoint(distance);
-            if (facialController != null) facialController.LookAt(targetPoint);
+            if (facialController != null) facialController.LookAt(targetPoint, false);
         }
     }
 

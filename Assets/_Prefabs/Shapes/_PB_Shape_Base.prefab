@@ -467,6 +467,9 @@ MonoBehaviour:
   shakenEmotionDuration: 1
   gentlePettingSpeedThreshold: 200
   tickleSpeedThreshold: 800
+  sleepBlinkCount: 3
+  sleepBlinkClosedDuration: 0.3
+  sleepBlinkOpenDuration: 0.2
   lookPlaneHeight: 1
   lookAreaOffset: {x: 0.5, y: 1, z: 0.5}
   idleLookIntervalMin: 1.5
@@ -701,6 +704,9 @@ MonoBehaviour:
   blinkIntervalMax: 12
   blinkDuration: 0.1
   hideObjectOnBlink: 1
+  blinkOnLookChance: 0.7
+  resetGazeOnBlinkChance: 0.3
+  gazeShiftThreshold: 1
   featureBindings:
   - featureType: 1
     targetObjects:
@@ -772,10 +778,12 @@ MonoBehaviour:
     boneStates: []
   - featureType: 21
     boneStates: []
+  - featureType: 22
+    boneStates: []
   particleBindings:
   - featureType: 26
     particlePrefab: {fileID: 0}
-    sceneParticle: {fileID: 0}
+    sceneParticle: {fileID: 8088907188859181384}
     instantiate: 0
     spawnOffset: {x: 0, y: 0, z: 0}
     shouldLoop: 1
@@ -885,6 +893,10 @@ PrefabInstance:
       value: Sleeping
       objectReference: {fileID: 0}
     - target: {fileID: 8294083197414925230, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.294
+      objectReference: {fileID: 0}
+    - target: {fileID: 8294083197414925230, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
@@ -904,6 +916,11 @@ PrefabInstance:
 --- !u!4 &7144345532127014257 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8294083197414925230, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
+  m_PrefabInstance: {fileID: 1170743290549997279}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &8088907188859181384 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 6953209188632336279, guid: 8731de742c555ce498d05d58c2419eab, type: 3}
   m_PrefabInstance: {fileID: 1170743290549997279}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2143099452246868823

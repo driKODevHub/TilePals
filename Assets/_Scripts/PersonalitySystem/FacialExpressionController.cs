@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq; // NEW: Added to fix Any() compilation error
 using EZhex1991.EZSoftBone; // NEW: Physics bones support
 
 public class FacialExpressionController : MonoBehaviour
@@ -119,11 +120,16 @@ public class FacialExpressionController : MonoBehaviour
     [SerializeField] private float blinkIntervalMax = 7f;
     [SerializeField] private float blinkDuration = 0.15f;
     [SerializeField] private bool hideObjectOnBlink = true;
+    [Range(0f, 1f)][SerializeField] private float blinkOnLookChance = 0.7f;
+    [Range(0f, 1f)][SerializeField] private float resetGazeOnBlinkChance = 0.3f;
+    [SerializeField] private float gazeShiftThreshold = 1.0f;
 
     [Header("--- 3D FEATURES BINDING ---")]
     [Tooltip("Прив'язка типів до конкретних об'єктів на сцені.")]
     public List<FeatureBinding> featureBindings;
-    public List<BoneBinding> boneBindings;         // NEW
+    [Header("--- BONES & PHYSICS ---")]
+    [SerializeField] private float boneTransitionSpeed = 5f; // Speed of transitioning between bone poses
+    public List<BoneBinding> boneBindings; // NEW
     public List<ParticleBinding> particleBindings; // NEW
 
     [Header("--- DEBUG / GIZMOS ---")]
@@ -134,8 +140,37 @@ public class FacialExpressionController : MonoBehaviour
     // --- STATE ---
     private Coroutine _blinkingCoroutine;
     private Vector3 _currentWorldLookTarget;
+    private Vector3 _lastWorldLookTarget;
     private bool _isLookingAtSomething = false;
     private List<GameObject> _activeInstantiatedParticles = new List<GameObject>(); // NEW: Track particles
+    private CatFeatureType _currentEyeFeature = CatFeatureType.None; // NEW: Track active eye for blinking
+    private Coroutine _manualBlinkCoroutine;
+    private List<BoneBinding> _activeBoneBindings = new List<BoneBinding>(); // NEW: To persist poses across Animator updates
+    
+    private struct BoneTransformData
+    {
+        public Vector3 position;
+        public Quaternion rotation;
+        public Vector3 scale;
+    }
+    private Dictionary<Transform, BoneTransformData> _defaultBonePoses = new Dictionary<Transform, BoneTransformData>();
+
+    private class BoneTarget
+    {
+        public Vector3 currentPosition;
+        public Quaternion currentRotation;
+        public Vector3 currentScale;
+
+        public Vector3 targetPosition;
+        public Quaternion targetRotation;
+        public Vector3 targetScale;
+        
+        public bool isDirty = false;
+        public bool isInitialized = false;
+    }
+    private Dictionary<Transform, BoneTarget> _boneTargets = new Dictionary<Transform, BoneTarget>();
+    private bool _anyBoneDirty = false;
+    private HashSet<CatFeatureType> _activeBoneTypes = new HashSet<CatFeatureType>(); // NEW: Track currently active bone types
 
     public bool IsLookingAtSomething => _isLookingAtSomething;
 
@@ -144,6 +179,27 @@ public class FacialExpressionController : MonoBehaviour
         InitializeEyeRotation(leftEye);
         InitializeEyeRotation(rightEye);
         InitializeFacePosition(faceRig);
+
+        // Capture default rig poses for all custom bones
+        if (boneBindings != null)
+        {
+            foreach (var binding in boneBindings)
+            {
+                if (binding.boneStates == null) continue;
+                foreach (var state in binding.boneStates)
+                {
+                    if (state.boneTransform != null && !_defaultBonePoses.ContainsKey(state.boneTransform))
+                    {
+                        _defaultBonePoses[state.boneTransform] = new BoneTransformData
+                        {
+                            position = state.boneTransform.localPosition,
+                            rotation = state.boneTransform.localRotation,
+                            scale = state.boneTransform.localScale
+                        };
+                    }
+                }
+            }
+        }
 
         if (_blinkingCoroutine != null) StopCoroutine(_blinkingCoroutine);
         _blinkingCoroutine = StartCoroutine(BlinkRoutine());
@@ -201,6 +257,10 @@ public class FacialExpressionController : MonoBehaviour
 
     private void LateUpdate()
     {
+        // 1. Re-apply bone transforms every frame to override Animator
+        ApplyActiveBoneBindings();
+
+        // 2. Update Eyes and Gaze
         UpdateEye(leftEye);
         UpdateEye(rightEye);
         UpdateFace(faceRig);
@@ -208,8 +268,20 @@ public class FacialExpressionController : MonoBehaviour
 
     // --- PUBLIC API ---
 
-    public void LookAt(Vector3 worldPosition)
+    public void LookAt(Vector3 worldPosition, bool allowBlinkOnShift = true)
     {
+        // Check if the target shifted significantly to trigger a blink
+        if (allowBlinkOnShift && (!_isLookingAtSomething || Vector3.Distance(worldPosition, _lastWorldLookTarget) > gazeShiftThreshold))
+        {
+            if (Random.value < blinkOnLookChance)
+            {
+                TriggerBlink();
+            }
+            _lastWorldLookTarget = worldPosition;
+        }
+
+        if (!allowBlinkOnShift) _lastWorldLookTarget = worldPosition; // Keep last target updated even if not blinking
+
         _currentWorldLookTarget = worldPosition;
         _isLookingAtSomething = true;
     }
@@ -228,6 +300,22 @@ public class FacialExpressionController : MonoBehaviour
 
         // 1. Reset Everything
         ClearParticles(); // NEW: Destroy/Stop particles
+        _activeBoneBindings.Clear(); // NEW: Reset tracked bone poses
+        // REMOVED: _activeBoneTypes.Clear() - we keep state across emotions to prevent redundant transitions
+
+        // Reset all tracked bone targets to their rig-default state first.
+        // If the new emotion specifies a custom pose, it will overwrite this in ActivateBoneFeatures.
+        foreach (var pair in _boneTargets)
+        {
+            if (_defaultBonePoses.TryGetValue(pair.Key, out var defaultPose))
+            {
+                pair.Value.targetPosition = defaultPose.position;
+                pair.Value.targetRotation = defaultPose.rotation;
+                pair.Value.targetScale = defaultPose.scale;
+                pair.Value.isDirty = true;
+                _anyBoneDirty = true;
+            }
+        }
         
         if (featureBindings != null)
         {
@@ -248,6 +336,12 @@ public class FacialExpressionController : MonoBehaviour
         {
             foreach (var featureType in emotionProfileSO.activeFeatures)
             {
+                // Track current eye feature for blink logic
+                if (featureType.ToString().StartsWith("Eye_"))
+                {
+                    _currentEyeFeature = featureType;
+                }
+
                 ActivateFeature(featureType);
                 ActivateBoneFeatures(featureType);     // NEW
                 ActivateParticleFeatures(featureType); // NEW
@@ -275,37 +369,113 @@ public class FacialExpressionController : MonoBehaviour
     {
         if (boneBindings == null || type == CatFeatureType.None) return;
 
+        string prefix = type.ToString().Split('_')[0];
+        bool alreadyActive = _activeBoneTypes.Contains(type);
+
         // Find bindings for this type
         var activeBindings = boneBindings.FindAll(b => b.featureType == type);
         if (activeBindings.Count == 0) return;
 
-        // 1. Disable Physics (EZSoftBone)
-        var softBones = GetComponentsInChildren<EZSoftBone>();
-        foreach (var sb in softBones) sb.enabled = false;
-
-        // 2. Apply Transforms
+        // Update targets
         foreach (var binding in activeBindings)
         {
-            if (binding.boneStates != null)
+            if (binding.boneStates == null) continue;
+            foreach (var state in binding.boneStates)
             {
-                foreach (var state in binding.boneStates)
+                if (state.boneTransform == null) continue;
+                
+                if (!_boneTargets.TryGetValue(state.boneTransform, out var target))
                 {
-                    if (state.boneTransform != null)
-                    {
-                        state.boneTransform.localPosition = state.targetPosition;
-                        state.boneTransform.localEulerAngles = state.targetEulerAngles;
-                        state.boneTransform.localScale = state.targetScale;
-                    }
+                    target = new BoneTarget();
+                    _boneTargets[state.boneTransform] = target;
+                }
+                
+                if (!target.isInitialized)
+                {
+                    target.currentPosition = state.boneTransform.localPosition;
+                    target.currentRotation = state.boneTransform.localRotation;
+                    target.currentScale = state.boneTransform.localScale;
+                    target.isInitialized = true;
+                }
+
+                target.targetPosition = state.targetPosition;
+                target.targetRotation = Quaternion.Euler(state.targetEulerAngles);
+                target.targetScale = state.targetScale;
+
+                if (alreadyActive)
+                {
+                    // Snap: No transition if same type
+                    target.currentPosition = target.targetPosition;
+                    target.currentRotation = target.targetRotation;
+                    target.currentScale = target.targetScale;
+                    target.isDirty = false;
+                }
+                else
+                {
+                    // Transition: Mark for Lerp
+                    target.isDirty = true;
+                    _anyBoneDirty = true;
                 }
             }
         }
 
-        // 3. Re-Enable Physics (Sync Rest State)
-        foreach (var sb in softBones)
+        // Register new type and clean up old ones with same prefix
+        _activeBoneTypes.RemoveWhere(t => t.ToString().StartsWith(prefix));
+        _activeBoneTypes.Add(type);
+
+        _activeBoneBindings.AddRange(activeBindings);
+    }
+
+    private void ApplyActiveBoneBindings()
+    {
+        bool stillDirty = false;
+        float step = boneTransitionSpeed * Time.deltaTime;
+        var softBones = GetComponentsInChildren<EZSoftBone>();
+
+        foreach (var pair in _boneTargets)
         {
-            sb.InitStructures(); // Captures current pose as rest pose
-            sb.enabled = true;
+            Transform t = pair.Key;
+            BoneTarget target = pair.Value;
+            if (t == null) continue;
+
+            if (target.isDirty)
+            {
+                // Interpolate internal state
+                target.currentPosition = Vector3.Lerp(target.currentPosition, target.targetPosition, step);
+                target.currentRotation = Quaternion.Slerp(target.currentRotation, target.targetRotation, step);
+                target.currentScale = Vector3.Lerp(target.currentScale, target.targetScale, step);
+
+                // Check if settled
+                float dist = Vector3.Distance(target.currentPosition, target.targetPosition) + 
+                             Quaternion.Angle(target.currentRotation, target.targetRotation);
+                
+                if (dist > 0.01f) stillDirty = true;
+                else 
+                {
+                    target.isDirty = false;
+                    target.currentPosition = target.targetPosition;
+                    target.currentRotation = target.targetRotation;
+                    target.currentScale = target.targetScale;
+                }
+            }
+
+            // ALWAYS apply the currentInterpolated state to override Animator
+            t.localPosition = target.currentPosition;
+            t.localRotation = target.currentRotation;
+            t.localScale = target.currentScale;
         }
+
+        // If we were dirty and are moving, we must tell EZSoftBone to update its "Rest Pose"
+        // But we only do this if we are currently transitioning to avoid constant re-init jitter
+        if (_anyBoneDirty)
+        {
+            foreach (var sb in softBones)
+            {
+                if (sb.enabled) sb.InitStructures();
+            }
+        }
+
+        _anyBoneDirty = stillDirty;
     }
 
     private void ActivateParticleFeatures(CatFeatureType type)
@@ -409,7 +579,9 @@ public class FacialExpressionController : MonoBehaviour
             targetRotation = GetRestingRotation(rig);
         }
 
-        float step = eyesRotationSpeed * Time.deltaTime * (1f - eyesDamping);
+        // When not looking at something (staring), use much higher speed to avoid "laggy" swimming effect from animation swaying
+        float effectiveDamping = _isLookingAtSomething ? eyesDamping : 0f;
+        float step = eyesRotationSpeed * Time.deltaTime * (1f - effectiveDamping);
         rig.currentWorldRotation = Quaternion.Slerp(rig.currentWorldRotation, targetRotation, step);
 
         ApplyEyePosition(rig);
@@ -464,6 +636,9 @@ public class FacialExpressionController : MonoBehaviour
             finalLocalPos = new Vector3(x, 0, y);
 
         rig.eyeBone.position = rig.referencePivot.TransformPoint(finalLocalPos);
+        
+        // Reverting to referencePivot.rotation because the model uses position for pupil tracking.
+        // Rotating the bone leads to pupil flipping/skipping on the surface.
         rig.eyeBone.rotation = rig.referencePivot.rotation;
     }
 
@@ -553,6 +728,19 @@ public class FacialExpressionController : MonoBehaviour
     }
 
     public Transform GetFacialFocusPoint() => faceRig.facialFocusPoint;
+
+    public void TriggerBlink(float customDuration = -1f)
+    {
+        if (_manualBlinkCoroutine != null) StopCoroutine(_manualBlinkCoroutine);
+        _manualBlinkCoroutine = StartCoroutine(ManualBlinkRoutine(customDuration > 0 ? customDuration : blinkDuration));
+    }
+
+    private IEnumerator ManualBlinkRoutine(float duration)
+    {
+        SetBlinkState(true);
+        yield return new WaitForSeconds(duration);
+        SetBlinkState(false);
+    }
     
 
     // ===================================================================================
@@ -564,17 +752,66 @@ public class FacialExpressionController : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(Random.Range(blinkIntervalMin, blinkIntervalMax));
+
+            // NEW: Skip blinking if eyes are already closed or "happy" (^^ shape)
+            if (_currentEyeFeature == CatFeatureType.Eye_Closed || 
+                _currentEyeFeature == CatFeatureType.Eye_Sleep || 
+                _currentEyeFeature == CatFeatureType.Eye_Happy)
+            {
+                continue;
+            }
+
             SetBlinkState(true);
             yield return new WaitForSeconds(blinkDuration);
             SetBlinkState(false);
+
+            // NEW: Randomly reset gaze to forward/neutral after a blink
+            if (_isLookingAtSomething && Random.value < resetGazeOnBlinkChance)
+            {
+                ResetPupilPosition();
+            }
         }
     }
 
     private void SetBlinkState(bool isBlinking)
     {
+        // 1. Legacy support (if needed)
         bool shouldBeActive = hideObjectOnBlink ? !isBlinking : isBlinking;
         if (leftEye.blinkObject) leftEye.blinkObject.SetActive(shouldBeActive);
         if (rightEye.blinkObject) rightEye.blinkObject.SetActive(shouldBeActive);
+
+        // 2. New 3D Swapping Logic
+        if (_currentEyeFeature != CatFeatureType.None && _currentEyeFeature != CatFeatureType.Eye_Closed)
+        {
+            if (isBlinking)
+            {
+                // Toggle OFF current eyes, Toggle ON closed eyes
+                SetFeatureObjectsActive(_currentEyeFeature, false);
+                SetFeatureObjectsActive(CatFeatureType.Eye_Closed, true);
+            }
+            else
+            {
+                // Toggle OFF closed eyes, Toggle ON current eyes
+                SetFeatureObjectsActive(CatFeatureType.Eye_Closed, false);
+                SetFeatureObjectsActive(_currentEyeFeature, true);
+            }
+        }
+    }
+
+    private void SetFeatureObjectsActive(CatFeatureType type, bool active)
+    {
+        if (featureBindings == null || type == CatFeatureType.None) return;
+
+        foreach (var binding in featureBindings)
+        {
+            if (binding.featureType == type && binding.targetObjects != null)
+            {
+                foreach (var obj in binding.targetObjects)
+                {
+                    if (obj != null) obj.SetActive(active);
+                }
+            }
+        }
     }
 
     // ===================================================================================
