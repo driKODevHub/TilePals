@@ -142,30 +142,23 @@ public class PuzzleManager : MonoBehaviour
 
         Vector2 currentPos = inputReader.MousePosition;
         float dist = (currentPos - _lastMousePos).magnitude;
-        _currentMouseSpeed = dist / Time.deltaTime;
-                _lastMousePos = currentPos;
-
-            Ray ray = Camera.main.ScreenPointToRay(currentPos);
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer | pieceLayer))
-            {
-                Vector3 currentWorldPos = hit.point;
-                _lastHitPoint = currentWorldPos;
-            }
-        _lastMousePos = currentPos;
-
-            Ray ray = Camera.main.ScreenPointToRay(currentPos);
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer | pieceLayer))
-            {
-                Vector3 currentWorldPos = hit.point;
-                _lastHitPoint = currentWorldPos;
-            }
-
-        Ray ray = Camera.main.ScreenPointToRay(currentPos);
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
+        
+        if (dist > 0.001f)
         {
-            Vector3 currentWorldPos = hit.point;
+            _currentMouseSpeed = dist / Time.deltaTime;
+            _lastMousePos = currentPos;
+
+            Ray ray = Camera.main.ScreenPointToRay(currentPos);
+            if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer | pieceLayer))
             {
-                _currentThrowVelocity = Vector3.Lerp(_currentThrowVelocity, velocity, Time.deltaTime * 10f);
+                Vector3 currentWorldPos = hit.point;
+                // Calculate world delta
+                _currentWorldMouseDelta = currentWorldPos - _lastWorldMousePos;
+                _lastWorldMousePos = currentWorldPos;
+                _lastHitPoint = currentWorldPos;
+                
+                // For legacy throw velocity
+                _currentThrowVelocity = Vector3.Lerp(_currentThrowVelocity, _currentWorldMouseDelta / Time.deltaTime, Time.deltaTime * 10f);
             }
         }
     }
@@ -419,8 +412,8 @@ public class PuzzleManager : MonoBehaviour
         _initialPieceRotation = piece.transform.rotation;
         _lastSnappedGridOrigin = null;
 
-        Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
-        Vector3 hitPoint = Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer) ? hit.point : piece.transform.position;
+        Ray pickupRay = Camera.main.ScreenPointToRay(inputReader.MousePosition);
+        Vector3 hitPoint = Physics.Raycast(pickupRay, out RaycastHit pickupHit, 100f, pieceLayer) ? pickupHit.point : piece.transform.position;
 
         if (piece.IsPlaced || piece.IsOffGrid)
         {

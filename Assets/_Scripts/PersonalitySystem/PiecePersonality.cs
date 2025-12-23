@@ -76,10 +76,7 @@ public class PiecePersonality : MonoBehaviour
             facialController = GetComponentInChildren<FacialExpressionController>();
 
         // NEW: Auto-detect animator
-        if (catAnimator == null) catAnimator = GetComponent<ProceduralCatAnimator>();
-        
-        // NEW: Auto-detect animator
-        // Handled in replace_file_content hopefully, but let's be safe
+        if (catAnimator == null)
             catAnimator = GetComponent<ProceduralCatAnimator>();
     }
 
@@ -262,10 +259,11 @@ public class PiecePersonality : MonoBehaviour
         {
             StopAllBehaviorCoroutines();
             _isBeingPetted = true;
+            if (catAnimator != null) catAnimator.SetPetting(true);
             _isSleeping = false;
-        if (catAnimator != null) catAnimator.SetSleeping(false);
+            if (catAnimator != null) catAnimator.SetSleeping(false);
             _isLookingRandomly = false;
-            SetEmotion(neutralEmotion);
+            SetEmotion(pettingGentleEmotion);
         }
         else if (piece != _puzzlePiece && piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.AttractAttention)
         {
@@ -278,10 +276,12 @@ public class PiecePersonality : MonoBehaviour
         }
     }
 
-    private void HandlePettingUpdate(PuzzlePiece piece, float mouseSpeed)
+    private void HandlePettingUpdate(PuzzlePiece piece, float mouseSpeed, Vector3 worldDelta, Vector3 hitPoint)
     {
         if (piece != _puzzlePiece || !_isBeingPetted) return;
         if (_temperament == null) return;
+
+        if (catAnimator != null) catAnimator.ApplyPettingImpact(worldDelta, hitPoint);
 
         EmotionProfileSO targetEmotion = null;
 
