@@ -43,6 +43,7 @@ public class PiecePersonality : MonoBehaviour
     [SerializeField] private float idleLookDurationMax = 2.5f;
     [SerializeField] private float idleLookRadius = 3f;
     [SerializeField] private float flyOverReactionRadius = 2.5f;
+    [Range(0f, 1f)][SerializeField] private float lookAtCameraChance = 0.5f;
 
     [Header("Посилання на компоненти")]
     [SerializeField] private FacialExpressionController facialController;
@@ -53,6 +54,7 @@ public class PiecePersonality : MonoBehaviour
     private PuzzlePiece _puzzlePiece;
     private EmotionProfileSO _lastPettingEmotion;
     private bool _isLookingRandomly = false;
+    private bool _wantsToLookAtCamera = false;
     private PuzzlePiece _attentionTarget;
 
     // --- DEBUG LOGIC VARIABLES ---
@@ -142,7 +144,22 @@ public class PiecePersonality : MonoBehaviour
         // BLOCK: Do not look around if sleeping or in the process of falling asleep
         if (_isSleeping || _fallingAsleepCoroutine != null) return;
 
-        if (!_isHeld && !_isBeingPetted && facialController != null)
+        if (facialController == null) return;
+
+        if (_isHeld)
+        {
+            if (_wantsToLookAtCamera)
+            {
+                facialController.LookAtCamera();
+            }
+            else
+            {
+                facialController.ResetPupilPosition();
+            }
+            return;
+        }
+
+        if (!_isBeingPetted)
         {
             if (_puzzlePiece.HasItem)
             {
@@ -303,11 +320,13 @@ public class PiecePersonality : MonoBehaviour
             _isSleeping = false;
             _isBeingPetted = false;
             _isLookingRandomly = false;
+            _wantsToLookAtCamera = Random.value < lookAtCameraChance;
             SetEmotion(pickedUpEmotion);
             if (facialController != null)
             {
                 facialController.UpdateSortingOrder(true);
-                facialController.ResetPupilPosition();
+                if (_wantsToLookAtCamera) facialController.LookAtCamera();
+                else facialController.ResetPupilPosition();
             }
         }
         else if (piece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Toy ||
@@ -588,7 +607,7 @@ public class PiecePersonality : MonoBehaviour
                         break;
 
                     case IdleGazeState.LookAtPlayer:
-                        facialController.ResetPupilPosition();
+                        facialController.LookAtCamera();
                         break;
 
                     case IdleGazeState.Wait:

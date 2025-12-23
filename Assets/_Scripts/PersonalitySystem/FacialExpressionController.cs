@@ -142,6 +142,7 @@ public class FacialExpressionController : MonoBehaviour
     private Vector3 _currentWorldLookTarget;
     private Vector3 _lastWorldLookTarget;
     private bool _isLookingAtSomething = false;
+    private bool _isTrackingCamera = false; // NEW
     private List<GameObject> _activeInstantiatedParticles = new List<GameObject>(); // NEW: Track particles
     private CatFeatureType _currentEyeFeature = CatFeatureType.None; // NEW: Track active eye for blinking
     private Coroutine _manualBlinkCoroutine;
@@ -270,6 +271,8 @@ public class FacialExpressionController : MonoBehaviour
 
     public void LookAt(Vector3 worldPosition, bool allowBlinkOnShift = true)
     {
+        _isTrackingCamera = false; // Disable camera tracking if specific point is given
+
         // Check if the target shifted significantly to trigger a blink
         if (allowBlinkOnShift && (!_isLookingAtSomething || Vector3.Distance(worldPosition, _lastWorldLookTarget) > gazeShiftThreshold))
         {
@@ -286,9 +289,16 @@ public class FacialExpressionController : MonoBehaviour
         _isLookingAtSomething = true;
     }
 
+    public void LookAtCamera()
+    {
+        _isLookingAtSomething = true;
+        _isTrackingCamera = true;
+    }
+
     public void ResetPupilPosition()
     {
         _isLookingAtSomething = false;
+        _isTrackingCamera = false;
     }
 
     /// <summary>
@@ -562,6 +572,14 @@ public class FacialExpressionController : MonoBehaviour
 
         if (_isLookingAtSomething)
         {
+            if (_isTrackingCamera && Camera.main != null)
+            {
+                // Замість позиції камери (лінзи), дивимось в "центр екрану" на певній відстані.
+                // Це створює відчуття погляду в очі гравцю, який дивиться в центр монітора.
+                float distance = Vector3.Distance(Camera.main.transform.position, rig.referencePivot.position);
+                _currentWorldLookTarget = Camera.main.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, distance));
+            }
+
             Vector3 directionToTarget = _currentWorldLookTarget - rig.referencePivot.position;
             if (directionToTarget.sqrMagnitude < 0.001f) directionToTarget = (eyesFacingDirection == FacingDirection.Z_Forward_Y_Up) ? rig.referencePivot.forward : rig.referencePivot.up;
 
@@ -573,16 +591,17 @@ public class FacialExpressionController : MonoBehaviour
             {
                 targetRotation = Quaternion.LookRotation(directionToTarget, rig.referencePivot.forward) * Quaternion.Euler(90, 0, 0);
             }
+
+            float effectiveDamping = eyesDamping;
+            float step = eyesRotationSpeed * Time.deltaTime * (1f - effectiveDamping);
+            rig.currentWorldRotation = Quaternion.Slerp(rig.currentWorldRotation, targetRotation, step);
         }
         else
         {
             targetRotation = GetRestingRotation(rig);
+            // SNAP: Миттєво прилипаємо до дефолтної позиції, щоб не було розсинхрону при процедурному диханні
+            rig.currentWorldRotation = targetRotation;
         }
-
-        // When not looking at something (staring), use much higher speed to avoid "laggy" swimming effect from animation swaying
-        float effectiveDamping = _isLookingAtSomething ? eyesDamping : 0f;
-        float step = eyesRotationSpeed * Time.deltaTime * (1f - effectiveDamping);
-        rig.currentWorldRotation = Quaternion.Slerp(rig.currentWorldRotation, targetRotation, step);
 
         ApplyEyePosition(rig);
     }
