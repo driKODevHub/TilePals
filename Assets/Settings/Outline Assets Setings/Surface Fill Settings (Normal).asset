@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Fill
   m_EditorClassIdentifier: Linework::Linework.SurfaceFill.Fill
   material: {fileID: 0}
-  isActive: 1
+  isActive: 0
   RenderingLayer:
     serializedVersion: 0
     m_Bits: 1

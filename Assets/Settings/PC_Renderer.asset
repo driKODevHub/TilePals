@@ -78,11 +78,11 @@ MonoBehaviour:
     probeVolumeBlendStatesCS: {fileID: 7200000, guid: b9a23f869c4fd45f19c5ada54dd82176, type: 3}
   m_RendererFeatures:
   - {fileID: 7833122117494664109}
-  - {fileID: -5503759105745244610}
   - {fileID: 345321952908897831}
+  - {fileID: -5503759105745244610}
   - {fileID: -3782766715665903361}
   - {fileID: 3989350782350934273}
-  m_RendererFeatureMap: ad6b866f10d7b46c3eaebbe440b89eb3276e47907cd4ca04ff1090ccb6e980cb0141746a66055d37
+  m_RendererFeatureMap: ad6b866f10d7b46c276e47907cd4ca043eaebbe440b89eb3ff1090ccb6e980cb0141746a66055d37
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -150,7 +150,7 @@ MonoBehaviour:
     _DepthMaskLayerMask:
       serializedVersion: 2
       m_Bits: 8832
-    _UseCustomData: 0
+    _UseCustomData: 1
     _UseDepthMask: 1
     _UseCustomTexture: 0
     _CustomTexture: {fileID: 0}

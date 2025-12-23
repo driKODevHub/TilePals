@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Toony Colors Pro 2_User_TileCats_Eyes
+  m_Shader: {fileID: 4800000, guid: bff0fa01ca48dd64cb13d97411e8c535, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - TCP2_SPECULAR
+  - _RECEIVE_SHADOWS_OFF
+  m_InvalidKeywords:
+  - TCP2_SKETCH
+  - TCP2_UV_NORMALS_FULL
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3000
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: d4fb8092e2d588e4499b19f75833d988, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BlendingSource:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DiffuseTintMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ProgressiveSketchTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SketchTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _StylizedThreshold:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AnisotropicSpread: 0.394
+    - _HSV_S: 1
+    - _NormalsSource: 0
+    - _NormalsUVType: 0
+    - _OutlineWidth: 2.67
+    - _ProgressiveSketchSmoothness: 0.195
+    - _RampSmoothing: 0.137
+    - _RampThreshold: 0.649
+    - _ReceiveShadowsOff: 0
+    - _RimMax: 0.761
+    - _RimMin: 0.35
+    - _ShadowLineSmoothing: 0.0445
+    - _ShadowLineStrength: 1
+    - _ShadowLineThreshold: 0.639
+    - _Shadow_HSV_H: 0
+    - _Shadow_HSV_S: 0
+    - _Shadow_HSV_V: 0
+    - _SketchTexture_OffsetSpeed: 121.19
+    - _SpecularRoughnessPBR: 0.707
+    - _SpecularShadowAttenuation: 4.25
+    - _SpecularSmoothness: 0.24
+    - _SpecularToonBands: 1.36
+    - _SpecularToonSize: 0.033
+    - _SpecularToonSmoothness: 0.001
+    - _UseSketch: 1
+    - _UseSpecular: 1
+    - _UseTexturedThreshold: 0
+    - __BeginGroup_ShadowHSV: 0
+    - __EndGroup: 0
+    - __dummy__: 0
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _BlendingContrast: {r: 1, g: 1, b: 1, a: 0}
+    - _DiffuseTint: {r: 1, g: 1, b: 1, a: 1}
+    - _HColor: {r: 0.8679245, g: 0.8679245, b: 0.8679245, a: 1}
+    - _OutlineColorVertex: {r: 1, g: 0, b: 0, a: 1}
+    - _RimColor: {r: 0.1293745, g: 0.07865586, b: 0.2578616, a: 0.5}
+    - _SColor: {r: 0.3207547, g: 0.3207547, b: 0.3207547, a: 1}
+    - _ShadowLineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _SpecularColor: {r: 0.07, g: 0.07, b: 0.07, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
