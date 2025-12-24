@@ -491,11 +491,12 @@ public class PuzzleManager : MonoBehaviour
 
             // FIX: Ensure the click offset is within the piece bounds to prevent "jumping" when clicking collider edges
             Vector2Int rawOffset = new Vector2Int(clickX - originX, clickZ - originZ);
-            var occupiedCells = piece.PieceTypeSO.GetGridPositionList(Vector2Int.zero, piece.CurrentDirection);
+            var occupiedCells = piece.PieceTypeSO.GetGridPositionsList(Vector2Int.zero, piece.CurrentDirection);
             
             if (!occupiedCells.Contains(rawOffset))
             {
                 // If clicked outside the grid representation (edge of collider), snap to nearest cell
+                // This ensures we pick up the cat where it "lives", not on an empty adjacent cell
                 Vector2Int bestCell = Vector2Int.zero;
                 float minDist = float.MaxValue;
                 foreach (var cell in occupiedCells)

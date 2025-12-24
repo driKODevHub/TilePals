@@ -8,37 +8,34 @@ public class TemperamentSO : ScriptableObject
     [Serializable]
     public struct SynergyRule
     {
-        [Tooltip("����������� �����, �� ���� ���� �������.")]
+        [Tooltip("Temperament of the neighbor to react to.")]
         public TemperamentSO neighborTemperament;
-        [Tooltip("������, ��� ������ � ��� ������� � ��� ������.")]
+        [Tooltip("My reaction to this neighbor.")]
         public EmotionProfileSO myReaction;
-        [Tooltip("������, ��� � ������� �������� ����� � �������.")]
+        [Tooltip("The neighbor's reaction to me.")]
         public EmotionProfileSO neighborReaction;
-        [Tooltip("��� (� ��������), �������� ����� ��������� �� �������.")]
+        [Tooltip("Reaction duration in seconds.")]
         public float reactionDuration;
     }
 
-    [Header("������� ����������")]
-    public string temperamentName = "����� �����������";
+    [Header("Basic Information")]
+    public string temperamentName = "New Temperament";
     [TextArea] public string description;
 
-    [Header("³������� �����������")]
-    // --- �̲����: � Color �� Material ---
-    [Tooltip("�������, ���� ���� ���������� ���� � ��� �������������.")]
-    public Material temperamentMaterial;
+    
 
-    [Header("�������� ������� ��������� (�� 0 �� 1)")]
+    [Header("Initial Stats (Range 0 to 1)")]
     [Range(0f, 1f)] public float initialFatigue = 0.1f;
     [Range(0f, 1f)] public float initialIrritation = 0.1f;
     [Range(0f, 1f)] public float initialTrust = 0.5f;
 
-    [Header("����������� �������")]
+    [Header("Modificators")]
     public float irritationModifier = 1.0f;
     public float fatigueModifier = 1.0f;
     public float trustModifier = 1.0f;
 
-    [Header("������� �����䳿 � �������")]
-    [Tooltip("������ ������, �� ��� ����������� ����� �� �������� � ������.")]
+    [Header("Synergy Rules")]
+    [Tooltip("List of rules for how this temperament reacts to others.")]
     public List<SynergyRule> synergyRules;
 
     [Header("Indifferent Settings (Sleepy Cats)")]
@@ -47,4 +44,3 @@ public class TemperamentSO : ScriptableObject
     [Tooltip("The emotion used for the indifferent state (usually closed eyes).")]
     public EmotionProfileSO indifferentEmotion;
 }
-

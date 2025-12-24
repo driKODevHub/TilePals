@@ -185,11 +185,6 @@ public class PiecePersonality : MonoBehaviour
         _temperament = newTemperament;
         if (_temperament == null) return;
 
-        if (_puzzlePiece != null)
-        {
-            _puzzlePiece.SetTemperamentMaterial(_temperament.temperamentMaterial);
-        }
-
         _currentFatigue = _temperament.initialFatigue;
         _currentIrritation = _temperament.initialIrritation;
         _currentTrust = _temperament.initialTrust;
