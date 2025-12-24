@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using System.Collections.Generic;
 using System;
 
@@ -8,36 +8,43 @@ public class TemperamentSO : ScriptableObject
     [Serializable]
     public struct SynergyRule
     {
-        [Tooltip("Темперамент сусіда, на який буде реакція.")]
+        [Tooltip("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.")]
         public TemperamentSO neighborTemperament;
-        [Tooltip("Емоція, яку покажу Я при зустрічі з цим сусідом.")]
+        [Tooltip("пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.")]
         public EmotionProfileSO myReaction;
-        [Tooltip("Емоція, яку я попрошу показати сусіда у відповідь.")]
+        [Tooltip("пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.")]
         public EmotionProfileSO neighborReaction;
-        [Tooltip("Час (в секундах), протягом якого тримається ця реакція.")]
+        [Tooltip("пїЅпїЅпїЅ (пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ), пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.")]
         public float reactionDuration;
     }
 
-    [Header("Основна інформація")]
-    public string temperamentName = "Новий темперамент";
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
+    public string temperamentName = "пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ";
     [TextArea] public string description;
 
-    [Header("Візуальне відображення")]
-    // --- ЗМІНЕНО: з Color на Material ---
-    [Tooltip("Матеріал, який буде призначено фігурі з цим темпераментом.")]
+    [Header("ВіпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
+    // --- пїЅМІпїЅпїЅпїЅпїЅ: пїЅ Color пїЅпїЅ Material ---
+    [Tooltip("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.")]
     public Material temperamentMaterial;
 
-    [Header("Початкові Внутрішні Параметри (від 0 до 1)")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅ 0 пїЅпїЅ 1)")]
     [Range(0f, 1f)] public float initialFatigue = 0.1f;
     [Range(0f, 1f)] public float initialIrritation = 0.1f;
     [Range(0f, 1f)] public float initialTrust = 0.5f;
 
-    [Header("Модифікатори Реакцій")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
     public float irritationModifier = 1.0f;
     public float fatigueModifier = 1.0f;
     public float trustModifier = 1.0f;
 
-    [Header("Правила Взаємодії з Сусідами")]
-    [Tooltip("Список правил, як цей темперамент реагує на сусідство з іншими.")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅдії пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
+    [Tooltip("пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.")]
     public List<SynergyRule> synergyRules;
+
+    [Header("Indifferent Settings (Sleepy Cats)")]
+    [Tooltip("If true, the cat will be indifferent/sleepy by default, having closed eyes and ignoring low-priority targets.")]
+    public bool isIndifferent;
+    [Tooltip("The emotion used for the indifferent state (usually closed eyes).")]
+    public EmotionProfileSO indifferentEmotion;
 }
+

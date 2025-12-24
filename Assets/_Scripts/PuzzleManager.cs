@@ -41,6 +41,7 @@ public class PuzzleManager : MonoBehaviour
     private PuzzlePiece _potentialInteractionPiece;
     private Vector2 _clickStartPos;
     private float _clickStartTime;
+    private Vector3 _clickStartWorldHit;
     private bool _isPettingActive;
 
     // --- DOUBLE CLICK DETECTION (TAP) ---
@@ -262,6 +263,17 @@ public class PuzzleManager : MonoBehaviour
             _clickStartPos = inputReader.MousePosition;
             _clickStartTime = Time.time;
             _isPettingActive = false;
+
+            // Capture the world point on the piece for accurate pivot calculation
+            Ray ray = Camera.main.ScreenPointToRay(_clickStartPos);
+            if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
+            {
+                _clickStartWorldHit = hit.point;
+            }
+            else
+            {
+                _clickStartWorldHit = _hoveredPiece.transform.position;
+            }
         }
         else if (_heldPiece == null && _hoveredPiece == null)
         {
@@ -455,8 +467,8 @@ public class PuzzleManager : MonoBehaviour
         _initialPieceRotation = piece.transform.rotation;
         _lastSnappedGridOrigin = null;
 
-        Ray pickupRay = Camera.main.ScreenPointToRay(inputReader.MousePosition);
-        Vector3 hitPoint = Physics.Raycast(pickupRay, out RaycastHit pickupHit, 100f, pieceLayer) ? pickupHit.point : piece.transform.position;
+        // Use the stored world hit from the moment of initial click to fix offsets and rapid drag issues
+        Vector3 hitPoint = _clickStartWorldHit;
 
         if (piece.IsPlaced || piece.IsOffGrid)
         {
@@ -477,7 +489,24 @@ public class PuzzleManager : MonoBehaviour
             GridBuildingSystem.Instance.GetGrid().GetXZ(hitPoint, out int clickX, out int clickZ);
             GridBuildingSystem.Instance.GetGrid().GetXZ(pieceOriginWorld, out int originX, out int originZ);
 
-            piece.ClickOffset = new Vector2Int(clickX - originX, clickZ - originZ);
+            // FIX: Ensure the click offset is within the piece bounds to prevent "jumping" when clicking collider edges
+            Vector2Int rawOffset = new Vector2Int(clickX - originX, clickZ - originZ);
+            var occupiedCells = piece.PieceTypeSO.GetGridPositionList(Vector2Int.zero, piece.CurrentDirection);
+            
+            if (!occupiedCells.Contains(rawOffset))
+            {
+                // If clicked outside the grid representation (edge of collider), snap to nearest cell
+                Vector2Int bestCell = Vector2Int.zero;
+                float minDist = float.MaxValue;
+                foreach (var cell in occupiedCells)
+                {
+                    float d = Vector2Int.Distance(rawOffset, cell);
+                    if (d < minDist) { minDist = d; bestCell = cell; }
+                }
+                rawOffset = bestCell;
+            }
+
+            piece.ClickOffset = rawOffset;
         }
         else
         {

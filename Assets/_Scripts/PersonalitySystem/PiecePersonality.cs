@@ -112,6 +112,7 @@ public class PiecePersonality : MonoBehaviour
     
     // NEW: Track active emotion for debug
     private EmotionProfileSO _currentActiveEmotion; 
+    private bool _isIndifferent;
 
     public float GetFlyOverRadius() => flyOverReactionRadius;
 
@@ -192,6 +193,7 @@ public class PiecePersonality : MonoBehaviour
         _currentFatigue = _temperament.initialFatigue;
         _currentIrritation = _temperament.initialIrritation;
         _currentTrust = _temperament.initialTrust;
+        _isIndifferent = _temperament.isIndifferent;
 
         ReturnToNeutralState();
     }
@@ -247,9 +249,13 @@ public class PiecePersonality : MonoBehaviour
         }
         else if (_currentGazeTarget != null)
         {
-            bestTarget = _currentGazeTarget;
+            // Indifferent cats ignore low-priority targets unless they are "briefly awake"
+            if (!_isIndifferent || _currentGazeTarget.priority > GazePriority.Neighbor)
+            {
+                bestTarget = _currentGazeTarget;
+            }
         }
-        else if (_puzzlePiece.HasItem)
+        else if (_puzzlePiece.HasItem && !_isIndifferent)
         {
             bestTarget = new GazeTarget(_puzzlePiece.GetAttachmentPoint().position, GazePriority.Neighbor);
         }
@@ -616,9 +622,14 @@ public class PiecePersonality : MonoBehaviour
         if (catAnimator != null) catAnimator.SetSleeping(false);
         _isLookingRandomly = false;
 
-        SetEmotion(neutralEmotion);
+        if (_isIndifferent && _temperament.indifferentEmotion != null)
+            SetEmotion(_temperament.indifferentEmotion);
+        else
+            SetEmotion(neutralEmotion);
 
         float sleepTime = Random.Range(timeToSleepMin, timeToSleepMax);
+        if (_isIndifferent) sleepTime *= 0.3f; // Sleep much faster
+
         _sleepCoroutine = StartCoroutine(SleepTimer(sleepTime));
         _idleLookCoroutine = StartCoroutine(IdleLookRoutine());
     }
@@ -718,7 +729,21 @@ public class PiecePersonality : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(Random.Range(idleLookIntervalMin, idleLookIntervalMax));
-            if (_isHeld || _isSleeping || _isBeingPetted || (_currentGazeTarget != null && !_currentGazeTarget.IsExpired)) continue;
+            if (_isHeld || _isSleeping || _isBeingPetted) continue;
+            
+            // Indifferent cats only wake up occasionally for a very short look
+            if (_isIndifferent && (_currentGazeTarget == null || _currentGazeTarget.IsExpired))
+            {
+                if (Random.value > 0.15f) // 15% chance to wake up briefly
+                {
+                    yield return new WaitForSeconds(Random.Range(2f, 5f));
+                    continue;
+                }
+            }
+            else if (_currentGazeTarget != null && !_currentGazeTarget.IsExpired)
+            {
+                continue;
+            }
 
             _isLookingRandomly = true;
 
@@ -732,6 +757,9 @@ public class PiecePersonality : MonoBehaviour
 
             if (facialController != null)
             {
+                // If indifferent, we forced a wake-up, so let's use a short duration
+                float duration = _isIndifferent ? Random.Range(2f, 4f) : idleLookDurationMax;
+
                 switch (nextAction)
                 {
                     case IdleGazeState.LookAtRandom:
@@ -739,19 +767,19 @@ public class PiecePersonality : MonoBehaviour
                         lookCenter.y = lookPlaneHeight;
                         Vector3 randomDirection = Random.insideUnitSphere * idleLookRadius;
                         randomDirection.y = 0;
-                        SetGazeTarget(new GazeTarget(lookCenter + randomDirection, GazePriority.Idle, idleLookDurationMax));
+                        SetGazeTarget(new GazeTarget(lookCenter + randomDirection, GazePriority.Idle, duration));
                         break;
 
                     case IdleGazeState.LookAtNeighbor:
                         if (hasNeighbors)
                         {
                             PiecePersonality targetPiece = allPieces[Random.Range(0, allPieces.Count)];
-                            SetGazeTarget(new GazeTarget(targetPiece.GetFocusPoint(), GazePriority.Neighbor, idleLookDurationMax));
+                            SetGazeTarget(new GazeTarget(targetPiece.GetFocusPoint(), GazePriority.Neighbor, duration));
                         }
                         break;
 
                     case IdleGazeState.LookAtPlayer:
-                        SetGazeTarget(GazeTarget.Camera(GazePriority.Idle, idleLookDurationMax));
+                        SetGazeTarget(GazeTarget.Camera(GazePriority.Idle, duration));
                         break;
 
                     case IdleGazeState.Wait:
@@ -759,7 +787,7 @@ public class PiecePersonality : MonoBehaviour
                 }
             }
 
-            yield return new WaitForSeconds(Random.Range(idleLookDurationMin, idleLookDurationMax));
+            yield return new WaitForSeconds(_isIndifferent ? Random.Range(2f, 4f) : Random.Range(idleLookDurationMin, idleLookDurationMax));
 
             _isLookingRandomly = false;
         }
