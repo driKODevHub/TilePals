@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using EZhex1991.EZSoftBone;
@@ -6,7 +6,7 @@ using Debug = UnityEngine.Debug;
 
 public class LevelLoader : MonoBehaviour
 {
-    [Header("Налаштування спавну")]
+    [Header("РќР°Р»Р°С€С‚СѓРІР°РЅРЅСЏ СЃРїР°РІРЅСѓ")]
     [SerializeField] private Transform pieceSpawnParent;
 
     private GridDataSO _currentLevelData;
@@ -21,14 +21,14 @@ public class LevelLoader : MonoBehaviour
 
         if (_currentLevelData == null) return;
 
-        // Ініціалізація гріда (включаючи locked клітинки)
+        // Р†РЅС–С†С–Р°Р»С–Р·Р°С†С–СЏ РіСЂС–РґР° (РІРєР»СЋС‡Р°СЋС‡Рё locked РєР»С–С‚РёРЅРєРё)
         GridBuildingSystem.Instance.InitializeGrid(_currentLevelData);
         if (GridVisualManager.Instance != null) GridVisualManager.Instance.ReinitializeVisuals();
 
-        // 1. Спавнимо фігури (фізично створюємо об'єкти)
+        // 1. РЎРїР°РІРЅРёРјРѕ С„С–РіСѓСЂРё (С„С–Р·РёС‡РЅРѕ СЃС‚РІРѕСЂСЋС”РјРѕ РѕР±'С”РєС‚Рё)
         SpawnPieces();
 
-        // 2. Якщо є збереження - застосовуємо
+        // 2. РЇРєС‰Рѕ С” Р·Р±РµСЂРµР¶РµРЅРЅСЏ - Р·Р°СЃС‚РѕСЃРѕРІСѓС”РјРѕ
         if (loadFromSave) ApplySavedState();
     }
 
@@ -53,7 +53,7 @@ public class LevelLoader : MonoBehaviour
         var personalityMap = _currentLevelData.personalityData?.personalityMappings
             .ToDictionary(m => m.pieceType, m => m.temperament) ?? new Dictionary<PlacedObjectTypeSO, TemperamentSO>();
 
-        // Використовуємо метод розширення Shuffle (визначений нижче)
+        // Р’РёРєРѕСЂРёСЃС‚РѕРІСѓС”РјРѕ РјРµС‚РѕРґ СЂРѕР·С€РёСЂРµРЅРЅСЏ Shuffle (РІРёР·РЅР°С‡РµРЅРёР№ РЅРёР¶С‡Рµ)
         piecesToSpawnTypes.Shuffle();
 
         List<PuzzlePiece> piecesToPlace = new List<PuzzlePiece>();
@@ -75,7 +75,7 @@ public class LevelLoader : MonoBehaviour
                 PiecePersonality personality = pieceComponent.GetComponent<PiecePersonality>();
                 if (personality != null && personalityMap.TryGetValue(pieceType, out TemperamentSO temperament))
                 {
-                    pieceComponent.SetTemperamentMaterial(temperament.temperamentMaterial);
+                    
                     personality.Setup(temperament);
                 }
 
@@ -152,7 +152,7 @@ public class LevelLoader : MonoBehaviour
 
             if (piece.IsPlaced)
             {
-                // Безпечне отримання компонента PlacedObject або Infrastructure
+                // Р‘РµР·РїРµС‡РЅРµ РѕС‚СЂРёРјР°РЅРЅСЏ РєРѕРјРїРѕРЅРµРЅС‚Р° PlacedObject Р°Р±Рѕ Infrastructure
                 PlacedObject placedObj = piece.PlacedObjectComponent;
                 if (placedObj == null) placedObj = piece.InfrastructureComponent;
                 if (placedObj == null) placedObj = piece.GetComponent<PlacedObject>(); // Final check
@@ -244,7 +244,7 @@ public class LevelLoader : MonoBehaviour
 
         List<PuzzlePiece> availablePieces = new List<PuzzlePiece>(_spawnedPieces);
 
-        // --- СОРТУВАННЯ: Спочатку ставимо Тулзи (Infrastructure), потім Котів ---
+        // --- РЎРћР РўРЈР’РђРќРќРЇ: РЎРїРѕС‡Р°С‚РєСѓ СЃС‚Р°РІРёРјРѕ РўСѓР»Р·Рё (Infrastructure), РїРѕС‚С–Рј РљРѕС‚С–РІ ---
         var toolsToPlace = new List<PiecePlacementData>();
         var othersToPlace = new List<PiecePlacementData>();
 
@@ -261,19 +261,19 @@ public class LevelLoader : MonoBehaviour
             }
         }
 
-        // 1. Ставимо Тулзи
+        // 1. РЎС‚Р°РІРёРјРѕ РўСѓР»Р·Рё
         foreach (var pieceData in toolsToPlace)
         {
             PlacePieceFromSave(pieceData, availablePieces);
         }
 
-        // 2. Ставимо Все Інше (Котів на Тулзи)
+        // 2. РЎС‚Р°РІРёРјРѕ Р’СЃРµ Р†РЅС€Рµ (РљРѕС‚С–РІ РЅР° РўСѓР»Р·Рё)
         foreach (var pieceData in othersToPlace)
         {
             PlacePieceFromSave(pieceData, availablePieces);
         }
 
-        // 3. Відновлюємо OffGrid
+        // 3. Р’С–РґРЅРѕРІР»СЋС”РјРѕ OffGrid
         foreach (var pieceData in saveData.offGridPieces)
         {
             PlacePieceFromSaveOffGrid(pieceData, availablePieces);
@@ -312,7 +312,7 @@ public class LevelLoader : MonoBehaviour
     }
 }
 
-// --- ОСЬ ЦЕЙ КЛАС БУВ ПРОПУЩЕНИЙ ---
+// --- РћРЎР¬ Р¦Р•Р™ РљР›РђРЎ Р‘РЈР’ РџР РћРџРЈР©Р•РќРР™ ---
 public static class ListExtensions
 {
     private static System.Random rng = new System.Random();

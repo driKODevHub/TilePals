@@ -197,11 +197,6 @@ public class PuzzlePiece : MonoBehaviour
     public Transform GetAttachmentPoint() => attachmentPoint;
 
     // --- Visual Proxy ---
-    public void SetTemperamentMaterial(Material mat)
-    {
-        if (Visuals != null) Visuals.SetTemperamentMaterial(mat);
-    }
-
     public void SetOutline(bool active)
     {
         if (Visuals != null) Visuals.SetOutline(active);

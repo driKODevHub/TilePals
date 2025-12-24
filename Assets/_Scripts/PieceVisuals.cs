@@ -1,9 +1,9 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Events;
 
 /// <summary>
-/// Відповідає виключно за ВІЗУАЛ: аутлайн, та запуск фідбеків (звуки/ефекти).
+/// Р’С–РґРїРѕРІС–РґР°С” РІРёРєР»СЋС‡РЅРѕ Р·Р° Р’Р†Р—РЈРђР›: Р°СѓС‚Р»Р°Р№РЅ, С‚Р° Р·Р°РїСѓСЃРє С„С–РґР±РµРєС–РІ (Р·РІСѓРєРё/РµС„РµРєС‚Рё).
 /// </summary>
 public class PieceVisuals : MonoBehaviour
 {
@@ -12,30 +12,30 @@ public class PieceVisuals : MonoBehaviour
     {
         [Header("Interaction (Mouse)")]
         public UnityEvent OnPickup;
-        public UnityEvent OnDrop;      // Кидок в "молоко" (OffGrid) або просто відпускання
+        public UnityEvent OnDrop;      // РљРёРґРѕРє РІ "РјРѕР»РѕРєРѕ" (OffGrid) Р°Р±Рѕ РїСЂРѕСЃС‚Рѕ РІС–РґРїСѓСЃРєР°РЅРЅСЏ
         public UnityEvent OnHoverStart;
         public UnityEvent OnHoverEnd;
 
         [Header("Action (Gameplay)")]
         public UnityEvent OnRotate;
-        public UnityEvent OnPlaceSuccess; // Успішно поставили на сітку
-        public UnityEvent OnPlaceFailed;  // Спроба поставити на зайняте місце (Error)
+        public UnityEvent OnPlaceSuccess; // РЈСЃРїС–С€РЅРѕ РїРѕСЃС‚Р°РІРёР»Рё РЅР° СЃС–С‚РєСѓ
+        public UnityEvent OnPlaceFailed;  // РЎРїСЂРѕР±Р° РїРѕСЃС‚Р°РІРёС‚Рё РЅР° Р·Р°Р№РЅСЏС‚Рµ РјС–СЃС†Рµ (Error)
 
         [Header("Movement (Passive)")]
-        public UnityEvent OnGridSnap;     // Фігура "знайшла" валідне місце під час перетягування
+        public UnityEvent OnGridSnap;     // Р¤С–РіСѓСЂР° "Р·РЅР°Р№С€Р»Р°" РІР°Р»С–РґРЅРµ РјС–СЃС†Рµ РїС–Рґ С‡Р°СЃ РїРµСЂРµС‚СЏРіСѓРІР°РЅРЅСЏ
     }
 
     [Header("Outline Settings (Hover)")]
-    [Tooltip("Виберіть шар, на якому працює ефект аутлайну (Hover).")]
+    [Tooltip("Р’РёР±РµСЂС–С‚СЊ С€Р°СЂ, РЅР° СЏРєРѕРјСѓ РїСЂР°С†СЋС” РµС„РµРєС‚ Р°СѓС‚Р»Р°Р№РЅСѓ (Hover).")]
     [SerializeField] private LayerMask outlineLayerMask;
     [SerializeField] private List<MeshRenderer> outlineMeshRenderers;
     [SerializeField] private List<SkinnedMeshRenderer> outlineSkinnedMeshRenderers;
 
     [Header("Feedbacks")]
-    [Tooltip("Список всіх подій для Feel. Можна згортати.")]
+    [Tooltip("РЎРїРёСЃРѕРє РІСЃС–С… РїРѕРґС–Р№ РґР»СЏ Feel. РњРѕР¶РЅР° Р·РіРѕСЂС‚Р°С‚Рё.")]
     public FeedbackCollection feedbacks;
 
-    // Внутрішні змінні
+    // Р’РЅСѓС‚СЂС–С€РЅС– Р·РјС–РЅРЅС–
     private int _outlineLayerIndex;
     private Dictionary<Renderer, int> _originalLayers = new Dictionary<Renderer, int>();
     private bool _isOutlineLocked = false;
@@ -57,7 +57,7 @@ public class PieceVisuals : MonoBehaviour
         }
     }
 
-    #region Trigger Methods (Викликаються з PuzzleManager)
+    #region Trigger Methods (Р’РёРєР»РёРєР°СЋС‚СЊСЃСЏ Р· PuzzleManager)
 
     public void PlayPickup() => feedbacks.OnPickup?.Invoke();
     public void PlayDrop() => feedbacks.OnDrop?.Invoke();
@@ -85,7 +85,7 @@ public class PieceVisuals : MonoBehaviour
         }
     }
 
-    public void SetTemperamentMaterial(Material mat) { }
+    
 
     #endregion
 
@@ -122,8 +122,8 @@ public class PieceVisuals : MonoBehaviour
         if (_isOutlineLocked && !isActive) return;
 
         // --- FIX BUG: Logic to prevent double triggering of Hover Sounds ---
-        // Ми перевіряємо, чи змінився стан, перш ніж викликати івент.
-        // Якщо ми вже Hovered і нам знову кажуть SetOutline(true) (наприклад при пікапі), ми ігноруємо івент.
+        // РњРё РїРµСЂРµРІС–СЂСЏС”РјРѕ, С‡Рё Р·РјС–РЅРёРІСЃСЏ СЃС‚Р°РЅ, РїРµСЂС€ РЅС–Р¶ РІРёРєР»РёРєР°С‚Рё С–РІРµРЅС‚.
+        // РЇРєС‰Рѕ РјРё РІР¶Рµ Hovered С– РЅР°Рј Р·РЅРѕРІСѓ РєР°Р¶СѓС‚СЊ SetOutline(true) (РЅР°РїСЂРёРєР»Р°Рґ РїСЂРё РїС–РєР°РїС–), РјРё С–РіРЅРѕСЂСѓС”РјРѕ С–РІРµРЅС‚.
 
         if (isActive && !_isHovered)
         {
