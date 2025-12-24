@@ -1,17 +1,19 @@
-using Unity.Cinemachine;
+п»їusing Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 
 public class CameraController : MonoBehaviour
 {
+    public static CameraController Instance { get; private set; }
+
     [SerializeField]private float minFollowOffsetY = 2f;
     [SerializeField]private float maxFollowOffsetY = 50f;
 
     [SerializeField] CinemachineCamera cinemachineCamera;
 
     [Header("Feature Toggle")]
-    [Tooltip("Вмикає або вимикає можливість обертати камеру.")]
+    [Tooltip("пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.")]
     [SerializeField] private bool enableRotation = true;
 
     [Header("Movement Settings")]
@@ -19,36 +21,36 @@ public class CameraController : MonoBehaviour
     [SerializeField] float rotationSpeed = 100f;
 
     [Header("Zoom Settings")]
-    [Tooltip("Зум (висота камери), який встановлюється на початку рівня.")]
+    [Tooltip("пїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ), пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ.")]
     [SerializeField] float defaultZoom = 20f;
 
     [Header("Drag Pan Settings")]
-    [Tooltip("Множник швидкості перетягування. 1.0 = 1:1 рух мишки до землі.")]
+    [Tooltip("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. 1.0 = 1:1 пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ.")]
     [SerializeField] float dragSensitivity = 1.0f;
-    [Tooltip("Чим вище значення, тим швидше камера зупиняється. Низьке значення = більше інерції (плавніше).")]
+    [Tooltip("пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ = пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ).")]
     [SerializeField] float movementSmoothing = 10f;
 
     [Header("Focus Settings")]
-    [Tooltip("Швидкість (згладжування) руху камери при автоматичному фокусуванні (старт/перемога). Менше = плавніше.")]
+    [Tooltip("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ) пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ). пїЅпїЅпїЅпїЅпїЅ = пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.")]
     [SerializeField] float focusSmoothing = 5f;
 
     [Header("Bounds Settings")]
-    [Tooltip("Вмикає обмеження руху камери.")]
+    [Tooltip("пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.")]
     [SerializeField] private bool enableBounds = true;
 
-    [Tooltip("Якщо увімкнено, межі руху розраховуються динамічно на основі зуму (поля зору), щоб не бачити 'пустоту' за межами карти.")]
+    [Tooltip("пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ), пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅ' пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.")]
     [SerializeField] private bool limitByFieldOfView = true;
 
-    [Tooltip("Множник відступу від країв при динамічному обмеженні. Збільште, якщо камера бачить за межі карти при віддаленні.")]
+    [Tooltip("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.")]
     [SerializeField] private float viewBoundsMarginFactor = 1.0f;
 
     [Header("Debug")]
-    [SerializeField] private bool showDebugLogs = true; // Вимкни, коли знайдеш проблему
+    [SerializeField] private bool showDebugLogs = true; // пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
-    // --- ПУБЛІЧНЕ ПОЛЕ ДЛЯ EDITOR SCRIPT ---
+    // --- пїЅпїЅпїЅЛІпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ EDITOR SCRIPT ---
     [HideInInspector] public GridDataSO activeGridData;
 
-    // Приватні параметри меж (кешовані)
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
     private Vector2 _boundsCenter;
     private Vector2 _boundsSize;
     private float _boundsRotationY;
@@ -58,7 +60,7 @@ public class CameraController : MonoBehaviour
     private Vector3 inputRorateDirection;
     private Vector3 targetFollowOffset;
 
-    private bool isDragPanning = false;
+    private bool isDragPanning = false; public bool IsDragPanning => isDragPanning;
     private bool _isFocusing = false;
     private Vector3 _targetPosition;
 
@@ -68,6 +70,9 @@ public class CameraController : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance != null) { Destroy(gameObject); return; }
+        Instance = this;
+
         playerInputActions = new PlayerInputActions();
         playerInputActions.Player.Enable();
     }
@@ -152,18 +157,18 @@ public class CameraController : MonoBehaviour
 
         if (limitByFieldOfView)
         {
-            // Беремо поточну висоту камери (zoom)
+            // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (zoom)
             float currentHeight = cinemachineFollow.FollowOffset.y;
 
-            // Розраховуємо приблизний радіус видиміості на землі
-            // Чим вище камера -> тим більше ми бачимо -> тим більший відступ треба зробити від краю карти
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
+            // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ -> пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ -> пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
             float visibleRadius = currentHeight * viewBoundsMarginFactor;
 
-            // Aspect ratio correction (ширина зазвичай більша за висоту)
+            // Aspect ratio correction (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)
             float aspect = Camera.main != null ? Camera.main.aspect : 1.77f;
 
-            marginX = visibleRadius * aspect; // Ширина
-            marginZ = visibleRadius;          // Висота (глибина)
+            marginX = visibleRadius * aspect; // пїЅпїЅпїЅпїЅпїЅпїЅ
+            marginZ = visibleRadius;          // пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
         }
 
         Vector3 worldCenter = new Vector3(center.x, 0, center.y);
@@ -174,8 +179,8 @@ public class CameraController : MonoBehaviour
         Vector3 localPos = inverseRot * dir;
 
         // Calculate extents (half-sizes) minus the visual margin
-        // Ми віднімаємо margin, щоб центр камери не міг підійти до краю настільки близько, 
-        // щоб "виглянути" за межі visual bounds.
+        // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ margin, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, 
+        // пїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ" пїЅпїЅ пїЅпїЅпїЅ visual bounds.
         float allowedExtentX = Mathf.Max(0, (size.x / 2f) - marginX);
         float allowedExtentZ = Mathf.Max(0, (size.y / 2f) - marginZ);
 

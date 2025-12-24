@@ -52,11 +52,59 @@ public class PiecePersonality : MonoBehaviour
     private float _currentFatigue, _currentIrritation, _currentTrust;
     private bool _isHeld, _isSleeping, _isBeingPetted;
     private Coroutine _sleepCoroutine, _shakenCoroutine, _reactionCoroutine, _idleLookCoroutine, _wakeUpCoroutine, _fallingAsleepCoroutine;
+    private enum IdleGazeState { LookAtRandom, LookAtNeighbor, LookAtPlayer, Wait, LookAtToy }
+
+    public enum GazePriority
+    {
+        Idle = 0,           // Random looks, cursor
+        Neighbor = 1,       // Looking at neighbor
+        Reaction = 2,       // Flyover reaction
+        Tap = 3,            // Tap/Rustle (Player interaction)
+        Petting = 4         // Petting (Highest priority)
+    }
+
+    [System.Serializable]
+    public class GazeTarget
+    {
+        public Vector3 position;
+        public Transform targetTransform;
+        public GazePriority priority;
+        public float expirationTime;
+        public bool isCamera;
+
+        public GazeTarget(Vector3 pos, GazePriority prio, float duration = -1f)
+        {
+            position = pos;
+            priority = prio;
+            expirationTime = duration > 0 ? Time.time + duration : -1f;
+            isCamera = false;
+        }
+
+        public GazeTarget(Transform target, GazePriority prio, float duration = -1f)
+        {
+            targetTransform = target;
+            priority = prio;
+            expirationTime = duration > 0 ? Time.time + duration : -1f;
+            isCamera = false;
+        }
+
+        public static GazeTarget Camera(GazePriority prio, float duration = -1f)
+        {
+            var gt = new GazeTarget(Vector3.zero, prio, duration);
+            gt.isCamera = true;
+            return gt;
+        }
+
+        public bool IsExpired => expirationTime > 0 && Time.time > expirationTime;
+        public Vector3 GetPosition() => targetTransform != null ? targetTransform.position : position;
+    }
+
+    private GazeTarget _currentGazeTarget;
     private PuzzlePiece _puzzlePiece;
     private EmotionProfileSO _lastPettingEmotion;
     private bool _isLookingRandomly = false;
     private bool _wantsToLookAtCamera = false;
-    private PuzzlePiece _attentionTarget;
+    private PuzzlePiece _attentionTarget; // Keep for legacy compatibility if needed, but transition logic to GazeTarget
 
     // --- DEBUG LOGIC VARIABLES ---
     private bool _isDebugStatsActive = false;
@@ -64,8 +112,6 @@ public class PiecePersonality : MonoBehaviour
     
     // NEW: Track active emotion for debug
     private EmotionProfileSO _currentActiveEmotion; 
-
-    private enum IdleGazeState { LookAtRandom, LookAtNeighbor, LookAtPlayer, Wait, LookAtToy }
 
     public float GetFlyOverRadius() => flyOverReactionRadius;
 
@@ -90,6 +136,7 @@ public class PiecePersonality : MonoBehaviour
         PersonalityEventManager.OnPettingUpdate += HandlePettingUpdate;
         PersonalityEventManager.OnPettingEnd += HandlePettingEnd;
         PersonalityEventManager.OnPieceFlyOver += HandlePieceFlyOver;
+        PersonalityEventManager.OnFloorTap += HandleFloorTap;
     }
 
     private void OnDisable()
@@ -102,6 +149,34 @@ public class PiecePersonality : MonoBehaviour
         PersonalityEventManager.OnPettingUpdate -= HandlePettingUpdate;
         PersonalityEventManager.OnPettingEnd -= HandlePettingEnd;
         PersonalityEventManager.OnPieceFlyOver -= HandlePieceFlyOver;
+        PersonalityEventManager.OnFloorTap -= HandleFloorTap;
+    }
+
+    public Vector3 GetGridCenterWorldPosition()
+    {
+        if (_puzzlePiece == null || _puzzlePiece.PieceTypeSO == null) return transform.position;
+
+        // Grid cell size
+        float cellSize = 1f; // Default fallback
+        if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
+            cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
+
+        // PlacedObjectTypeSO provides better center logic based on rotation
+        Vector3 centerOffset = _puzzlePiece.PieceTypeSO.GetBoundsCenterOffset(_puzzlePiece.CurrentDirection) * cellSize;
+        Vector2Int rotationOffset = _puzzlePiece.PieceTypeSO.GetRotationOffset(_puzzlePiece.CurrentDirection);
+
+        // Calculate the "true origin" (un-pivoted cell position)
+        Vector3 originPos = transform.position - new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
+
+        return originPos + centerOffset;
+    }
+
+    private void SetGazeTarget(GazeTarget target)
+    {
+        if (_currentGazeTarget == null || _currentGazeTarget.IsExpired || target.priority >= _currentGazeTarget.priority)
+        {
+            _currentGazeTarget = target;
+        }
     }
 
     public void Setup(TemperamentSO newTemperament)
@@ -151,37 +226,53 @@ public class PiecePersonality : MonoBehaviour
 
         if (facialController == null) return;
 
+        // Cleanup expired target
+        if (_currentGazeTarget != null && _currentGazeTarget.IsExpired)
+            _currentGazeTarget = null;
+
         if (_isHeld)
         {
-            if (_wantsToLookAtCamera)
+            if (_wantsToLookAtCamera) facialController.LookAtCamera();
+            else facialController.ResetPupilPosition();
+            return;
+        }
+
+        // Determine best gaze target
+        GazeTarget bestTarget = null;
+
+        if (_isBeingPetted)
+        {
+            // Cursor is best when petting (high priority)
+            bestTarget = new GazeTarget(Vector3.zero, GazePriority.Petting);
+        }
+        else if (_currentGazeTarget != null)
+        {
+            bestTarget = _currentGazeTarget;
+        }
+        else if (_puzzlePiece.HasItem)
+        {
+            bestTarget = new GazeTarget(_puzzlePiece.GetAttachmentPoint().position, GazePriority.Neighbor);
+        }
+
+        // Apply best target
+        if (bestTarget != null)
+        {
+            if (bestTarget.priority == GazePriority.Petting || (bestTarget.priority == GazePriority.Idle && bestTarget.targetTransform == null && !bestTarget.isCamera))
+            {
+                LookAtCursor();
+            }
+            else if (bestTarget.isCamera)
             {
                 facialController.LookAtCamera();
             }
             else
             {
-                facialController.ResetPupilPosition();
+                facialController.LookAt(bestTarget.GetPosition(), false);
             }
-            return;
         }
-
-        if (!_isBeingPetted)
+        else if (!_isLookingRandomly)
         {
-            if (_puzzlePiece.HasItem)
-            {
-                facialController.LookAt(_puzzlePiece.GetAttachmentPoint().position, false);
-            }
-            else if (_attentionTarget != null)
-            {
-                facialController.LookAt(_attentionTarget.transform.position, false);
-            }
-            else if (_isLookingRandomly)
-            {
-                // Logic in coroutine
-            }
-            else
-            {
-                LookAtCursor();
-            }
+            LookAtCursor();
         }
     }
 
@@ -269,7 +360,7 @@ public class PiecePersonality : MonoBehaviour
         {
             if (!_isSleeping && !_isHeld)
             {
-                _attentionTarget = piece;
+                SetGazeTarget(new GazeTarget(piece.transform, GazePriority.Reaction, 5.0f));
                 SetEmotion(excitedEmotion != null ? excitedEmotion : curiousEmotion);
                 StopAllBehaviorCoroutines();
             }
@@ -314,9 +405,9 @@ public class PiecePersonality : MonoBehaviour
             _lastPettingEmotion = null;
             ReturnToNeutralState();
         }
-        else if (piece == _attentionTarget)
+        else if (_currentGazeTarget != null && piece.transform == _currentGazeTarget.targetTransform)
         {
-            _attentionTarget = null;
+            _currentGazeTarget = null;
             ReturnToNeutralState();
         }
     }
@@ -346,7 +437,7 @@ public class PiecePersonality : MonoBehaviour
         {
             if (!_isSleeping && !_isHeld && Vector3.Distance(transform.position, piece.transform.position) < idleLookRadius * 1.5f)
             {
-                _attentionTarget = piece;
+                SetGazeTarget(new GazeTarget(piece.transform, GazePriority.Neighbor, 4.0f));
                 SetEmotion(curiousEmotion);
                 StopAllBehaviorCoroutines();
             }
@@ -362,9 +453,9 @@ public class PiecePersonality : MonoBehaviour
             if (facialController != null) facialController.UpdateSortingOrder(false);
             StartCoroutine(ReturnToNeutralAfterDelay(0.5f));
         }
-        else if (piece == _attentionTarget)
+        else if (_currentGazeTarget != null && piece.transform == _currentGazeTarget.targetTransform)
         {
-            _attentionTarget = null;
+            _currentGazeTarget = null;
             ReturnToNeutralState();
         }
     }
@@ -408,9 +499,47 @@ public class PiecePersonality : MonoBehaviour
         }
         else if (!_isLookingRandomly)
         {
+            SetGazeTarget(new GazeTarget(stationaryPiece.transform.position, GazePriority.Reaction, 2.0f));
             StartCoroutine(ShowReactionEmotion(curiousEmotion, 2.0f));
         }
     }
+
+    private void HandleFloorTap(Vector3 position, float radius, float strength)
+    {
+        if (_isHoldingItem() || _isHeld) return;
+
+        // Temperament and state influence on sensitivity
+        float sensitivity = 1.0f;
+        if (_temperament != null)
+        {
+            // Irritated/Excited cats might be more sensitive
+            sensitivity += _currentIrritation * 0.5f;
+            // Sleepy/Fatigued cats might be less sensitive
+            sensitivity -= _currentFatigue * 0.3f;
+        }
+
+        Vector3 myCenter = GetGridCenterWorldPosition();
+        float dist = Vector3.Distance(myCenter, position);
+
+        if (dist <= radius * sensitivity)
+        {
+            // Wake up if sleeping
+            if (_isSleeping)
+            {
+                ReturnToNeutralState();
+            }
+
+            // Duration based on distance: far = 3s, close = 5s
+            float duration = 3f + (1f - dist / (radius * sensitivity)) * 2f;
+            duration *= strength; // Factor in the tap strength
+
+            SetGazeTarget(new GazeTarget(position, GazePriority.Tap, duration));
+
+            if (!_isBeingPetted) TriggerExternalReaction(curiousEmotion, 2.0f);
+        }
+    }
+
+    private bool _isHoldingItem() => _puzzlePiece != null && _puzzlePiece.HasItem;
 
     private void CheckForNeighborReaction(PuzzlePiece newNeighbor)
     {
@@ -503,7 +632,7 @@ public class PiecePersonality : MonoBehaviour
     private IEnumerator SleepTimer(float time)
     {
         yield return new WaitForSeconds(time);
-        if (_isBeingPetted || _isHeld || _attentionTarget != null || _puzzlePiece.HasItem) yield break;
+        if (_isBeingPetted || _isHeld || (_currentGazeTarget != null && !_currentGazeTarget.IsExpired) || _puzzlePiece.HasItem) yield break;
         
         StopAllBehaviorCoroutines();
         _fallingAsleepCoroutine = StartCoroutine(SleepBlinkSequence());
@@ -529,7 +658,7 @@ public class PiecePersonality : MonoBehaviour
             if (facialController != null && Random.value < 0.5f) 
                 facialController.ResetPupilPosition();
 
-            if (_isHeld || _isBeingPetted || _attentionTarget != null) yield break;
+            if (_isHeld || _isBeingPetted || (_currentGazeTarget != null && !_currentGazeTarget.IsExpired)) yield break;
         }
 
         // Finally sleep
@@ -589,7 +718,7 @@ public class PiecePersonality : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(Random.Range(idleLookIntervalMin, idleLookIntervalMax));
-            if (_isHeld || _isSleeping || _isBeingPetted || _attentionTarget != null) continue;
+            if (_isHeld || _isSleeping || _isBeingPetted || (_currentGazeTarget != null && !_currentGazeTarget.IsExpired)) continue;
 
             _isLookingRandomly = true;
 
@@ -610,19 +739,19 @@ public class PiecePersonality : MonoBehaviour
                         lookCenter.y = lookPlaneHeight;
                         Vector3 randomDirection = Random.insideUnitSphere * idleLookRadius;
                         randomDirection.y = 0;
-                        facialController.LookAt(lookCenter + randomDirection);
+                        SetGazeTarget(new GazeTarget(lookCenter + randomDirection, GazePriority.Idle, idleLookDurationMax));
                         break;
 
                     case IdleGazeState.LookAtNeighbor:
                         if (hasNeighbors)
                         {
                             PiecePersonality targetPiece = allPieces[Random.Range(0, allPieces.Count)];
-                            facialController.LookAt(targetPiece.GetFocusPoint().transform.position);
+                            SetGazeTarget(new GazeTarget(targetPiece.GetFocusPoint(), GazePriority.Neighbor, idleLookDurationMax));
                         }
                         break;
 
                     case IdleGazeState.LookAtPlayer:
-                        facialController.LookAtCamera();
+                        SetGazeTarget(GazeTarget.Camera(GazePriority.Idle, idleLookDurationMax));
                         break;
 
                     case IdleGazeState.Wait:

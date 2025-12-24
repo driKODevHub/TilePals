@@ -53,12 +53,16 @@ public class ProceduralCatAnimator : MonoBehaviour
     private Quaternion _targetPettingRot = Quaternion.identity;
     private Vector3 _externalTailForce;
     
-    // Lerping multipliers
+    // Smoothing & Timers
     private float _currentMotionScale = 1f;
+    private float _internalBreathingTime;
+    private float _internalTailTime;
 
     private void Awake()
     {
-        _timeOffset = Random.Range(0f, 100f);
+        float randomOffset = Random.Range(0f, 100f);
+        _internalBreathingTime = randomOffset;
+        _internalTailTime = randomOffset;
 
         // NEW: Auto-detect bodyRoot if missing
         if (bodyRoot == null)
@@ -109,6 +113,12 @@ public class ProceduralCatAnimator : MonoBehaviour
     private void Update()
     {
         UpdateMotionScale();
+        
+        // Accumulate time incrementally to prevent phase jumps during speed changes
+        float dt = Time.deltaTime * _currentMotionScale;
+        _internalBreathingTime += dt * idleSpeed;
+        _internalTailTime += dt * wagSpeed;
+
         AnimateBody();
         ResetPettingImpact();
     }
@@ -123,9 +133,8 @@ public class ProceduralCatAnimator : MonoBehaviour
     {
         if (bodyRoot == null) return;
 
-        float time = (Time.time + _timeOffset) * _currentMotionScale;
-        float sineWave = Mathf.Sin(time * idleSpeed);
-        float cosWave = Mathf.Cos(time * idleSpeed);
+        float sineWave = Mathf.Sin(_internalBreathingTime);
+        float cosWave = Mathf.Cos(_internalBreathingTime);
 
         // 1. Position with Scale Compensation
         // Offset is calculated in "Unity World Meters" relative to the script host
@@ -213,9 +222,8 @@ public class ProceduralCatAnimator : MonoBehaviour
     {
         if (!enableTailWag) return Vector3.zero;
 
-        float time = (Time.time + _timeOffset) * _currentMotionScale;
         float phaseOffset = normalizedLength * tailWaviness;
-        float wave = Mathf.Sin((time * wagSpeed) - phaseOffset);
+        float wave = Mathf.Sin(_internalTailTime - phaseOffset);
 
         Vector3 worldDirection = transform.TransformDirection(wagLocalAxis);
         Vector3 force = worldDirection * (wave * wagStrength * _currentMotionScale);

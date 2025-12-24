@@ -29,4 +29,8 @@ public static class PersonalityEventManager
     // --- ДИСТАНЦІЙНІ РЕАКЦІЇ (ПРОЛІТ НАД КОТОМ) ---
     public static event Action<PuzzlePiece> OnPieceFlyOver;
     public static void RaisePieceFlyOver(PuzzlePiece stationaryPiece) => OnPieceFlyOver?.Invoke(stationaryPiece);
+
+    // --- ВЗАЄМОДІЯ ТАП (СТУКІТ/ШУРХІТ) ---
+    public static event Action<Vector3, float, float> OnFloorTap;
+    public static void RaiseFloorTap(Vector3 position, float radius, float strength) => OnFloorTap?.Invoke(position, radius, strength);
 }

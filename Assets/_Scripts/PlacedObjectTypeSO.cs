@@ -1,4 +1,4 @@
-// PlacedObjectTypeSO.cs
+п»ї// PlacedObjectTypeSO.cs
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -6,26 +6,26 @@ using System;
 [CreateAssetMenu(fileName = "PlacedObjectType", menuName = "GridBuildingSystem/PlacedObjectType", order = 1)]
 public class PlacedObjectTypeSO : ScriptableObject
 {
-    // --- ENUMS ДЛЯ ТИПІЗАЦІЇ ---
+    // --- ENUMS пїЅпїЅпїЅ пїЅпїЅПІпїЅпїЅЦІпїЅ ---
     public enum ItemCategory
     {
-        Character,  // Коти (стандартна поведінка)
-        Prop,       // Декор, меблі (блокують грід, без фізики або з нею)
-        Toy,        // Іграшки (можна давати котам, кидати)
-        Food,       // Їжа (привертає увагу)
-        Tool        // Інструменти (розширюють грід)
+        Character,  // пїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+        Prop,       // пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ)
+        Toy,        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ)
+        Food,       // пїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)
+        Tool        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ)
     }
 
     public enum UsageType
     {
         None,
-        HoldInMouth,    // Кіт бере в зуби
-        AttractAttention, // Кіт дивиться
-        UnlockGrid,     // Розблоковує клітинки
-        Bounce          // Просто фізичний об'єкт
+        HoldInMouth,    // КіпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
+        AttractAttention, // КіпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+        UnlockGrid,     // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+        Bounce          // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ'пїЅпїЅпїЅ
     }
 
-    // --- ЛОГІКА НАПРЯМКІВ ---
+    // --- пїЅпїЅГІпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅКІпїЅ ---
     public static Dir GetNextDirencion(Dir dir)
     {
         return dir switch
@@ -69,15 +69,17 @@ public class PlacedObjectTypeSO : ScriptableObject
     public UsageType usageType = UsageType.None;
 
     [Header("Physics Settings (For Non-Characters)")]
-    [Tooltip("Чи використовувати фізику при падінні (для іграшок/предметів).")]
+    [Tooltip("пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ).")]
     public bool usePhysics = false;
     public float mass = 1.0f;
     public float bounciness = 0.5f;
     public float throwForceMultiplier = 1.0f;
 
     [Header("Grid Expansion (For Tools)")]
-    [Tooltip("Радіус розблокування клітинок (якщо це Tool).")]
+    [Tooltip("пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅ Tool).")]
     public int unlockRadius = 1;
+
+    public Vector2Int size => GetMaxDimensions();
 
     public Vector2Int GetMaxDimensions()
     {

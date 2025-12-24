@@ -43,6 +43,12 @@ public class PuzzleManager : MonoBehaviour
     private float _clickStartTime;
     private bool _isPettingActive;
 
+    // --- DOUBLE CLICK DETECTION (TAP) ---
+    private float _lastClickTime;
+    [SerializeField] private float doubleClickThreshold = 0.3f;
+    [SerializeField] private float floorTapRadius = 5f;
+    [SerializeField] private float floorTapStrength = 1f;
+
     private Vector3 _initialPiecePosition;
     private Quaternion _initialPieceRotation;
     private bool _isLevelComplete = false;
@@ -57,6 +63,12 @@ public class PuzzleManager : MonoBehaviour
     private float _currentMouseSpeed;
 
     private Vector2Int? _lastSnappedGridOrigin = null;
+
+#if UNITY_EDITOR
+    private Vector3 _debugTapPos;
+    private float _debugTapRadius;
+    private float _debugTapTime;
+#endif
 
     // --- SNAPSHOT FOR UNDO/REDO ---
     private List<PuzzlePiece> _initialPassengersSnapshot = new List<PuzzlePiece>();
@@ -250,6 +262,28 @@ public class PuzzleManager : MonoBehaviour
             _clickStartPos = inputReader.MousePosition;
             _clickStartTime = Time.time;
             _isPettingActive = false;
+        }
+        else if (_heldPiece == null && _hoveredPiece == null)
+        {
+            // Floor Tap / Rustle detection
+            float currentTime = Time.time;
+            bool isDragPanning = CameraController.Instance != null && CameraController.Instance.IsDragPanning;
+
+            if (currentTime - _lastClickTime <= doubleClickThreshold && !isDragPanning)
+            {
+                Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
+                if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer))
+                {
+                    PersonalityEventManager.RaiseFloorTap(hit.point, floorTapRadius, floorTapStrength);
+
+#if UNITY_EDITOR
+                    _debugTapPos = hit.point;
+                    _debugTapRadius = floorTapRadius;
+                    _debugTapTime = Time.time;
+#endif
+                }
+            }
+            _lastClickTime = currentTime;
         }
     }
 
@@ -728,5 +762,18 @@ public class PuzzleManager : MonoBehaviour
 
     public void SaveCurrentProgress() => GameManager.Instance.SaveCurrentProgress();
     public void OnLevelComplete() => GameManager.Instance.OnLevelComplete();
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        if (Application.isPlaying && Time.time - _debugTapTime < 1.5f)
+        {
+            Gizmos.color = new Color(1f, 1f, 0f, 0.5f);
+            Gizmos.DrawWireSphere(_debugTapPos, _debugTapRadius);
+            Gizmos.color = new Color(1f, 1f, 0f, 0.1f);
+            Gizmos.DrawSphere(_debugTapPos, _debugTapRadius);
+        }
+    }
+#endif
 }
 
