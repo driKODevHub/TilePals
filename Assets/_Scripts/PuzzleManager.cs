@@ -52,6 +52,11 @@ public class PuzzleManager : MonoBehaviour
 
     private Vector3 _initialPiecePosition;
     private Quaternion _initialPieceRotation;
+    // --- Initial State Tracking for Undo ---
+    private bool _initialWasPlaced;
+    private bool _initialWasOffGrid;
+    private Vector2Int _initialOrigin;
+    
     private bool _isLevelComplete = false;
     private List<PuzzlePiece> _piecesBeingFlownOver = new List<PuzzlePiece>();
     private List<PiecePersonality> _allPersonalities = new List<PiecePersonality>();
@@ -465,6 +470,9 @@ public class PuzzleManager : MonoBehaviour
 
         _initialPiecePosition = piece.transform.position;
         _initialPieceRotation = piece.transform.rotation;
+        _initialWasPlaced = piece.IsPlaced;
+        _initialWasOffGrid = piece.IsOffGrid;
+        
         _lastSnappedGridOrigin = null;
 
         // Use the stored world hit from the moment of initial click to fix offsets and rapid drag issues
@@ -482,6 +490,7 @@ public class PuzzleManager : MonoBehaviour
             {
                 origin = piece.OffGridOrigin;
             }
+            _initialOrigin = origin;
 
             Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection);
             Vector3 pieceOriginWorld = piece.transform.position - new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
@@ -654,9 +663,17 @@ public class PuzzleManager : MonoBehaviour
 
         if (canOnGrid)
         {
-            // Передаємо збережений список пасажирів (той що був при Pickup або поточний, якщо не змінювався)
-            // Але оскільки ми могли додати когось під час утримання, беремо поточний StoredPassengers
-            ICommand cmd = new PlaceCommand(_heldPiece, origin, _heldPiece.CurrentDirection, _initialPiecePosition, _initialPieceRotation, _heldPiece.StoredPassengers);
+            ICommand cmd = new PlaceCommand(
+                _heldPiece, 
+                origin, 
+                _heldPiece.CurrentDirection, 
+                _initialPiecePosition, 
+                _initialPieceRotation, 
+                _heldPiece.StoredPassengers,
+                _initialWasPlaced,
+                _initialWasOffGrid,
+                _initialOrigin
+            );
 
             if (cmd.Execute())
             {

@@ -3252,6 +3252,9 @@ MonoBehaviour:
   offGridPlaneLayer:
     serializedVersion: 2
     m_Bits: 256
+  doubleClickThreshold: 0.3
+  floorTapRadius: 5
+  floorTapStrength: 1
 --- !u!1 &1180661166
 GameObject:
   m_ObjectHideFlags: 0
@@ -3385,7 +3388,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7237212316425976301, guid: 8bcf9ac8450020c41b158e0d51bb55cf, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -463,6 +463,9 @@ MonoBehaviour:
   - pieceType: {fileID: 11400000, guid: 777287fb56edbd042bc1443804c1552e, type: 2}
     position: {x: -10, y: -10}
     direction: 0
+  - pieceType: {fileID: 11400000, guid: 777287fb56edbd042bc1443804c1552e, type: 2}
+    position: {x: -10, y: -10}
+    direction: 0
   puzzlePieces:
   - {fileID: 11400000, guid: d1f4ee20de4e6f14e9e169f9bfbca7fc, type: 2}
   - {fileID: 11400000, guid: e3b4a7d4c280d3842a0ac0c34fde6b68, type: 2}

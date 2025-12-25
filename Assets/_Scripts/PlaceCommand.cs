@@ -9,45 +9,114 @@ public class PlaceCommand : ICommand
 
     private Vector3 prevPosition;
     private Quaternion prevRotation;
-
-    // —Ú‡Ì "ƒÓ"
+    private Vector2Int prevGridOrigin; 
+    private Vector2Int prevOffGridOrigin;
     private bool wasOnGrid;
     private bool wasOffGrid;
-    private Vector2Int prevGridOrigin;
-    private Vector2Int prevOffGridOrigin;
 
-    // «Ì≥ÏÓÍ Ô‡Ò‡ÊË≥‚ Ì‡ ÏÓÏÂÌÚ ÒÚ‚ÓÂÌÌˇ ÍÓÏ‡Ì‰Ë
+    // Snapshot of passengers (cats/items) on the tool BEFORE the move
     private List<PuzzlePiece> passengersSnapshot;
 
-    public PlaceCommand(PuzzlePiece piece, Vector2Int gridPosition, PlacedObjectTypeSO.Dir direction, Vector3 prevPos, Quaternion prevRot, List<PuzzlePiece> currentPassengers)
+    // Default Constructor - NOW TAKES INITIAL STATE
+    public PlaceCommand(PuzzlePiece piece, Vector2Int gridPosition, PlacedObjectTypeSO.Dir direction, bool initialWasPlaced, bool initialWasOffGrid)
     {
         this.piece = piece;
         this.gridPosition = gridPosition;
         this.direction = direction;
-        this.prevPosition = prevPos;
-        this.prevRotation = prevRot;
-        this.passengersSnapshot = currentPassengers != null ? new List<PuzzlePiece>(currentPassengers) : new List<PuzzlePiece>();
+        
+        this.prevPosition = piece.transform.position;
+        this.prevRotation = piece.transform.rotation;
+        
+        this.passengersSnapshot = piece.StoredPassengers != null ? new List<PuzzlePiece>(piece.StoredPassengers) : new List<PuzzlePiece>();
 
-        this.wasOnGrid = piece.IsPlaced;
-        this.wasOffGrid = piece.IsOffGrid;
+        this.wasOnGrid = initialWasPlaced;
+        this.wasOffGrid = initialWasOffGrid;
 
         if (wasOnGrid)
         {
-            this.prevGridOrigin = piece.PlacedObjectComponent != null ? piece.PlacedObjectComponent.Origin : (piece.InfrastructureComponent != null ? piece.InfrastructureComponent.Origin : Vector2Int.zero);
+            this.prevGridOrigin = piece.PlacedObjectComponent != null ? piece.PlacedObjectComponent.Origin : 
+                (piece.InfrastructureComponent != null ? piece.InfrastructureComponent.Origin : Vector2Int.zero);
+            
+            // If component is null but we claim it was on grid, we might have lost track or it's just physically there.
+            // But we can't reliably get Origin if component is null. 
+            // However, typically PrevPosition is near the grid spot.
         }
         if (wasOffGrid) this.prevOffGridOrigin = piece.OffGridOrigin;
     }
 
+    // Comprehensive Constructor
+    public PlaceCommand(PuzzlePiece piece, Vector2Int gridPosition, PlacedObjectTypeSO.Dir direction, 
+                        Vector3 prevPos, Quaternion prevRot, List<PuzzlePiece> currentPassengers,
+                        bool initialWasPlaced, bool initialWasOffGrid, Vector2Int? initialOrigin = null)
+    {
+        this.piece = piece;
+        this.gridPosition = gridPosition;
+        this.direction = direction;
+        
+        this.prevPosition = prevPos;
+        this.prevRotation = prevRot;
+        
+        this.passengersSnapshot = currentPassengers != null ? new List<PuzzlePiece>(currentPassengers) : new List<PuzzlePiece>();
+
+        this.wasOnGrid = initialWasPlaced;
+        this.wasOffGrid = initialWasOffGrid;
+
+        if (wasOnGrid)
+        {
+            if (initialOrigin.HasValue)
+            {
+                this.prevGridOrigin = initialOrigin.Value;
+            }
+            else
+            {
+                this.prevGridOrigin = piece.PlacedObjectComponent != null ? piece.PlacedObjectComponent.Origin : 
+                    (piece.InfrastructureComponent != null ? piece.InfrastructureComponent.Origin : Vector2Int.zero);
+            }
+        }
+        if (wasOffGrid)
+        {
+            if (initialOrigin.HasValue)
+            {
+                 this.prevOffGridOrigin = initialOrigin.Value;
+            }
+            else
+            {
+                 this.prevOffGridOrigin = piece.OffGridOrigin;
+            }
+        }
+        if (wasOffGrid) this.prevOffGridOrigin = piece.OffGridOrigin;
+    }
+
+    // Constructor for LevelLoader (Backwards compatibility / Defaults)
+    public PlaceCommand(PuzzlePiece piece, Vector2Int gridPosition, PlacedObjectTypeSO.Dir direction, Vector3 prevPos, Quaternion prevRot, List<PuzzlePiece> currentPassengers)
+        : this(piece, gridPosition, direction, prevPos, prevRot, currentPassengers, false, false)
+    {
+    }
+
     public bool Execute()
     {
-        // 1. Œ◊»Ÿ≈ÕÕﬂ: œÓ‚Ì≥ÒÚ˛ ‚Ë‰‡Îˇ∫ÏÓ Ù≥„ÛÛ Ú‡ øø Ô‡Ò‡ÊË≥‚ Á ÔÓÚÓ˜ÌÓ„Ó Ï≥Òˆˇ
-        // ÷Â ÍËÚË˜ÌÓ ‰Îˇ Redo, ˘Ó· Á‚≥Î¸ÌËÚË ÍÎ≥ÚËÌÍË
+        // 1. –û—á–∏—Å—Ç–∫–∞ –ø–æ—Ç–æ—á–Ω–æ–≥–æ —Å—Ç–∞–Ω—É (—è–∫—â–æ —Ü–µ Redo)
         CleanupCurrentState();
 
-        // 2. –Œ«Ã≤Ÿ≈ÕÕﬂ “”À«¿/‘≤√”–»
-        // “ÛÚ ÏË ÔËÔÛÒÍ‡∫ÏÓ, ˘Ó ı≥‰ ‚‡Î≥‰ÌËÈ (·Ó ÏË ÈÓ„Ó ‚ÊÂ Ó·ËÎË ‡·Ó ˘ÓÈÌÓ ÔÂÂ‚≥ËÎË ‚ Manager)
-        // ¬ËÍÓËÒÚÓ‚Û∫ÏÓ PlacePieceOnGrid Ì‡ÔˇÏÛ
+        // 2. –¢–∏–º—á–∞—Å–æ–≤–æ –ø—Ä–∏—î–¥–Ω—É—î–º–æ –ø–∞—Å–∞–∂–∏—Ä—ñ–≤, —â–æ–± –≤–æ–Ω–∏ —Ä—É—Ö–∞–ª–∏—Å—è —Ä–∞–∑–æ–º –∑ —Ç—É–ª–∑–æ—é
+        // –¶–µ –∫—Ä–∏—Ç–∏—á–Ω–æ –¥–ª—è –∫–æ—Ä–µ–∫—Ç–Ω–æ–≥–æ –ø–µ—Ä–µ–º—ñ—â–µ–Ω–Ω—è, –±–æ TeleportTo –º–∏—Ç—Ç—î–≤–∏–π
+        if (passengersSnapshot.Count > 0)
+        {
+            foreach (var p in passengersSnapshot)
+            {
+                if (p == null) continue;
 
+                // –ü–µ—Ä–µ–∫–æ–Ω—É—î–º–æ—Å—å, —â–æ –ø–∞—Å–∞–∂–∏—Ä –Ω–µ –Ω–∞ –≥—Ä—ñ–¥—ñ –ª–æ–≥—ñ—á–Ω–æ
+                if (p.IsPlaced) GridBuildingSystem.Instance.RemovePieceFromGrid(p);
+                else if (p.IsOffGrid) OffGridManager.RemovePiece(p);
+
+                // –ü—Ä–∏—î–¥–Ω—É—î–º–æ –¥–æ —Ç—É–ª–∑–∏ (AddPassenger —Ç–∞–∫–æ–∂ –≤–∏–º–∏–∫–∞—î —Ñ—ñ–∑–∏–∫—É)
+                // –¶–µ –≥–∞—Ä–∞–Ω—Ç—É—î, —â–æ –∫–æ–ª–∏ —Ç—É–ª–∑–∞ —Å—Ç—Ä–∏–±–Ω–µ, –ø–∞—Å–∞–∂–∏—Ä–∏ —Å—Ç—Ä–∏–±–Ω—É—Ç—å –∑ –Ω–µ—é
+                piece.AddPassenger(p);
+            }
+        }
+
+        // 3. –†–æ–∑–º—ñ—â—É—î–º–æ –¢—É–ª–∑—É –Ω–∞ –≥—Ä—ñ–¥—ñ (–õ–æ–≥—ñ—á–Ω–æ)
         PlacedObject placedObjectComponent = GridBuildingSystem.Instance.PlacePieceOnGrid(piece, gridPosition, direction);
 
         if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
@@ -55,41 +124,46 @@ public class PlaceCommand : ICommand
         else
             piece.SetPlaced(placedObjectComponent);
 
-        // ¬≥ÁÛ‡Î¸ÌÂ ÔÂÂÏ≥˘ÂÌÌˇ
+        // –û–±—á–∏—Å–ª—é—î–º–æ –Ω–æ–≤—É –≤—ñ–∑—É–∞–ª—å–Ω—É –ø–æ–∑–∏—Ü—ñ—é
         float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
         Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(direction);
         Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
         Vector3 finalPos = GridBuildingSystem.Instance.GetGrid().GetWorldPosition(gridPosition.x, gridPosition.y) + offset;
 
+        // 4. –§—ñ–∑–∏—á–Ω–æ –ø–µ—Ä–µ–º—ñ—â—É—î–º–æ —Ç—É–ª–∑—É (—ñ –ø—Ä–∏—î–¥–Ω–∞–Ω–∏—Ö –ø–∞—Å–∞–∂–∏—Ä—ñ–≤)
         piece.UpdateTransform(finalPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(direction), 0));
 
-        // 3. ¬≤ƒÕŒ¬À≈ÕÕﬂ œ¿—¿∆»–≤¬ (Redo Logic)
+        // 5. –†–æ–∑–º—ñ—â—É—î–º–æ –ø–∞—Å–∞–∂–∏—Ä—ñ–≤ –Ω–∞ –Ω–æ–≤–∏—Ö –º—ñ—Å—Ü—è—Ö (–õ–æ–≥—ñ—á–Ω–æ —Ç–∞ –≤—ñ–∑—É–∞–ª—å–Ω–æ –≤—ñ–¥'—î–¥–Ω—É—î–º–æ)
         if (passengersSnapshot.Count > 0)
         {
-            piece.StoredPassengers.Clear(); // Œ˜Ë˘‡∫ÏÓ, ·Ó Á‡‡Á ‚ËÒ‡‰ËÏÓ
+            // –û—á–∏—â–∞—î–º–æ —Å–ø–∏—Å–æ–∫ –≤ —Ç—É–ª–∑—ñ, –±–æ –∑–∞—Ä–∞–∑ –º–∏ —ó—Ö "–≤–∏—Å–∞–¥–∂—É—î–º–æ" –Ω–∞ –≥—Ä—ñ–¥
+            piece.StoredPassengers.Clear();
 
             foreach (var p in passengersSnapshot)
             {
                 if (p == null) continue;
 
-                // œÂÂÍÓÌÛ∫ÏÓÒ¸, ˘Ó Ô‡Ò‡ÊË "˜ËÒÚËÈ"
-                if (p.IsPlaced) GridBuildingSystem.Instance.RemovePieceFromGrid(p);
-                else if (p.IsOffGrid) OffGridManager.RemovePiece(p);
+                // –û–Ω–æ–≤–ª—é—î–º–æ –ª–æ–≥—ñ—á–Ω–∏–π –Ω–∞–ø—Ä—è–º–æ–∫ –ø–∞—Å–∞–∂–∏—Ä–∞ –≤—ñ–¥–ø–æ–≤—ñ–¥–Ω–æ –¥–æ –π–æ–≥–æ –≤—ñ–∑—É–∞–ª—å–Ω–æ–≥–æ –ø–æ–≤–æ—Ä–æ—Ç—É
+                // –¶–µ –≤–∞–∂–ª–∏–≤–æ, —è–∫—â–æ —Ç—É–ª–∑–∞ –±—É–ª–∞ –ø–æ–≤–µ—Ä–Ω—É—Ç–∞ –≤ –ø—Ä–æ—Ü–µ—Å—ñ
+                p.SyncDirectionFromRotation(p.transform.rotation);
 
-                // ¬≥‰˜≥ÔÎˇ∫ÏÓ Ù≥ÁË˜ÌÓ
+                // –í—ñ–¥'—î–¥–Ω—É—î–º–æ –≤—ñ–¥ —Ç—É–ª–∑–∏ (–ª–æ–≥—ñ—á–Ω–æ –±–∞—Ç—å–∫–æ–º —Å—Ç–∞—î –∑–∞–≥–∞–ª—å–Ω–∏–π –∫–æ–Ω—Ç–µ–π–Ω–µ—Ä –∞–±–æ –Ω—ñ—á–æ–≥–æ, –∑–∞–ª–µ–∂–Ω–æ –≤—ñ–¥ —Ä–µ–∞–ª—ñ–∑–∞—Ü—ñ—ó SetParent(null) –∞–±–æ —ñ–Ω—à–æ–≥–æ)
+                // –í –¥–∞–Ω–æ–º—É –≤–∏–ø–∞–¥–∫—É, –º–∏ –ø—Ä–æ—Å—Ç–æ –∑–º—ñ–Ω—é—î–º–æ parent –Ω–∞ —Ç–æ–π, —â–æ —É —Ç—É–ª–∑–∏ (GridArea –∞–±–æ World)
                 p.transform.SetParent(piece.transform.parent);
 
-                // –ÓÁ‡ıÓ‚Û∫ÏÓ ÔÓÁËˆ≥˛
+                // –û–±—á–∏—Å–ª—é—î–º–æ –∫–æ–æ—Ä–¥–∏–Ω–∞—Ç–∏ –≥—Ä—ñ–¥–∞ –Ω–∞ –æ—Å–Ω–æ–≤—ñ –Ω–æ–≤–æ—ó —Å–≤—ñ—Ç–æ–≤–æ—ó –ø–æ–∑–∏—Ü—ñ—ó
                 Vector3 pWorldPos = p.transform.position;
                 GridBuildingSystem.Instance.GetGrid().GetXZ(pWorldPos, out int px, out int pz);
+                
+                // –í—Ä–∞—Ö–æ–≤—É—î–º–æ –æ—Ñ—Å–µ—Ç –ø–æ–≤–æ—Ä–æ—Ç—É —Å–∞–º–æ–≥–æ –∫–æ—Ç–∞
                 Vector2Int pRotOffset = p.PieceTypeSO.GetRotationOffset(p.CurrentDirection);
                 Vector2Int pOrigin = new Vector2Int(px, pz) - pRotOffset;
 
-                // —“¿¬»ÃŒ Õ¿ √–≤ƒ
+                // –†–æ–∑–º—ñ—â—É—î–º–æ –Ω–∞ –≥—Ä—ñ–¥—ñ
                 var po = GridBuildingSystem.Instance.PlacePieceOnGrid(p, pOrigin, p.CurrentDirection);
                 p.SetPlaced(po);
 
-                // —ÌÂÔ ‚≥ÁÛ‡Î‡
+                // –§—ñ–Ω–∞–ª—å–Ω–µ —ñ–¥–µ–∞–ª—å–Ω–µ –≤–∏—Ä—ñ–≤–Ω—é–≤–∞–Ω–Ω—è (Snap) –ø–æ —Ü–µ–Ω—Ç—Ä—É –∫–ª—ñ—Ç–∏–Ω–∫–∏
                 Vector3 snapPos = GridBuildingSystem.Instance.GetGrid().GetWorldPosition(pOrigin.x, pOrigin.y) +
                                   new Vector3(pRotOffset.x, 0, pRotOffset.y) * cellSize;
                 p.UpdateTransform(snapPos, p.transform.rotation);
@@ -104,35 +178,31 @@ public class PlaceCommand : ICommand
 
     public void Undo()
     {
-        // 1. Œ◊»Ÿ≈ÕÕﬂ: «Ì≥Ï‡∫ÏÓ ‚ÒÂ, ˘Ó ÔÓÒÚ‡‚ËÎË ‚ Execute/Redo
         CleanupCurrentState();
 
-        // 2. ¬≤ƒÕŒ¬À≈ÕÕﬂ œ¿—¿∆»–≤¬ ¬ “”À« (ÀÓ„≥Í‡ "¬ ÍË¯ÂÌ˛")
-        // ﬂÍ˘Ó ÚÛÎÁ Ï‡‚ Ô‡Ò‡ÊË≥‚, ÏË øı ‚ÊÂ ÁÌˇÎË Á „≥‰‡ ‚ CleanupCurrentState.
-        // “ÂÔÂ ÚÂ·‡ øı ‰Ó‰‡ÚË ‚ ÒÔËÒÓÍ storedPassengers ÚÛÎÁ‡ ≥ ÔËÍ≥ÔËÚË Ù≥ÁË˜ÌÓ.
+        // –í—ñ–¥–Ω–æ–≤–ª—é—î–º–æ –ø–∞—Å–∞–∂–∏—Ä—ñ–≤ (–ø—Ä–∏—î–¥–Ω—É—î–º–æ –¥–æ —Ç—É–ª–∑–∏ –ø–µ—Ä–µ–¥ —Å—Ç—Ä–∏–±–∫–æ–º –Ω–∞–∑–∞–¥)
         if (passengersSnapshot.Count > 0)
         {
             foreach (var p in passengersSnapshot)
             {
                 if (p == null) continue;
-                piece.AddPassenger(p); // ÷Â Ó·ËÚ¸ SetParent(tool) ≥ disable physics
+                piece.AddPassenger(p); 
             }
         }
 
-        // 3. œŒ¬≈–Õ≈ÕÕﬂ Õ¿ —“¿–≈ Ã≤—÷≈ (‘≥ÁËÍ‡)
+        // –ü–æ–≤–µ—Ä—Ç–∞—î–º–æ —Ç—É–ª–∑—É –Ω–∞–∑–∞–¥ (—Ä–∞–∑–æ–º –∑ –ø–∞—Å–∞–∂–∏—Ä–∞–º–∏)
         piece.UpdateTransform(prevPosition, prevRotation);
-        piece.SyncPassengersRotation();
+        piece.SyncPassengersRotation(); // –°–∏–Ω—Ö—Ä–æ–Ω—ñ–∑—É—î–º–æ –ø–æ–≤–æ—Ä–æ—Ç –ø—ñ—Å–ª—è –ø–æ–≤–µ—Ä–Ω–µ–Ω–Ω—è
 
-        // 4. ¬≤ƒÕŒ¬À≈ÕÕﬂ ÀŒ√≤ » —“¿–Œ√Œ Ã≤—÷ﬂ
         if (wasOnGrid)
         {
-            // Force Place Ì‡ ÒÚ‡Â Ï≥ÒˆÂ
+            // Force Place –Ω–∞ —Å—Ç–∞—Ä–µ –º—ñ—Å—Ü–µ
             var po = GridBuildingSystem.Instance.PlacePieceOnGrid(piece, prevGridOrigin, piece.CurrentDirection);
 
             if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
             {
                 piece.SetInfrastructure(po);
-                // ﬂÍ˘Ó ÔÓ‚ÂÌÛÎË ÚÛÎÁ Ì‡ „≥‰, Ô‡Ò‡ÊËË Ï‡˛Ú¸ ‚ËÈÚË Á "ÍË¯ÂÌ≥" ≥ ÒÚ‡ÚË Ì‡ „≥‰
+                // –†–æ–∑–º—ñ—â—É—î–º–æ –ø–∞—Å–∞–∂–∏—Ä—ñ–≤ –Ω–∞–∑–∞–¥ –Ω–∞ –≥—Ä—ñ–¥ (–≤—ñ–¥'—î–¥–Ω—É—î–º–æ –≤—ñ–¥ —Ç—É–ª–∑–∏)
                 RestorePassengersOnGridAfterUndo(piece);
             }
             else
@@ -144,7 +214,7 @@ public class PlaceCommand : ICommand
         {
             OffGridManager.PlacePiece(piece, prevOffGridOrigin);
             piece.SetOffGrid(true, prevOffGridOrigin);
-            // “ÛÚ Ô‡Ò‡ÊËË Á‡ÎË¯‡˛Ú¸Òˇ ‚ ÍË¯ÂÌ≥ (AddPassenger ÁÓ·Ë‚ Ò‚Ó˛ ÒÔ‡‚Û)
+            // –Ø–∫—â–æ OffGrid, —Ç–æ –ø–∞—Å–∞–∂–∏—Ä–∏ –∑–∞–ª–∏—à–∞—é—Ç—å—Å—è –Ω–∞ —Ç—É–ª–∑—ñ (–ª–æ–≥—ñ–∫–∞ OffGrid –∑–∞–∑–≤–∏—á–∞–π —Ç—Ä–∏–º–∞—î —ó—Ö —Ä–∞–∑–æ–º)
         }
         else
         {
@@ -156,9 +226,7 @@ public class PlaceCommand : ICommand
 
     private void CleanupCurrentState()
     {
-        // ÷ÂÈ ÏÂÚÓ‰ „‡‡ÌÚÛ∫, ˘Ó ÍÎ≥ÚËÌÍË Á‚≥Î¸ÌˇÚ¸Òˇ, ‰Â · Ù≥„Û‡ ÌÂ ·ÛÎ‡
-
-        // 1. ﬂÍ˘Ó ˆÂ ÚÛÎÁ ≥ ‚≥Ì Ì‡ „≥‰≥ - ÁÌ≥Ï‡∫ÏÓ ÈÓ„Ó (ˆÂ Á‡·ÎÓÍÛ∫ ÍÎ≥ÚËÌÍË)
+        // –ó–Ω—ñ–º–∞—î–º–æ —Ç—É–ª–∑—É –∑ –ø–æ—Ç–æ—á–Ω–æ—ó –ø–æ–∑–∏—Ü—ñ—ó
         if (piece.IsPlaced)
         {
             GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
@@ -171,8 +239,7 @@ public class PlaceCommand : ICommand
         }
         piece.SetOffGrid(false);
 
-        // 2. ﬂÍ˘Ó ∫ Ô‡Ò‡ÊËË, øı ÚÂÊ ÚÂ·‡ ÁÌˇÚË Á „≥‰‡/offgrid
-        // ¬ÓÌË ÏÓÊÛÚ¸ ·ÛÚË ˇÍ Ì‡ „≥‰≥ (ˇÍ˘Ó ÚÛÎÁ ·Û‚ placed), Ú‡Í ≥ ‰≥Ú¸ÏË (ˇÍ˘Ó undo Á offgrid)
+        // –ó–Ω—ñ–º–∞—î–º–æ –ø–∞—Å–∞–∂–∏—Ä—ñ–≤ –∑ —ó—Ö –ø–æ—Ç–æ—á–Ω–∏—Ö –ø–æ–∑–∏—Ü—ñ–π
         if (passengersSnapshot.Count > 0)
         {
             foreach (var p in passengersSnapshot)
@@ -194,15 +261,15 @@ public class PlaceCommand : ICommand
 
     private void RestorePassengersOnGridAfterUndo(PuzzlePiece tool)
     {
-        // ÷ÂÈ ÏÂÚÓ‰ ‚ËÍÎËÍ‡∫Ú¸Òˇ, ÍÓÎË Undo ÔÓ‚ÂÌÛÎÓ ÚÛÎÁ Õ¿ √–≤ƒ.
-        // œ‡Ò‡ÊËË Á‡‡Á ‚ storedPassengers (˜ÂÂÁ ÍÓÍ 2 ‚ Undo).
-        // “Â·‡ øı ‚ËÒ‡‰ËÚË.
-
         var grid = GridBuildingSystem.Instance.GetGrid();
+        float cellSize = grid.GetCellSize();
+        
+        // –ö–æ–ø—ñ—é—î–º–æ —Å–ø–∏—Å–æ–∫, –±–æ –±—É–¥–µ–º–æ –∑–º—ñ–Ω—é–≤–∞—Ç–∏ StoredPassengers
         List<PuzzlePiece> currentPassengers = new List<PuzzlePiece>(tool.StoredPassengers);
 
         foreach (var p in currentPassengers)
         {
+            // –í—ñ–¥'—î–¥–Ω—É—î–º–æ –≤—ñ–¥ —Ç—É–ª–∑–∏
             p.transform.SetParent(tool.transform.parent);
             p.SyncDirectionFromRotation(p.transform.rotation);
 
@@ -214,6 +281,11 @@ public class PlaceCommand : ICommand
             // Force Place
             var po = GridBuildingSystem.Instance.PlacePieceOnGrid(p, pOrigin, p.CurrentDirection);
             p.SetPlaced(po);
+            
+            // –ó–∞–±–µ–∑–ø–µ—á—É—î–º–æ –≤—ñ–∑—É–∞–ª—å–Ω–µ –≤–∏—Ä—ñ–≤–Ω—é–≤–∞–Ω–Ω—è —ñ —Ç—É—Ç
+             Vector3 snapPos = GridBuildingSystem.Instance.GetGrid().GetWorldPosition(pOrigin.x, pOrigin.y) +
+                                  new Vector3(pRotOffset.x, 0, pRotOffset.y) * cellSize;
+            p.UpdateTransform(snapPos, p.transform.rotation);
         }
         tool.StoredPassengers.Clear();
     }
