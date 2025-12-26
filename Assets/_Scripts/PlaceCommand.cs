@@ -9,6 +9,7 @@ public class PlaceCommand : ICommand
 
     private Vector3 prevPosition;
     private Quaternion prevRotation;
+    private PlacedObjectTypeSO.Dir prevDirection; // STORE PREVIOUS DIRECTION
     private Vector2Int prevGridOrigin; 
     private Vector2Int prevOffGridOrigin;
     private bool wasOnGrid;
@@ -26,6 +27,7 @@ public class PlaceCommand : ICommand
         
         this.prevPosition = piece.transform.position;
         this.prevRotation = piece.transform.rotation;
+        this.prevDirection = piece.CurrentDirection; // Default from piece
         
         this.passengersSnapshot = piece.StoredPassengers != null ? new List<PuzzlePiece>(piece.StoredPassengers) : new List<PuzzlePiece>();
 
@@ -36,10 +38,6 @@ public class PlaceCommand : ICommand
         {
             this.prevGridOrigin = piece.PlacedObjectComponent != null ? piece.PlacedObjectComponent.Origin : 
                 (piece.InfrastructureComponent != null ? piece.InfrastructureComponent.Origin : Vector2Int.zero);
-            
-            // If component is null but we claim it was on grid, we might have lost track or it's just physically there.
-            // But we can't reliably get Origin if component is null. 
-            // However, typically PrevPosition is near the grid spot.
         }
         if (wasOffGrid) this.prevOffGridOrigin = piece.OffGridOrigin;
     }
@@ -47,7 +45,8 @@ public class PlaceCommand : ICommand
     // Comprehensive Constructor
     public PlaceCommand(PuzzlePiece piece, Vector2Int gridPosition, PlacedObjectTypeSO.Dir direction, 
                         Vector3 prevPos, Quaternion prevRot, List<PuzzlePiece> currentPassengers,
-                        bool initialWasPlaced, bool initialWasOffGrid, Vector2Int? initialOrigin = null)
+                        bool initialWasPlaced, bool initialWasOffGrid, Vector2Int? initialOrigin,
+                        PlacedObjectTypeSO.Dir initialDirection) 
     {
         this.piece = piece;
         this.gridPosition = gridPosition;
@@ -55,6 +54,7 @@ public class PlaceCommand : ICommand
         
         this.prevPosition = prevPos;
         this.prevRotation = prevRot;
+        this.prevDirection = initialDirection; // USE PROVIDED DIRECTION
         
         this.passengersSnapshot = currentPassengers != null ? new List<PuzzlePiece>(currentPassengers) : new List<PuzzlePiece>();
 
@@ -84,12 +84,11 @@ public class PlaceCommand : ICommand
                  this.prevOffGridOrigin = piece.OffGridOrigin;
             }
         }
-        if (wasOffGrid) this.prevOffGridOrigin = piece.OffGridOrigin;
     }
 
     // Constructor for LevelLoader (Backwards compatibility / Defaults)
     public PlaceCommand(PuzzlePiece piece, Vector2Int gridPosition, PlacedObjectTypeSO.Dir direction, Vector3 prevPos, Quaternion prevRot, List<PuzzlePiece> currentPassengers)
-        : this(piece, gridPosition, direction, prevPos, prevRot, currentPassengers, false, false)
+        : this(piece, gridPosition, direction, prevPos, prevRot, currentPassengers, false, false, null, PlacedObjectTypeSO.Dir.Down)
     {
     }
 
@@ -196,8 +195,8 @@ public class PlaceCommand : ICommand
 
         if (wasOnGrid)
         {
-            // Force Place на старе місце
-            var po = GridBuildingSystem.Instance.PlacePieceOnGrid(piece, prevGridOrigin, piece.CurrentDirection);
+            // Force Place на старе місце використовуючи ПОПЕРЕДНІЙ напрямок (для коректного розвороту)
+            var po = GridBuildingSystem.Instance.PlacePieceOnGrid(piece, prevGridOrigin, prevDirection);
 
             if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
             {
@@ -242,6 +241,8 @@ public class PlaceCommand : ICommand
         // Знімаємо пасажирів з їх поточних позицій
         if (passengersSnapshot.Count > 0)
         {
+
+            
             foreach (var p in passengersSnapshot)
             {
                 if (p == null) continue;

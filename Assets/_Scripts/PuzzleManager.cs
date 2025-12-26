@@ -53,9 +53,11 @@ public class PuzzleManager : MonoBehaviour
     private Vector3 _initialPiecePosition;
     private Quaternion _initialPieceRotation;
     // --- Initial State Tracking for Undo ---
+    // --- Initial State Tracking for Undo ---
     private bool _initialWasPlaced;
     private bool _initialWasOffGrid;
     private Vector2Int _initialOrigin;
+    private PlacedObjectTypeSO.Dir _initialDirection;
     
     private bool _isLevelComplete = false;
     private List<PuzzlePiece> _piecesBeingFlownOver = new List<PuzzlePiece>();
@@ -470,6 +472,7 @@ public class PuzzleManager : MonoBehaviour
 
         _initialPiecePosition = piece.transform.position;
         _initialPieceRotation = piece.transform.rotation;
+        _initialDirection = piece.CurrentDirection;
         _initialWasPlaced = piece.IsPlaced;
         _initialWasOffGrid = piece.IsOffGrid;
         
@@ -672,7 +675,8 @@ public class PuzzleManager : MonoBehaviour
                 _heldPiece.StoredPassengers,
                 _initialWasPlaced,
                 _initialWasOffGrid,
-                _initialOrigin
+                _initialOrigin,
+                _initialDirection
             );
 
             if (cmd.Execute())
