@@ -1517,8 +1517,11 @@ public class GridDataSOEditor : Editor
             }
 
             EditorGUILayout.BeginHorizontal("box");
-
-            // --- LARGER COLOR FIELD ---
+            
+            // --- PREVIEW (Fixed Width Container) ---
+            EditorGUILayout.BeginVertical(GUILayout.Width(42));
+            DrawPieceShapePreview(pieceType);
+            EditorGUILayout.EndVertical();
             if (configElementProp != null) {
                 var colorProp = configElementProp.FindPropertyRelative("color");
                 EditorGUI.BeginChangeCheck();
@@ -1609,6 +1612,13 @@ public class GridDataSOEditor : Editor
             SerializedProperty productProp = listProp.GetArrayElementAtIndex(i);
             EditorGUILayout.BeginHorizontal();
             
+            var pType = (PlacedObjectTypeSO)productProp.FindPropertyRelative("pieceType").objectReferenceValue;
+            if (pType != null) {
+                 EditorGUILayout.BeginVertical(GUILayout.Width(42));
+                 DrawPieceShapePreview(pType);
+                 EditorGUILayout.EndVertical();
+            }
+
             EditorGUILayout.PropertyField(productProp.FindPropertyRelative("pieceType"), GUIContent.none, GUILayout.Width(120));
             EditorGUILayout.PropertyField(productProp.FindPropertyRelative("position"), GUIContent.none, GUILayout.Width(80));
             EditorGUILayout.PropertyField(productProp.FindPropertyRelative("direction"), GUIContent.none, GUILayout.Width(60));
@@ -1819,12 +1829,16 @@ public class GridDataSOEditor : Editor
 
             EditorGUILayout.BeginVertical("box");
             SerializedProperty pieceTypeProp = elementProp.FindPropertyRelative("pieceType");
-            EditorGUILayout.ObjectField(pieceTypeProp, GUIContent.none);
+            
             if (pieceTypeProp.objectReferenceValue != null)
             {
                 EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.BeginVertical(GUILayout.Width(42));
                 DrawPieceShapePreview((PlacedObjectTypeSO)pieceTypeProp.objectReferenceValue);
+                EditorGUILayout.EndVertical();
+                
                 EditorGUILayout.BeginVertical();
+                EditorGUILayout.ObjectField(pieceTypeProp, GUIContent.none);
                 EditorGUILayout.PropertyField(elementProp.FindPropertyRelative("color"));
                 EditorGUILayout.PropertyField(elementProp.FindPropertyRelative("isRequired"), new GUIContent("Is Required"));
                 if (elementProp.FindPropertyRelative("isRequired").boolValue)
@@ -1839,6 +1853,10 @@ public class GridDataSOEditor : Editor
 
                 EditorGUILayout.EndVertical();
                 EditorGUILayout.EndHorizontal();
+            }
+            else
+            {
+                EditorGUILayout.ObjectField(pieceTypeProp, GUIContent.none);
             }
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space(5);
