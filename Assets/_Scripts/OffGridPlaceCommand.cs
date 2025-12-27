@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using System.Collections.Generic;
 
 public class OffGridPlaceCommand : ICommand
@@ -34,52 +34,58 @@ public class OffGridPlaceCommand : ICommand
 
     public bool Execute()
     {
-        // 1. Прибираємо зі старого місця
-        if (piece.IsPlaced) GridBuildingSystem.Instance.RemovePieceFromGrid(piece); // Це заблокує клітинки, якщо був тулз
-        else if (piece.IsOffGrid) OffGridManager.RemovePiece(piece);
+        var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+        if (activeBoard == null) return false;
+
+        // 1. Remove from previous state
+        if (piece.IsPlaced) GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
+        else if (piece.IsOffGrid) activeBoard.OffGridTracker.RemovePiece(piece);
+        
         piece.SetOffGrid(false);
 
-        // 2. ВІДНОВЛЮЄМО ПАСАЖИРІВ НА БОРТ (Redo Logic)
-        // Якщо ми ставимо тулз в OffGrid, пасажири повинні бути дітьми (StoredPassengers)
+        // 2. Handle passengers
         if (passengers.Count > 0)
         {
             foreach (var p in passengers)
             {
                 if (p.IsPlaced) GridBuildingSystem.Instance.RemovePieceFromGrid(p);
-                else if (p.IsOffGrid) OffGridManager.RemovePiece(p);
+                else if (p.IsOffGrid) activeBoard.OffGridTracker.RemovePiece(p);
 
-                piece.AddPassenger(p); // Забираємо на борт
+                piece.AddPassenger(p); 
             }
         }
 
-        // 3. Ставимо в OffGrid
+        // 3. Place OffGrid
         piece.SetInitialRotation(direction);
-        float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
+        float cellSize = activeBoard.Grid.GetCellSize();
+        
+        Vector3 cellWorldPos = activeBoard.Grid.GetWorldPosition(offGridOrigin.x, offGridOrigin.y);
         Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(direction);
-        Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
-        Vector3 finalPos = new Vector3(offGridOrigin.x * cellSize, 0, offGridOrigin.y * cellSize) + offset;
+        Vector3 finalPos = cellWorldPos + new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
 
         piece.UpdateTransform(finalPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(direction), 0));
         piece.SetOffGrid(true, offGridOrigin);
-        OffGridManager.PlacePiece(piece, offGridOrigin);
+        activeBoard.OffGridTracker.PlacePiece(piece, offGridOrigin);
 
         return true;
     }
 
     public void Undo()
     {
-        // 1. Прибираємо з OffGrid
-        OffGridManager.RemovePiece(piece);
+        var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+        if (activeBoard == null) return;
+
+        // 1. Remove from current off-grid
+        activeBoard.OffGridTracker.RemovePiece(piece);
         piece.SetOffGrid(false);
 
-        // 2. Повертаємо фізично на старе місце
+        // 2. Restore transform
         piece.UpdateTransform(prevPosition, prevRotation);
         piece.SyncDirectionFromRotation(prevRotation);
 
-        // 3. Відновлюємо логічний стан
+        // 3. Restore status
         if (wasOnGrid)
         {
-            // Якщо був на гріді -> ставимо на грід (це РОЗБЛОКУЄ клітинки)
             if (GridBuildingSystem.Instance.CanPlacePiece(piece, prevGridOrigin, piece.CurrentDirection))
             {
                 var po = GridBuildingSystem.Instance.PlacePieceOnGrid(piece, prevGridOrigin, piece.CurrentDirection);
@@ -87,7 +93,6 @@ public class OffGridPlaceCommand : ICommand
                 if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
                 {
                     piece.SetInfrastructure(po);
-                    // Висаджуємо пасажирів назад на грід
                     RestorePassengersOnGridAfterUndo(piece);
                 }
                 else
@@ -98,16 +103,17 @@ public class OffGridPlaceCommand : ICommand
         }
         else if (wasOffGrid)
         {
-            OffGridManager.PlacePiece(piece, prevOffGridOrigin);
+            activeBoard.OffGridTracker.PlacePiece(piece, prevOffGridOrigin);
             piece.SetOffGrid(true, prevOffGridOrigin);
-            // Пасажири залишаються на борту
         }
     }
 
     private void RestorePassengersOnGridAfterUndo(PuzzlePiece tool)
     {
-        var grid = GridBuildingSystem.Instance.GetGrid();
-        // Копіюємо список
+        var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+        if (activeBoard == null) return;
+        
+        var grid = activeBoard.Grid;
         List<PuzzlePiece> currentPassengers = new List<PuzzlePiece>(tool.StoredPassengers);
 
         foreach (var p in currentPassengers)

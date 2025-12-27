@@ -1,15 +1,13 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 
-// Вішайте цей скрипт на КОРІНЬ префабу LevelSelection
 public class LevelSelectionUI : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private LevelCollectionSO levelCollection;
     [SerializeField] private Transform buttonsContainer;
-    [SerializeField] private GameObject levelButtonPrefab;
+    [SerializeField] private GameObject locationButtonPrefab;
     [SerializeField] private Button backButton;
 
     private List<GameObject> _spawnedButtons = new List<GameObject>();
@@ -30,51 +28,46 @@ public class LevelSelectionUI : MonoBehaviour
     {
         gameObject.SetActive(isActive);
 
-        // Генеруємо кнопки при першому відкритті
         if (isActive && !_isInitialized)
         {
-            GenerateLevelButtons();
+            GenerateLocationButtons();
             _isInitialized = true;
         }
     }
 
-    private void GenerateLevelButtons()
+    private void GenerateLocationButtons()
     {
         foreach (var btn in _spawnedButtons) Destroy(btn);
         _spawnedButtons.Clear();
 
-        if (levelCollection == null) return;
+        var locations = GameManager.Instance.GetAvailableLocations();
+        if (locations == null) return;
 
-        for (int i = 0; i < levelCollection.levels.Count; i++)
+        for (int i = 0; i < locations.Count; i++)
         {
-            int levelIndex = i;
-            GridDataSO levelData = levelCollection.levels[i];
+            int index = i;
+            LevelCollectionSO location = locations[i];
+            if (location == null) continue;
 
-            GameObject btnObj = Instantiate(levelButtonPrefab, buttonsContainer);
+            GameObject btnObj = Instantiate(locationButtonPrefab, buttonsContainer);
             _spawnedButtons.Add(btnObj);
 
             TextMeshProUGUI btnText = btnObj.GetComponentInChildren<TextMeshProUGUI>();
             if (btnText != null)
             {
-                btnText.text = (i + 1).ToString();
-            }
-            else
-            {
-                Text legacyText = btnObj.GetComponentInChildren<Text>();
-                if (legacyText != null) legacyText.text = (i + 1).ToString();
+                btnText.text = location.locationName;
             }
 
             Button btnComp = btnObj.GetComponent<Button>();
             btnComp.onClick.AddListener(() =>
             {
-                OnLevelButtonClicked(levelIndex);
+                OnLocationButtonClicked(index);
             });
         }
     }
 
-    private void OnLevelButtonClicked(int levelIndex)
+    private void OnLocationButtonClicked(int locationIndex)
     {
-        SaveSystem.ClearLevelProgress(levelIndex);
-        GameManager.Instance.StartGameAtLevel(levelIndex, false);
+        GameManager.Instance.SelectLocation(locationIndex);
     }
 }

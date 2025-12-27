@@ -94,6 +94,27 @@ public class CameraController : MonoBehaviour
         _boundsRotationY = rotationY;
     }
 
+    public void FocusOnBoard(PuzzleBoard board)
+    {
+        if (board == null) return;
+        
+        if (board.LevelData != null)
+        {
+            // Note: cameraBoundsCenter is relative to board origin? 
+            // Or absolute? LevelData usually defines it relative to the board.
+            // Let's assume relative to pivot.
+            Vector2 absoluteCenter = board.LevelData.cameraBoundsCenter + new Vector2(board.Pivot.position.x, board.Pivot.position.z);
+            SetCameraBounds(absoluteCenter, board.LevelData.cameraBoundsSize, board.LevelData.cameraBoundsYRotation);
+            
+            _targetPosition = new Vector3(absoluteCenter.x, transform.position.y, absoluteCenter.y);
+        }
+        else
+        {
+            _targetPosition = new Vector3(board.Pivot.position.x, transform.position.y, board.Pivot.position.z);
+        }
+        
+        _isFocusing = true;
+    }
     public void FocusOnLevel(bool immediate)
     {
         _targetPosition = new Vector3(_boundsCenter.x, transform.position.y, _boundsCenter.y);

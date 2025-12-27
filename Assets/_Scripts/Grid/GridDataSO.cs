@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using System.Collections.Generic;
 using System;
 
@@ -23,6 +23,8 @@ public class GridDataSO : ScriptableObject
         public PlacedObjectTypeSO pieceType;
         public Vector2Int position;
         public PlacedObjectTypeSO.Dir direction;
+        public bool isObstacle; // Items that occupy grid but don't count towards win
+        public bool isHidden;   // Pieces that are hidden in containers
     }
 
     [Serializable]
@@ -49,6 +51,10 @@ public class GridDataSO : ScriptableObject
         public List<GeneratedPieceData> solution;
         public SolutionWrapper(List<GeneratedPieceData> solutionData) { this.solution = solutionData; }
     }
+
+    [Header("Environment & Spawning")]
+    public GameObject environmentPrefab;
+    public Vector3 levelSpawnOffset;
 
     [Header("Grid Settings")]
     public int width = 10;
@@ -77,11 +83,14 @@ public class GridDataSO : ScriptableObject
     public List<GeneratorPieceConfig> generatorPieceConfig;
 
     [Header("Level Items (Spawn Always)")]
-    [Tooltip("Предмети, які будуть заспавнені на рівні незалежно від генератора (Тулзи, Іграшки, тощо).")]
+    [Tooltip("Pieces that always spawn in the level (utility, deco).")]
     public List<GeneratedPieceData> levelItems = new List<GeneratedPieceData>();
 
+    [Header("Obstacles (Static pieces)")]
+    public List<GeneratedPieceData> staticObstacles = new List<GeneratedPieceData>();
+
     [Header("Generated Puzzle Data (Read-Only)")]
-    public List<PlacedObjectTypeSO> puzzlePieces; // Це список, який використовує гра для спавну котів з рішення
+    public List<PlacedObjectTypeSO> puzzlePieces; 
     public List<PieceCount> generatedPieceSummary;
     public List<GeneratedPieceData> puzzleSolution;
 

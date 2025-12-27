@@ -1,9 +1,10 @@
-public enum GridCellState
+Ôªøpublic enum GridCellState
 {
     Active,             // Default buildable, unoccupied cell
     Inactive,           // Not buildable, unoccupied cell
     Occupied,           // Cell with a placed object
-    Locked,             // --- ÕŒ¬≈: Cell requires unlocking (Tool) ---
+    Locked,             // --- –ù–û–í–ï: Cell requires unlocking (Tool) ---
     Hovered,            // Cell currently hovered by mouse (and potentially buildable/active)
-    InvalidPlacement    // Cell where an attempt to place an object is invalid
+    InvalidPlacement,    // Cell where an attempt to place an object is invalid
+    Hint
 }

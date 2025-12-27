@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+п»їusing System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
@@ -9,6 +9,15 @@ public class GridBuildingSystem : MonoBehaviour
     [SerializeField] private LayerMask whatIsGround;
     private GridDataSO gridData;
     private GridXZ<GridObject> grid;
+    public PuzzleBoard ActiveBoard => activeBoard;
+    private PuzzleBoard activeBoard;
+
+    public void SetActiveBoard(PuzzleBoard board)
+    {
+        this.activeBoard = board;
+        this.grid = board.Grid;
+        if (CameraController.Instance != null) CameraController.Instance.FocusOnBoard(board);
+    }
 
     private void Awake()
     {
@@ -76,7 +85,7 @@ public class GridBuildingSystem : MonoBehaviour
 
             GridObject gridObject = grid.GetGridObject(gridPosition.x, gridPosition.y);
 
-            // Ігноруємо колізію з самим собою (якщо ми перевіряємо те саме місце, де вже стоїмо)
+            // Р†РіРЅРѕСЂСѓС”РјРѕ РєРѕР»С–Р·С–СЋ Р· СЃР°РјРёРј СЃРѕР±РѕСЋ (СЏРєС‰Рѕ РјРё РїРµСЂРµРІС–СЂСЏС”РјРѕ С‚Рµ СЃР°РјРµ РјС–СЃС†Рµ, РґРµ РІР¶Рµ СЃС‚РѕС—РјРѕ)
             PlacedObject currentPlaced = gridObject.GetPlacedObject();
             if (currentPlaced != null && currentPlaced.GetComponent<PuzzlePiece>() == piece)
             {
@@ -91,9 +100,9 @@ public class GridBuildingSystem : MonoBehaviour
 
             if (isTool)
             {
-                if (!gridObject.IsLocked()) return false; // Тулз ставиться тільки на Locked
+                if (!gridObject.IsLocked()) return false; // РўСѓР»Р· СЃС‚Р°РІРёС‚СЊСЃСЏ С‚С–Р»СЊРєРё РЅР° Locked
                 if (gridObject.HasInfrastructure()) return false;
-                if (gridObject.IsOccupied()) return false; // Не можна ставити тулз під кота
+                if (gridObject.IsOccupied()) return false; // РќРµ РјРѕР¶РЅР° СЃС‚Р°РІРёС‚Рё С‚СѓР»Р· РїС–Рґ РєРѕС‚Р°
             }
             else
             {
@@ -105,6 +114,14 @@ public class GridBuildingSystem : MonoBehaviour
 
     public PlacedObject PlacePieceOnGrid(PuzzlePiece piece, Vector2Int origin, PlacedObjectTypeSO.Dir dir)
     {
+        return PlacePieceOnGridExplicit(activeBoard, piece, origin, dir);
+    }
+
+    public PlacedObject PlacePieceOnGridExplicit(PuzzleBoard targetBoard, PuzzlePiece piece, Vector2Int origin, PlacedObjectTypeSO.Dir dir)
+    {
+        if (targetBoard == null) return null;
+        var targetGrid = targetBoard.Grid;
+
         PlacedObject placedObject = piece.GetComponent<PlacedObject>();
         if (placedObject == null) placedObject = piece.gameObject.AddComponent<PlacedObject>();
 
@@ -117,11 +134,13 @@ public class GridBuildingSystem : MonoBehaviour
 
         foreach (Vector2Int gridPosition in gridPositionList)
         {
-            GridObject obj = grid.GetGridObject(gridPosition.x, gridPosition.y);
+            GridObject obj = targetGrid.GetGridObject(gridPosition.x, gridPosition.y);
+            if (obj == null) continue;
+
             if (isTool)
             {
                 obj.SetInfrastructureObject(placedObject);
-                obj.SetLocked(false); // Тулз розблоковує клітинку
+                obj.SetLocked(false); // РўСѓР»Р· СЂРѕР·Р±Р»РѕРєРѕРІСѓС” РєР»С–С‚РёРЅРєСѓ
             }
             else
             {
@@ -133,8 +152,23 @@ public class GridBuildingSystem : MonoBehaviour
 
     public void RemovePieceFromGrid(PuzzlePiece piece)
     {
+        // Find which board the piece belongs to or use active
+        PuzzleBoard targetBoard = activeBoard; // Default
+        
+        // If the piece is already placed, it should know its board
+        // But for now, we'll try to find it or assume active.
+        // Better: piece should have a reference to its board.
+        // Let's assume piece is from active board for now, or find it by search if needed.
+
+        RemovePieceFromGridExplicit(targetBoard, piece);
+    }
+
+    public void RemovePieceFromGridExplicit(PuzzleBoard targetBoard, PuzzlePiece piece)
+    {
+        if (targetBoard == null || targetBoard.Grid == null) return;
+        var targetGrid = targetBoard.Grid;
+
         PlacedObject placedObject = piece.GetComponent<PlacedObject>();
-        // Також перевіряємо InfrastructureComponent, якщо PlacedObjectComponent null
         if (placedObject == null) placedObject = piece.InfrastructureComponent;
         if (placedObject == null) placedObject = piece.PlacedObjectComponent;
 
@@ -145,15 +179,16 @@ public class GridBuildingSystem : MonoBehaviour
 
         foreach (Vector2Int gridPosition in gridPositionList)
         {
-            if (IsValidGridPosition(gridPosition.x, gridPosition.y))
+            if (gridPosition.x >= 0 && gridPosition.x < targetGrid.GetWidth() && 
+                gridPosition.y >= 0 && gridPosition.y < targetGrid.GetHeight())
             {
-                GridObject obj = grid.GetGridObject(gridPosition.x, gridPosition.y);
+                GridObject obj = targetGrid.GetGridObject(gridPosition.x, gridPosition.y);
                 if (isTool)
                 {
                     if (obj.GetInfrastructureObject() == placedObject)
                     {
                         obj.ClearInfrastructureObject();
-                        obj.SetLocked(true); // Забираємо тулз -> Блокуємо клітинку
+                        obj.SetLocked(true); 
                     }
                 }
                 else
@@ -165,10 +200,6 @@ public class GridBuildingSystem : MonoBehaviour
                 }
             }
         }
-
-        // Не знищуємо компонент PlacedObject відразу, якщо це в контексті гри, 
-        // бо він може знадобитися для логіки. Але очищаємо посилання в piece.
-        // piece.SetPlaced(null); // Це робиться в командах/менеджері
     }
 
     public bool CanPickUpToolWithPassengers(PuzzlePiece tool, out List<PuzzlePiece> passengers)
@@ -215,23 +246,35 @@ public class GridBuildingSystem : MonoBehaviour
 
     public float CalculateGridFillPercentage()
     {
-        if (grid == null) return 0f;
+        if (activeBoard == null || activeBoard.Grid == null) return 0f;
+        var targetGrid = activeBoard.Grid;
+        
         int totalRequiredCells = 0;
         int occupiedRequiredCells = 0;
 
-        for (int x = 0; x < grid.GetWidth(); x++)
+        for (int x = 0; x < targetGrid.GetWidth(); x++)
         {
-            for (int z = 0; z < grid.GetHeight(); z++)
+            for (int z = 0; z < targetGrid.GetHeight(); z++)
             {
-                GridObject gridObject = grid.GetGridObject(x, z);
+                GridObject gridObject = targetGrid.GetGridObject(x, z);
                 bool isTargetCell = gridObject.IsBuildable() || gridObject.IsLocked();
                 if (isTargetCell)
                 {
                     totalRequiredCells++;
-                    bool hasCat = gridObject.IsOccupied() &&
-                                  gridObject.GetPlacedObject() != null &&
-                                  gridObject.GetPlacedObject().PlacedObjectTypeSO.category == PlacedObjectTypeSO.ItemCategory.Character;
-                    if (hasCat) occupiedRequiredCells++;
+                    
+                    bool hasRequiredCat = false;
+                    PlacedObject po = gridObject.GetPlacedObject();
+                    if (po != null)
+                    {
+                        PuzzlePiece piece = po.GetComponent<PuzzlePiece>();
+                        if (piece != null && !piece.IsObstacle && 
+                            piece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Character)
+                        {
+                            hasRequiredCat = true;
+                        }
+                    }
+                    
+                    if (hasRequiredCat) occupiedRequiredCells++;
                 }
             }
         }

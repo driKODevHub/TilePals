@@ -1,9 +1,12 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using System.Collections.Generic;
 
 [CreateAssetMenu(fileName = "LevelCollection", menuName = "Puzzle/Level Collection")]
 public class LevelCollectionSO : ScriptableObject
 {
-    [Tooltip("Перетягніть сюди всі ваші рівні (GridDataSO) у тому порядку, в якому вони мають з'являтися в грі.")]
+    [Header("General Info")]
+    public string locationName = "New Location";
+
+    [Tooltip("The list of puzzle steps (GridDataSO) in this location.")]
     public List<GridDataSO> levels;
 }

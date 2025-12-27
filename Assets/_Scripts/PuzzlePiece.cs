@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.Collections.Generic;
 
@@ -12,7 +12,7 @@ public class PuzzlePiece : MonoBehaviour
     [SerializeField] private FacialExpressionController facialController;
 
     [Header("Attachment Settings")]
-    [Tooltip("Точка, куди будуть кріпитися іграшки/їжа.")]
+    [Tooltip("РўРѕС‡РєР°, РєСѓРґРё Р±СѓРґСѓС‚СЊ РєСЂС–РїРёС‚РёСЃСЏ С–РіСЂР°С€РєРё/С—Р¶Р°.")]
     [SerializeField] private Transform attachmentPoint;
 
     // --- Components ---
@@ -32,6 +32,9 @@ public class PuzzlePiece : MonoBehaviour
     public PlacedObject PlacedObjectComponent { get; private set; }
     public PlacedObject InfrastructureComponent { get; private set; }
     public bool IsRotating => Movement != null && Movement.IsRotating;
+    public bool IsStaticObstacle { get; set; } = false;
+    public bool IsObstacle { get; set; } = false; // Movable obstacle
+    public bool IsHidden { get; set; } = false;   // Hidden in a container
 
     // --- MOUTH ITEM (Single) ---
     public PuzzlePiece HeldItem { get; private set; }
@@ -96,7 +99,7 @@ public class PuzzlePiece : MonoBehaviour
     {
         if (Rb != null && pieceTypeSO.usePhysics)
         {
-            // Вимикаємо Movement, щоб він не конфліктував з фізикою
+            // Р’РёРјРёРєР°С”РјРѕ Movement, С‰РѕР± РІС–РЅ РЅРµ РєРѕРЅС„Р»С–РєС‚СѓРІР°РІ Р· С„С–Р·РёРєРѕСЋ
             if (Movement) Movement.enabled = false;
 
             Rb.isKinematic = false;
@@ -118,7 +121,7 @@ public class PuzzlePiece : MonoBehaviour
             Rb.angularVelocity = Vector3.zero;
         }
 
-        // Вмикаємо Movement, щоб він міг підхопити об'єкт і поставити його на місце
+        // Р’РјРёРєР°С”РјРѕ Movement, С‰РѕР± РІС–РЅ РјС–Рі РїС–РґС…РѕРїРёС‚Рё РѕР±'С”РєС‚ С– РїРѕСЃС‚Р°РІРёС‚Рё Р№РѕРіРѕ РЅР° РјС–СЃС†Рµ
         if (Movement) Movement.enabled = true;
 
         float yAngle = transform.eulerAngles.y;
@@ -133,9 +136,9 @@ public class PuzzlePiece : MonoBehaviour
         if (!StoredPassengers.Contains(passenger))
         {
             StoredPassengers.Add(passenger);
-            passenger.transform.SetParent(transform); // Робимо дитиною тулза
+            passenger.transform.SetParent(transform); // Р РѕР±РёРјРѕ РґРёС‚РёРЅРѕСЋ С‚СѓР»Р·Р°
 
-            // Вимикаємо фізику пасажиру
+            // Р’РёРјРёРєР°С”РјРѕ С„С–Р·РёРєСѓ РїР°СЃР°Р¶РёСЂСѓ
             passenger.DisablePhysics();
             if (passenger.Movement) passenger.Movement.enabled = false;
             if (passenger.PieceCollider) passenger.PieceCollider.enabled = false;
@@ -174,7 +177,7 @@ public class PuzzlePiece : MonoBehaviour
         item.transform.localRotation = Quaternion.identity;
 
         if (item.IsPlaced) GridBuildingSystem.Instance.RemovePieceFromGrid(item);
-        if (item.IsOffGrid) OffGridManager.RemovePiece(item);
+        if (item.IsOffGrid && GridBuildingSystem.Instance.ActiveBoard != null) GridBuildingSystem.Instance.ActiveBoard.OffGridTracker.RemovePiece(item);
         item.SetOffGrid(false);
         item.SetPlaced(null);
     }
@@ -257,14 +260,14 @@ public class PuzzlePiece : MonoBehaviour
     {
         if (Rb != null && !Rb.isKinematic) return;
 
-        // Якщо Movement компонент існує і він увімкнений (або ми хочемо, щоб він обробив це)
-        // Але оскільки ми вимикаємо Movement для оптимізації, треба перевірити логіку.
-        // Якщо ми тут, то це зазвичай телепортація або Undo. 
-        // Краще ввімкнути Movement на один кадр, щоб він оновив свої змінні (_targetPosition) і заснув.
+        // РЇРєС‰Рѕ Movement РєРѕРјРїРѕРЅРµРЅС‚ С–СЃРЅСѓС” С– РІС–РЅ СѓРІС–РјРєРЅРµРЅРёР№ (Р°Р±Рѕ РјРё С…РѕС‡РµРјРѕ, С‰РѕР± РІС–РЅ РѕР±СЂРѕР±РёРІ С†Рµ)
+        // РђР»Рµ РѕСЃРєС–Р»СЊРєРё РјРё РІРёРјРёРєР°С”РјРѕ Movement РґР»СЏ РѕРїС‚РёРјС–Р·Р°С†С–С—, С‚СЂРµР±Р° РїРµСЂРµРІС–СЂРёС‚Рё Р»РѕРіС–РєСѓ.
+        // РЇРєС‰Рѕ РјРё С‚СѓС‚, С‚Рѕ С†Рµ Р·Р°Р·РІРёС‡Р°Р№ С‚РµР»РµРїРѕСЂС‚Р°С†С–СЏ Р°Р±Рѕ Undo. 
+        // РљСЂР°С‰Рµ РІРІС–РјРєРЅСѓС‚Рё Movement РЅР° РѕРґРёРЅ РєР°РґСЂ, С‰РѕР± РІС–РЅ РѕРЅРѕРІРёРІ СЃРІРѕС— Р·РјС–РЅРЅС– (_targetPosition) С– Р·Р°СЃРЅСѓРІ.
 
         if (Movement != null)
         {
-            // Примусово вмикаємо для обробки телепортації, скрипт сам вимкнеться в TeleportTo
+            // РџСЂРёРјСѓСЃРѕРІРѕ РІРјРёРєР°С”РјРѕ РґР»СЏ РѕР±СЂРѕР±РєРё С‚РµР»РµРїРѕСЂС‚Р°С†С–С—, СЃРєСЂРёРїС‚ СЃР°Рј РІРёРјРєРЅРµС‚СЊСЃСЏ РІ TeleportTo
             Movement.enabled = true;
             Movement.TeleportTo(position, rotation);
         }
@@ -292,16 +295,16 @@ public class PuzzlePiece : MonoBehaviour
         Vector3 pivotPoint = currentGridOrigin + clickOffsetVector + halfCellVector;
 
         PlacedObjectTypeSO.Dir nextDirection = clockwise
-            ? PlacedObjectTypeSO.GetNextDirencion(CurrentDirection)
+            ? PlacedObjectTypeSO.GetNextDir(CurrentDirection)
             : PlacedObjectTypeSO.GetPreviousDir(CurrentDirection);
 
         float angle = clockwise ? 90f : -90f;
 
-        // Movement сам увімкнеться всередині RotateAroundPivot
+        // Movement СЃР°Рј СѓРІС–РјРєРЅРµС‚СЊСЃСЏ РІСЃРµСЂРµРґРёРЅС– RotateAroundPivot
         Movement.RotateAroundPivot(pivotPoint, Vector3.up, angle, () => {
             CurrentDirection = nextDirection;
             RecalculateClickOffset(pivotPoint, cellSize);
-            SyncPassengersRotation(); // Синхронізуємо пасажирів після повороту
+            SyncPassengersRotation(); // РЎРёРЅС…СЂРѕРЅС–Р·СѓС”РјРѕ РїР°СЃР°Р¶РёСЂС–РІ РїС–СЃР»СЏ РїРѕРІРѕСЂРѕС‚Сѓ
             onComplete?.Invoke();
         });
     }
@@ -315,10 +318,10 @@ public class PuzzlePiece : MonoBehaviour
         {
             if (p != null)
             {
-                // Оновлюємо логічний напрямок пасажира
+                // РћРЅРѕРІР»СЋС”РјРѕ Р»РѕРіС–С‡РЅРёР№ РЅР°РїСЂСЏРјРѕРє РїР°СЃР°Р¶РёСЂР°
                 p.SyncDirectionFromRotation(p.transform.rotation);
 
-                // Округляємо локальні координати
+                // РћРєСЂСѓРіР»СЏС”РјРѕ Р»РѕРєР°Р»СЊРЅС– РєРѕРѕСЂРґРёРЅР°С‚Рё
                 Vector3 localPos = p.transform.localPosition;
                 localPos.x = (float)Math.Round(localPos.x, 2);
                 localPos.y = (float)Math.Round(localPos.y, 2);

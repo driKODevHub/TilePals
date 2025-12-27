@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+п»їusing System.Collections.Generic;
 using UnityEngine;
 
 public class GridVisualManager : MonoBehaviour
@@ -13,10 +13,12 @@ public class GridVisualManager : MonoBehaviour
     [SerializeField] private Material hoveredMaterial;
     [SerializeField] private Material invalidPlacementMaterial;
     [SerializeField] private Material lockedMaterial;
+    [SerializeField] private Material hintMaterial;
 
     private GridXZ<GridObject> grid;
     private GameObject[,] cellVisuals;
     private PuzzlePiece currentlyHeldPiece;
+    private HashSet<Vector2Int> highlightedHintCells = new HashSet<Vector2Int>();
 
     private void Awake()
     {
@@ -26,8 +28,8 @@ public class GridVisualManager : MonoBehaviour
 
     private void Start()
     {
-        // Не ініціалізуємось тут автоматично, чекаємо команди від LevelLoader або GameManager
-        // Але про всяк випадок пробуємо, якщо рівень вже є
+        // РќРµ С–РЅС–С†С–Р°Р»С–Р·СѓС”РјРѕСЃСЊ С‚СѓС‚ Р°РІС‚РѕРјР°С‚РёС‡РЅРѕ, С‡РµРєР°С”РјРѕ РєРѕРјР°РЅРґРё РІС–Рґ LevelLoader Р°Р±Рѕ GameManager
+        // РђР»Рµ РїСЂРѕ РІСЃСЏРє РІРёРїР°РґРѕРє РїСЂРѕР±СѓС”РјРѕ, СЏРєС‰Рѕ СЂС–РІРµРЅСЊ РІР¶Рµ С”
         if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
         {
             ReinitializeVisuals();
@@ -36,28 +38,28 @@ public class GridVisualManager : MonoBehaviour
 
     public void ReinitializeVisuals()
     {
-        // 1. Очищаємо старі візуали та відписуємось від старого гріда
+        // 1. РћС‡РёС‰Р°С”РјРѕ СЃС‚Р°СЂС– РІС–Р·СѓР°Р»Рё С‚Р° РІС–РґРїРёСЃСѓС”РјРѕСЃСЊ РІС–Рґ СЃС‚Р°СЂРѕРіРѕ РіСЂС–РґР°
         ClearVisuals();
 
-        // 2. Отримуємо новий грід
+        // 2. РћС‚СЂРёРјСѓС”РјРѕ РЅРѕРІРёР№ РіСЂС–Рґ
         if (GridBuildingSystem.Instance == null) return;
         grid = GridBuildingSystem.Instance.GetGrid();
 
         if (grid == null || grid.GetWidth() == 0) return;
 
-        // 3. Створюємо нові візуали
+        // 3. РЎС‚РІРѕСЂСЋС”РјРѕ РЅРѕРІС– РІС–Р·СѓР°Р»Рё
         InitializeCellVisuals();
 
-        // 4. Підписуємось на події
+        // 4. РџС–РґРїРёСЃСѓС”РјРѕСЃСЊ РЅР° РїРѕРґС–С—
         SubscribeToEvents();
 
-        // 5. Оновлюємо картинку
+        // 5. РћРЅРѕРІР»СЋС”РјРѕ РєР°СЂС‚РёРЅРєСѓ
         RefreshAllCellVisuals();
     }
 
     private void SubscribeToEvents()
     {
-        // Відписуємось про всяк випадок, щоб не дублювати
+        // Р’С–РґРїРёСЃСѓС”РјРѕСЃСЊ РїСЂРѕ РІСЃСЏРє РІРёРїР°РґРѕРє, С‰РѕР± РЅРµ РґСѓР±Р»СЋРІР°С‚Рё
         if (PuzzleManager.Instance != null)
         {
             PuzzleManager.Instance.OnPiecePickedUp -= HandlePiecePickedUp;
@@ -76,7 +78,7 @@ public class GridVisualManager : MonoBehaviour
 
     private void ClearVisuals()
     {
-        // Відписуємось від старого гріда (якщо він був)
+        // Р’С–РґРїРёСЃСѓС”РјРѕСЃСЊ РІС–Рґ СЃС‚Р°СЂРѕРіРѕ РіСЂС–РґР° (СЏРєС‰Рѕ РІС–РЅ Р±СѓРІ)
         if (grid != null)
         {
             grid.OnGridObjectChanged -= Grid_OnGridObjectChanged;
@@ -125,7 +127,7 @@ public class GridVisualManager : MonoBehaviour
                 cell.name = $"Cell_{x}_{z}";
                 cellVisuals[x, z] = cell;
 
-                // Налаштування розміру квада
+                // РќР°Р»Р°С€С‚СѓРІР°РЅРЅСЏ СЂРѕР·РјС–СЂСѓ РєРІР°РґР°
                 Transform quad = cell.transform.Find("Quad");
                 if (quad != null)
                 {
@@ -146,6 +148,15 @@ public class GridVisualManager : MonoBehaviour
         UpdateHoveredCellVisuals();
     }
 
+    public void SetHintCells(IEnumerable<Vector2Int> cells)
+    {
+        highlightedHintCells.Clear();
+        if (cells != null)
+        {
+            foreach (var c in cells) highlightedHintCells.Add(c);
+        }
+        RefreshAllCellVisuals();
+    }
     public void RefreshAllCellVisuals()
     {
         if (grid == null || cellVisuals == null) return;
@@ -167,6 +178,10 @@ public class GridVisualManager : MonoBehaviour
 
         GridObject gridObject = grid.GetGridObject(x, z);
         GridCellState currentState = GetCellState(gridObject);
+        if (highlightedHintCells.Contains(new Vector2Int(x, z)) && (currentState == GridCellState.Active || currentState == GridCellState.Occupied))
+        {
+            currentState = GridCellState.Hint;
+        }
         SetCellMaterial(cellVisual, currentState);
     }
 
@@ -174,7 +189,7 @@ public class GridVisualManager : MonoBehaviour
     {
         if (currentlyHeldPiece == null) return;
 
-        // Оновлюємо весь грід до базового стану, щоб стерти старий ховер
+        // РћРЅРѕРІР»СЋС”РјРѕ РІРµСЃСЊ РіСЂС–Рґ РґРѕ Р±Р°Р·РѕРІРѕРіРѕ СЃС‚Р°РЅСѓ, С‰РѕР± СЃС‚РµСЂС‚Рё СЃС‚Р°СЂРёР№ С…РѕРІРµСЂ
         RefreshAllCellVisuals();
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -192,7 +207,7 @@ public class GridVisualManager : MonoBehaviour
             {
                 if (GridBuildingSystem.Instance.IsValidGridPosition(gridPos.x, gridPos.y))
                 {
-                    // Знаходимо візуал
+                    // Р—РЅР°С…РѕРґРёРјРѕ РІС–Р·СѓР°Р»
                     if (cellVisuals != null && gridPos.x >= 0 && gridPos.x < cellVisuals.GetLength(0) && gridPos.y >= 0 && gridPos.y < cellVisuals.GetLength(1))
                     {
                         GameObject cellVisual = cellVisuals[gridPos.x, gridPos.y];
@@ -227,6 +242,7 @@ public class GridVisualManager : MonoBehaviour
             GridCellState.Locked => lockedMaterial,
             GridCellState.Hovered => hoveredMaterial,
             GridCellState.InvalidPlacement => invalidPlacementMaterial,
+            GridCellState.Hint => hintMaterial,
             _ => activeMaterial,
         };
 

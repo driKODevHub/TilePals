@@ -1,12 +1,11 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using System.Collections.Generic;
 using System;
 
-// Структури даних для збереження стану рівня
 [Serializable]
 public class PiecePlacementData
 {
-    public string pieceTypeName; // Зберігаємо ім'я ScriptableObject'а фігури
+    public string pieceTypeName; 
     public Vector2Int origin;
     public PlacedObjectTypeSO.Dir direction;
 }
@@ -14,6 +13,8 @@ public class PiecePlacementData
 [Serializable]
 public class LevelSaveData
 {
+    public bool isLocked;
+    public bool isCompleted;
     public List<PiecePlacementData> onGridPieces = new List<PiecePlacementData>();
     public List<PiecePlacementData> offGridPieces = new List<PiecePlacementData>();
 }
@@ -23,7 +24,6 @@ public static class SaveSystem
     private const string CurrentLevelKey = "CurrentLevelIndex";
     private const string LevelProgressKeyPrefix = "LevelProgress_";
 
-    // Збереження/завантаження індексу поточного рівня
     public static void SaveCurrentLevelIndex(int index)
     {
         PlayerPrefs.SetInt(CurrentLevelKey, index);
@@ -35,35 +35,37 @@ public static class SaveSystem
         return PlayerPrefs.GetInt(CurrentLevelKey, 0);
     }
 
-    // Збереження/завантаження прогресу конкретного рівня
-    public static void SaveLevelProgress(int levelIndex, LevelSaveData data)
+    public static void SaveLevelProgress(string id, LevelSaveData data)
     {
         string json = JsonUtility.ToJson(data);
-        PlayerPrefs.SetString(LevelProgressKeyPrefix + levelIndex, json);
+        PlayerPrefs.SetString(LevelProgressKeyPrefix + id, json);
         PlayerPrefs.Save();
     }
 
-    public static LevelSaveData LoadLevelProgress(int levelIndex)
+    public static void SaveLevelProgress(int index, LevelSaveData data) => SaveLevelProgress(index.ToString(), data);
+
+    public static LevelSaveData LoadLevelProgress(string id)
     {
-        string key = LevelProgressKeyPrefix + levelIndex;
+        string key = LevelProgressKeyPrefix + id;
         if (PlayerPrefs.HasKey(key))
         {
             string json = PlayerPrefs.GetString(key);
             return JsonUtility.FromJson<LevelSaveData>(json);
         }
-        return new LevelSaveData(); // Повертаємо порожні дані, якщо збереження немає
+        return null;
     }
 
-    // Інструменти для очищення збережень
+    public static LevelSaveData LoadLevelProgress(int index) => LoadLevelProgress(index.ToString());
+
     public static void ClearLastCompletedLevel()
     {
         PlayerPrefs.DeleteKey(CurrentLevelKey);
-        Debug.Log("Очищено збереження останнього пройденого рівня.");
     }
 
-    public static void ClearLevelProgress(int levelIndex)
+    public static void ClearLevelProgress(string id)
     {
-        PlayerPrefs.DeleteKey(LevelProgressKeyPrefix + levelIndex);
-        Debug.Log($"Очищено прогрес для рівня {levelIndex}.");
+        PlayerPrefs.DeleteKey(LevelProgressKeyPrefix + id);
     }
+
+    public static void ClearLevelProgress(int index) => ClearLevelProgress(index.ToString());
 }

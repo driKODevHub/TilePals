@@ -4,168 +4,104 @@ using System.Collections.Generic;
 public class PlaceCommand : ICommand
 {
     private PuzzlePiece piece;
-    private Vector2Int gridPosition;
+    private Vector2Int origin;
     private PlacedObjectTypeSO.Dir direction;
 
     private Vector3 prevPosition;
     private Quaternion prevRotation;
-    private PlacedObjectTypeSO.Dir prevDirection; // STORE PREVIOUS DIRECTION
-    private Vector2Int prevGridOrigin; 
-    private Vector2Int prevOffGridOrigin;
     private bool wasOnGrid;
     private bool wasOffGrid;
+    private Vector2Int prevGridOrigin;
+    private Vector2Int prevOffGridOrigin;
+    
+    // Additional snapshot for direction flow
+    private PlacedObjectTypeSO.Dir prevDirection;
 
-    // Snapshot of passengers (cats/items) on the tool BEFORE the move
     private List<PuzzlePiece> passengersSnapshot;
 
-    // Default Constructor - NOW TAKES INITIAL STATE
-    public PlaceCommand(PuzzlePiece piece, Vector2Int gridPosition, PlacedObjectTypeSO.Dir direction, bool initialWasPlaced, bool initialWasOffGrid)
+    public PlaceCommand(PuzzlePiece piece, Vector2Int origin, PlacedObjectTypeSO.Dir direction,
+                        Vector3 prevPos, Quaternion prevRot, List<PuzzlePiece> passengers,
+                        bool wasPlaced, bool wasOff, Vector2Int prevOrigin, PlacedObjectTypeSO.Dir prevDir)
     {
         this.piece = piece;
-        this.gridPosition = gridPosition;
+        this.origin = origin;
         this.direction = direction;
-        
-        this.prevPosition = piece.transform.position;
-        this.prevRotation = piece.transform.rotation;
-        this.prevDirection = piece.CurrentDirection; // Default from piece
-        
-        this.passengersSnapshot = piece.StoredPassengers != null ? new List<PuzzlePiece>(piece.StoredPassengers) : new List<PuzzlePiece>();
 
-        this.wasOnGrid = initialWasPlaced;
-        this.wasOffGrid = initialWasOffGrid;
-
-        if (wasOnGrid)
-        {
-            this.prevGridOrigin = piece.PlacedObjectComponent != null ? piece.PlacedObjectComponent.Origin : 
-                (piece.InfrastructureComponent != null ? piece.InfrastructureComponent.Origin : Vector2Int.zero);
-        }
-        if (wasOffGrid) this.prevOffGridOrigin = piece.OffGridOrigin;
-    }
-
-    // Comprehensive Constructor
-    public PlaceCommand(PuzzlePiece piece, Vector2Int gridPosition, PlacedObjectTypeSO.Dir direction, 
-                        Vector3 prevPos, Quaternion prevRot, List<PuzzlePiece> currentPassengers,
-                        bool initialWasPlaced, bool initialWasOffGrid, Vector2Int? initialOrigin,
-                        PlacedObjectTypeSO.Dir initialDirection) 
-    {
-        this.piece = piece;
-        this.gridPosition = gridPosition;
-        this.direction = direction;
-        
         this.prevPosition = prevPos;
         this.prevRotation = prevRot;
-        this.prevDirection = initialDirection; // USE PROVIDED DIRECTION
-        
-        this.passengersSnapshot = currentPassengers != null ? new List<PuzzlePiece>(currentPassengers) : new List<PuzzlePiece>();
+        this.wasOnGrid = wasPlaced;
+        this.wasOffGrid = wasOff;
+        this.prevDirection = prevDir;
 
-        this.wasOnGrid = initialWasPlaced;
-        this.wasOffGrid = initialWasOffGrid;
+        // Ensure we store correct previous state
+        if (wasOnGrid) this.prevGridOrigin = prevOrigin;
+        if (wasOffGrid) this.prevOffGridOrigin = prevOrigin;
 
-        if (wasOnGrid)
-        {
-            if (initialOrigin.HasValue)
-            {
-                this.prevGridOrigin = initialOrigin.Value;
-            }
-            else
-            {
-                this.prevGridOrigin = piece.PlacedObjectComponent != null ? piece.PlacedObjectComponent.Origin : 
-                    (piece.InfrastructureComponent != null ? piece.InfrastructureComponent.Origin : Vector2Int.zero);
-            }
-        }
-        if (wasOffGrid)
-        {
-            if (initialOrigin.HasValue)
-            {
-                 this.prevOffGridOrigin = initialOrigin.Value;
-            }
-            else
-            {
-                 this.prevOffGridOrigin = piece.OffGridOrigin;
-            }
-        }
-    }
-
-    // Constructor for LevelLoader (Backwards compatibility / Defaults)
-    public PlaceCommand(PuzzlePiece piece, Vector2Int gridPosition, PlacedObjectTypeSO.Dir direction, Vector3 prevPos, Quaternion prevRot, List<PuzzlePiece> currentPassengers)
-        : this(piece, gridPosition, direction, prevPos, prevRot, currentPassengers, false, false, null, PlacedObjectTypeSO.Dir.Down)
-    {
+        // Snapshot passengers to restore parent-child relationship on Undo
+        this.passengersSnapshot = passengers != null ? new List<PuzzlePiece>(passengers) : new List<PuzzlePiece>();
     }
 
     public bool Execute()
     {
-        // 1. Очистка поточного стану (якщо це Redo)
-        CleanupCurrentState();
+        // 1. Placing Piece Logic
+        // Note: GridBuildingSystem.PlacePieceOnGrid handles registration to grid objects
+        
+        var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+        if (activeBoard == null) return false;
 
-        // 2. Тимчасово приєднуємо пасажирів, щоб вони рухалися разом з тулзою
-        // Це критично для коректного переміщення, бо TeleportTo миттєвий
-        if (passengersSnapshot.Count > 0)
+        var po = GridBuildingSystem.Instance.PlacePieceOnGrid(piece, origin, direction);
+        if (po == null) return false;
+
+        // 2. Setup Piece State
+        if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
         {
-            foreach (var p in passengersSnapshot)
-            {
-                if (p == null) continue;
-
-                // Переконуємось, що пасажир не на гріді логічно
-                if (p.IsPlaced) GridBuildingSystem.Instance.RemovePieceFromGrid(p);
-                else if (p.IsOffGrid) OffGridManager.RemovePiece(p);
-
-                // Приєднуємо до тулзи (AddPassenger також вимикає фізику)
-                // Це гарантує, що коли тулза стрибне, пасажири стрибнуть з нею
-                piece.AddPassenger(p);
-            }
+            piece.SetInfrastructure(po);
+            // Handling tools placement
+        }
+        else
+        {
+            piece.SetPlaced(po);
         }
 
-        // 3. Розміщуємо Тулзу на гріді (Логічно)
-        PlacedObject placedObjectComponent = GridBuildingSystem.Instance.PlacePieceOnGrid(piece, gridPosition, direction);
-
-        if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
-            piece.SetInfrastructure(placedObjectComponent);
-        else
-            piece.SetPlaced(placedObjectComponent);
-
-        // Обчислюємо нову візуальну позицію
-        float cellSize = GridBuildingSystem.Instance.GetGrid().GetCellSize();
+        piece.SetOffGrid(false);
+        
+        // 3. Update Transform
+        float cellSize = activeBoard.Grid.GetCellSize();
+        // Use Grid World Position to ensure Board pivot is respected
+        // Note: targetPosition passed into constructor might be stale if we relied on it. 
+        // Better to recalculate snap position here based on Grid.
+        Vector3 cellWorldPos = activeBoard.Grid.GetWorldPosition(origin.x, origin.y);
+        
         Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(direction);
-        Vector3 offset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
-        Vector3 finalPos = GridBuildingSystem.Instance.GetGrid().GetWorldPosition(gridPosition.x, gridPosition.y) + offset;
+        Vector3 snapPos = cellWorldPos + new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
+        
+        piece.UpdateTransform(snapPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(direction), 0));
 
-        // 4. Фізично переміщуємо тулзу (і приєднаних пасажирів)
-        piece.UpdateTransform(finalPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(direction), 0));
-
-        // 5. Розміщуємо пасажирів на нових місцях (Логічно та візуально від'єднуємо)
+        // 4. Handle Passengers (if any were stored)
         if (passengersSnapshot.Count > 0)
         {
-            // Очищаємо список в тулзі, бо зараз ми їх "висаджуємо" на грід
             piece.StoredPassengers.Clear();
 
             foreach (var p in passengersSnapshot)
             {
                 if (p == null) continue;
 
-                // Оновлюємо логічний напрямок пасажира відповідно до його візуального повороту
-                // Це важливо, якщо тулза була повернута в процесі
                 p.SyncDirectionFromRotation(p.transform.rotation);
-
-                // Від'єднуємо від тулзи (логічно батьком стає загальний контейнер або нічого, залежно від реалізації SetParent(null) або іншого)
-                // В даному випадку, ми просто змінюємо parent на той, що у тулзи (GridArea або World)
                 p.transform.SetParent(piece.transform.parent);
 
-                // Обчислюємо координати гріда на основі нової світової позиції
+                // Calculate where passenger lands relative to grid
                 Vector3 pWorldPos = p.transform.position;
-                GridBuildingSystem.Instance.GetGrid().GetXZ(pWorldPos, out int px, out int pz);
+                activeBoard.Grid.GetXZ(pWorldPos, out int px, out int pz);
                 
-                // Враховуємо офсет повороту самого кота
                 Vector2Int pRotOffset = p.PieceTypeSO.GetRotationOffset(p.CurrentDirection);
                 Vector2Int pOrigin = new Vector2Int(px, pz) - pRotOffset;
 
-                // Розміщуємо на гріді
-                var po = GridBuildingSystem.Instance.PlacePieceOnGrid(p, pOrigin, p.CurrentDirection);
-                p.SetPlaced(po);
+                var poPassenger = GridBuildingSystem.Instance.PlacePieceOnGrid(p, pOrigin, p.CurrentDirection);
+                p.SetPlaced(poPassenger);
 
-                // Фінальне ідеальне вирівнювання (Snap) по центру клітинки
-                Vector3 snapPos = GridBuildingSystem.Instance.GetGrid().GetWorldPosition(pOrigin.x, pOrigin.y) +
+                Vector3 pSnapPos = activeBoard.Grid.GetWorldPosition(pOrigin.x, pOrigin.y) +
                                   new Vector3(pRotOffset.x, 0, pRotOffset.y) * cellSize;
-                p.UpdateTransform(snapPos, p.transform.rotation);
+                p.UpdateTransform(pSnapPos, p.transform.rotation);
             }
         }
 
@@ -178,8 +114,10 @@ public class PlaceCommand : ICommand
     public void Undo()
     {
         CleanupCurrentState();
+        var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+        if (activeBoard == null) return; // Should not happen during Undo context usually
 
-        // Відновлюємо пасажирів (приєднуємо до тулзи перед стрибком назад)
+        // Restore passengers to Stored
         if (passengersSnapshot.Count > 0)
         {
             foreach (var p in passengersSnapshot)
@@ -189,19 +127,17 @@ public class PlaceCommand : ICommand
             }
         }
 
-        // Повертаємо тулзу назад (разом з пасажирами)
         piece.UpdateTransform(prevPosition, prevRotation);
-        piece.SyncPassengersRotation(); // Синхронізуємо поворот після повернення
+        if (piece.PieceTypeSO.category != PlacedObjectTypeSO.ItemCategory.Tool && piece.PieceTypeSO.category != PlacedObjectTypeSO.ItemCategory.Food && piece.PieceTypeSO.category != PlacedObjectTypeSO.ItemCategory.Toy)
+             piece.SyncPassengersRotation(); // Sync only for cats? Or logic depends on piece type. 
 
         if (wasOnGrid)
         {
-            // Force Place на старе місце використовуючи ПОПЕРЕДНІЙ напрямок (для коректного розвороту)
             var po = GridBuildingSystem.Instance.PlacePieceOnGrid(piece, prevGridOrigin, prevDirection);
 
             if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
             {
                 piece.SetInfrastructure(po);
-                // Розміщуємо пасажирів назад на грід (від'єднуємо від тулзи)
                 RestorePassengersOnGridAfterUndo(piece);
             }
             else
@@ -211,9 +147,8 @@ public class PlaceCommand : ICommand
         }
         else if (wasOffGrid)
         {
-            OffGridManager.PlacePiece(piece, prevOffGridOrigin);
+            activeBoard.OffGridTracker.PlacePiece(piece, prevOffGridOrigin);
             piece.SetOffGrid(true, prevOffGridOrigin);
-            // Якщо OffGrid, то пасажири залишаються на тулзі (логіка OffGrid зазвичай тримає їх разом)
         }
         else
         {
@@ -225,7 +160,8 @@ public class PlaceCommand : ICommand
 
     private void CleanupCurrentState()
     {
-        // Знімаємо тулзу з поточної позиції
+        var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+
         if (piece.IsPlaced)
         {
             GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
@@ -234,15 +170,12 @@ public class PlaceCommand : ICommand
         }
         else if (piece.IsOffGrid)
         {
-            OffGridManager.RemovePiece(piece);
+            activeBoard?.OffGridTracker.RemovePiece(piece);
         }
         piece.SetOffGrid(false);
 
-        // Знімаємо пасажирів з їх поточних позицій
         if (passengersSnapshot.Count > 0)
         {
-
-            
             foreach (var p in passengersSnapshot)
             {
                 if (p == null) continue;
@@ -253,7 +186,7 @@ public class PlaceCommand : ICommand
                 }
                 else if (p.IsOffGrid)
                 {
-                    OffGridManager.RemovePiece(p);
+                    activeBoard?.OffGridTracker.RemovePiece(p);
                     p.SetOffGrid(false);
                 }
             }
@@ -262,15 +195,16 @@ public class PlaceCommand : ICommand
 
     private void RestorePassengersOnGridAfterUndo(PuzzlePiece tool)
     {
-        var grid = GridBuildingSystem.Instance.GetGrid();
+        var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+        if (activeBoard == null || activeBoard.Grid == null) return;
+        
+        var grid = activeBoard.Grid;
         float cellSize = grid.GetCellSize();
         
-        // Копіюємо список, бо будемо змінювати StoredPassengers
         List<PuzzlePiece> currentPassengers = new List<PuzzlePiece>(tool.StoredPassengers);
 
         foreach (var p in currentPassengers)
         {
-            // Від'єднуємо від тулзи
             p.transform.SetParent(tool.transform.parent);
             p.SyncDirectionFromRotation(p.transform.rotation);
 
@@ -283,8 +217,7 @@ public class PlaceCommand : ICommand
             var po = GridBuildingSystem.Instance.PlacePieceOnGrid(p, pOrigin, p.CurrentDirection);
             p.SetPlaced(po);
             
-            // Забезпечуємо візуальне вирівнювання і тут
-             Vector3 snapPos = GridBuildingSystem.Instance.GetGrid().GetWorldPosition(pOrigin.x, pOrigin.y) +
+            Vector3 snapPos = grid.GetWorldPosition(pOrigin.x, pOrigin.y) +
                                   new Vector3(pRotOffset.x, 0, pRotOffset.y) * cellSize;
             p.UpdateTransform(snapPos, p.transform.rotation);
         }

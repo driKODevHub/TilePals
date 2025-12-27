@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +27,11 @@ public class GridDataSOEditor : Editor
     // --- Default Foldout State: Collapsed ---
     private bool showRequiredPieces = false;
     private bool showAllPieces = false;
-    private bool showLevelItems = false; // Новий список для айтемів
+    private bool showLevelItems = false; // РќРѕРІРёР№ СЃРїРёСЃРѕРє РґР»СЏ Р°Р№С‚РµРјС–РІ
+    private bool showObstaclesEditor = false;
+    private PlacedObjectTypeSO selectedObstacleType;
+    private PlacedObjectTypeSO.Dir selectedObstacleDir = PlacedObjectTypeSO.Dir.Down;
+    private bool obstaclePaintMode = false;
 
     private bool enableDebugLogs = false;
 
@@ -55,10 +59,10 @@ public class GridDataSOEditor : Editor
     private bool _calculationStopped;
     private int _globalMaxCount = 1;
 
-    // Стан для малювання
+    // РЎС‚Р°РЅ РґР»СЏ РјР°Р»СЋРІР°РЅРЅСЏ
     private bool _isDragging = false;
-    private bool _dragSetState = false; // Який стан ставимо (true/false) при драгу
-    private int _dragButton = -1; // Яка кнопка затиснута (0 - LMB, 2 - MMB)
+    private bool _dragSetState = false; // РЇРєРёР№ СЃС‚Р°РЅ СЃС‚Р°РІРёРјРѕ (true/false) РїСЂРё РґСЂР°РіСѓ
+    private int _dragButton = -1; // РЇРєР° РєРЅРѕРїРєР° Р·Р°С‚РёСЃРЅСѓС‚Р° (0 - LMB, 2 - MMB)
 
     private static readonly List<Color> colorPalette = new List<Color>
     {
@@ -150,7 +154,7 @@ public class GridDataSOEditor : Editor
             EditorUtility.SetDirty(gridDataSO);
         }
 
-        Handles.Label(center + rotation * (Vector3.right * (size.x / 2 + 1)), $"Bounds ({gridDataSO.cameraBoundsYRotation:F0}°)");
+        Handles.Label(center + rotation * (Vector3.right * (size.x / 2 + 1)), $"Bounds ({gridDataSO.cameraBoundsYRotation:F0}В°)");
     }
 
     public override void OnInspectorGUI()
@@ -162,78 +166,85 @@ public class GridDataSOEditor : Editor
 
         DrawPropertiesExcluding(serializedObject, "m_Script", "puzzlePieces", "levelItems", "generatedPieceSummary", "puzzleSolution", "availablePieceTypesForGeneration", "generatorPieceConfig", "solutionVariantsCount", "allFoundSolutions", "currentSolutionIndex", "isComplete", "personalityData", "width", "height", "buildableCells", "lockedCells", "generatedObstacles");
 
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("width"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("height"));
-
-        serializedObject.ApplyModifiedProperties();
-
-        if (gridDataSO.width != oldWidth || gridDataSO.height != oldHeight)
-        {
-            InitializeEditorGrid();
-        }
-
-        serializedObject.Update();
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("Environment & Spawning", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("environmentPrefab"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("levelSpawnOffset"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("cellSize"));
 
         EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("Buildable & Locked Cells Editor (Hold Click to Paint)", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Camera Settings (Boundaries)", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("cameraBoundsCenter"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("cameraBoundsSize"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("cameraBoundsYRotation"));
+
+        EditorGUILayout.Space(20);
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField("1. Level Preview", EditorStyles.boldLabel);
+        EditorGUI.BeginChangeCheck();
+        bool newPaintMode = GUILayout.Toggle(obstaclePaintMode, " PAINT MODE", "Button", GUILayout.Width(100), GUILayout.Height(20));
+        if (EditorGUI.EndChangeCheck()) {
+            obstaclePaintMode = newPaintMode;
+            Repaint();
+        }
+        EditorGUILayout.EndHorizontal();
+
+        DrawPuzzlePreview();
+
+        if (obstaclePaintMode) {
+            DrawManualObjectPainter();
+        }
+
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("2. Piece Summary (Live Inventory)", EditorStyles.boldLabel);
+        DrawPieceSummary();
+
+        EditorGUILayout.Space(20);
+        EditorGUILayout.LabelField("3. Topology (Hold Click to Paint)", EditorStyles.boldLabel);
         DrawBuildableCellsEditor();
 
         EditorGUILayout.Space(20);
-        EditorGUILayout.LabelField("Personality Settings", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("4. Puzzle Content & Generation", EditorStyles.boldLabel);
+        
         DrawPersonalityEditor();
 
-        EditorGUILayout.Space(20);
-        EditorGUILayout.LabelField("Puzzle Generator & Level Items", EditorStyles.boldLabel);
-
         EditorGUILayout.PropertyField(serializedObject.FindProperty("availablePieceTypesForGeneration"), true);
-        if (GUILayout.Button(new GUIContent("Update & Manage Generator Pieces", "Синхронізує список фігур нижче з тими, що вказані у 'Available Piece Types'."))) UpdateGeneratorPieceConfig();
-        if (GUILayout.Button(new GUIContent("Randomize All Colors", "Призначає фігурам нові кольори з палітри у випадковому порядку."))) RandomizeAllColors();
-
-        DrawMaxCountControls();
-
-        EditorGUILayout.Space();
-        EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button(new GUIContent("Deselect All Required", "Знімає позначку 'Is Required' з усіх фігур у списку."))) DeselectAllRequired();
-        if (GUILayout.Button(new GUIContent("Reset All Counts", "Встановлює значення 'Count' на 1 для всіх обов'язкових фігур."))) ResetAllCounts();
-        EditorGUILayout.EndHorizontal();
-
+        
+        if (GUILayout.Button(new GUIContent("Update Generator Piece Config"))) UpdateGeneratorPieceConfig();
+        
         showRequiredPieces = EditorGUILayout.Foldout(showRequiredPieces, "Required Pieces (Generator)", true);
         if (showRequiredPieces) DrawGeneratorPieceConfigList(true);
-        showAllPieces = EditorGUILayout.Foldout(showAllPieces, "All Available Pieces (Generator)", true);
-        if (showAllPieces) DrawGeneratorPieceConfigList(false);
 
-        // --- НОВЕ: Список статичних предметів (Тулзи, Іграшки) ---
         EditorGUILayout.Space(10);
-        showLevelItems = EditorGUILayout.Foldout(showLevelItems, "Level Items (Spawn Always - Tools/Toys)", true);
-        if (showLevelItems)
-        {
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("levelItems"), true);
+        showLevelItems = EditorGUILayout.Foldout(showLevelItems, "Manual Items (Spawn Always/Static)", true);
+        if (showLevelItems) {
+            DrawManualItemsList("levelItems");
+            DrawManualItemsList("staticObstacles");
         }
-        // --------------------------------------------------------
 
-        EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("Generator Settings", EditorStyles.boldLabel);
+        EditorGUILayout.Space(20);
+        EditorGUILayout.LabelField("5. Generator Controls", EditorStyles.boldLabel);
 
-        generationIterations = EditorGUILayout.IntField(new GUIContent("Generation Iterations", "Кількість спроб для пошуку найкращого рішення."), generationIterations);
+        generationIterations = EditorGUILayout.IntField(new GUIContent("Generation Iterations"), generationIterations);
         if (generationIterations < 1) generationIterations = 1;
-        selectionCriterion = (SolutionSelectionCriterion)EditorGUILayout.EnumPopup(new GUIContent("Selection Criterion", "Критерій для вибору найкращого рішення з усіх знайдених."), selectionCriterion);
+        selectionCriterion = (SolutionSelectionCriterion)EditorGUILayout.EnumPopup(new GUIContent("Selection Criterion"), selectionCriterion);
 
-        generationTimeout = EditorGUILayout.FloatField(new GUIContent("Total Timeout (Sec)", "Максимальний загальний час у секундах на пошук рішення."), generationTimeout);
-        enableDebugLogs = EditorGUILayout.Toggle(new GUIContent("Enable Debug Logs", "Вмикає вивід детальної інформації про процес генерації в консоль. Може сповільнювати роботу."), enableDebugLogs);
+        generationTimeout = EditorGUILayout.FloatField(new GUIContent("Total Timeout (Sec)"), generationTimeout);
+        enableDebugLogs = EditorGUILayout.Toggle(new GUIContent("Enable Debug Logs"), enableDebugLogs);
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Filler Piece Distribution Control", EditorStyles.boldLabel);
-        smallPieceMaxCells = EditorGUILayout.IntField(new GUIContent("Small Piece Max Cells", "Максимальна кількість клітинок, щоб фігура вважалася 'маленькою'."), smallPieceMaxCells);
-        mediumPieceMaxCells = EditorGUILayout.IntField(new GUIContent("Medium Piece Max Cells", "Максимальна кількість клітинок, щоб фігура вважалася 'середньою'."), mediumPieceMaxCells);
-        desiredSmallFillers = EditorGUILayout.IntSlider(new GUIContent("Desired Small Fillers", "Скільки маленьких допоміжних фігур буде використано при генерації."), desiredSmallFillers, 0, 20);
-        desiredMediumFillers = EditorGUILayout.IntSlider(new GUIContent("Desired Medium Fillers", "Скільки середніх допоміжних фігур буде використано при генерації."), desiredMediumFillers, 0, 20);
-        desiredLargeFillers = EditorGUILayout.IntSlider(new GUIContent("Desired Large Fillers", "Скільки великих допоміжних фігур буде використано при генерації."), desiredLargeFillers, 0, 20);
+        smallPieceMaxCells = EditorGUILayout.IntField(new GUIContent("Small Piece Max Cells"), smallPieceMaxCells);
+        mediumPieceMaxCells = EditorGUILayout.IntField(new GUIContent("Medium Piece Max Cells"), mediumPieceMaxCells);
+        desiredSmallFillers = EditorGUILayout.IntSlider(new GUIContent("Desired Small Fillers"), desiredSmallFillers, 0, 20);
+        desiredMediumFillers = EditorGUILayout.IntSlider(new GUIContent("Desired Medium Fillers"), desiredMediumFillers, 0, 20);
+        desiredLargeFillers = EditorGUILayout.IntSlider(new GUIContent("Desired Large Fillers"), desiredLargeFillers, 0, 20);
 
         EditorGUILayout.Space();
         DrawComplexityIndicator();
         EditorGUILayout.Space();
 
-        if (GUILayout.Button(new GUIContent("Generate Puzzle Solution", "Запускає повну генерацію пазла з нуля на основі поточних налаштувань.")))
+        if (GUILayout.Button(new GUIContent("Generate Puzzle Solution", "бЄ   ?     б­®? з­Ё гў .")))
         {
             var (complexity, _) = CalculateComplexity();
             if (complexity >= 2)
@@ -251,80 +262,54 @@ public class GridDataSOEditor : Editor
             }
         }
 
-        if (gridDataSO.puzzleSolution != null && gridDataSO.puzzleSolution.Count > 0)
+        if (!gridDataSO.isComplete)
         {
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("Generated Puzzle Preview", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Right-click on a piece to remove it.", MessageType.Info);
-            DrawPuzzlePreview();
-
-            EditorGUILayout.Space(5);
-            EditorGUILayout.LabelField("Manual Editing", EditorStyles.boldLabel);
-
-            if (!gridDataSO.isComplete)
-            {
-                EditorGUILayout.HelpBox("Puzzle is incomplete (geometry not filled)! You can try to fill the empty space or regenerate the whole puzzle.", MessageType.Warning);
-                if (GUILayout.Button(new GUIContent("Fill Empty Space", "Намагається заповнити порожні місця на полі, не змінюючи існуючі фігури.")))
-                {
-                    FillEmptySpace();
-                }
-            }
-
-            if (GUILayout.Button(new GUIContent("Clear All Pieces", "Видаляє всі фігури з поточного рішення.")))
-            {
-                if (EditorUtility.DisplayDialog("Clear All Pieces?", "Are you sure you want to remove all pieces from this puzzle solution?", "Yes", "No"))
-                {
-                    ClearAllPieces();
-                }
-            }
-
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("Generated Piece Summary", EditorStyles.boldLabel);
-            DrawPieceSummary();
-
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("Solution Analysis", EditorStyles.boldLabel);
-
-            string variantsLabel = $"Found: {gridDataSO.solutionVariantsCount} (Stored: {gridDataSO.allFoundSolutions?.Count ?? 0})";
-            EditorGUILayout.LabelField(variantsLabel);
-
-            useCalculationTimeout = EditorGUILayout.Toggle(new GUIContent("Use Timeout", "Якщо увімкнено, розрахунок зупиниться після вказаного часу, зберігши знайдені результати."), useCalculationTimeout);
-            if (useCalculationTimeout)
-            {
-                calculationTimeout = EditorGUILayout.FloatField(new GUIContent("Calculation Timeout (Sec)", "Максимальний час у секундах на пошук всіх рішень."), calculationTimeout);
-            }
-
-            maxSolutionsToStore = EditorGUILayout.IntField(new GUIContent("Max Solutions to Store", "Обмеження на кількість рішень, що зберігаються в пам'яті, щоб уникнути зависання редактора."), maxSolutionsToStore);
-
-            findAllPermutations = EditorGUILayout.Toggle(new GUIContent("Find All Permutations", "Якщо увімкнено, зберігає абсолютно всі рішення, включаючи перестановки однакових фігур. Якщо вимкнено - зберігає тільки візуально унікальні розкладки."), findAllPermutations);
-
-            if (GUILayout.Button(new GUIContent("Calculate Solution Variants", "Запускає пошук всіх можливих варіантів вирішення пазла з поточним набором фігур.")))
-            {
-                CalculateSolutions();
-            }
-
-            if (gridDataSO.allFoundSolutions != null && gridDataSO.allFoundSolutions.Count > 1)
-            {
-                DrawSolutionNavigator();
-            }
+            EditorGUILayout.HelpBox("Puzzle is incomplete (geometry not filled)! You can fill the empty space manually or regenerate.", MessageType.Warning);
+            if (GUILayout.Button("Fill Empty Space")) FillEmptySpace();
         }
 
+        if (GUILayout.Button("Clear All Generated Pieces"))
+        {
+            if (EditorUtility.DisplayDialog("Clear All Pieces?", "Remove all pieces from the current solution?", "Yes", "No")) ClearAllPieces();
+        }
+
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("Solution Analysis", EditorStyles.boldLabel);
+
+        string variantsLabel = $"Found: {gridDataSO.solutionVariantsCount} (Stored: {gridDataSO.allFoundSolutions?.Count ?? 0})";
+        EditorGUILayout.LabelField(variantsLabel);
+
+        useCalculationTimeout = EditorGUILayout.Toggle("Use Timeout", useCalculationTimeout);
+        if (useCalculationTimeout)
+        {
+            calculationTimeout = EditorGUILayout.FloatField("Calculation Timeout (Sec)", calculationTimeout);
+        }
+
+        maxSolutionsToStore = EditorGUILayout.IntField("Max Solutions to Store", maxSolutionsToStore);
+        findAllPermutations = EditorGUILayout.Toggle("Find All Permutations", findAllPermutations);
+
+        if (GUILayout.Button("Calculate Solution Variants")) CalculateSolutions();
+
+        if (gridDataSO.allFoundSolutions != null && gridDataSO.allFoundSolutions.Count > 1)
+        {
+            DrawSolutionNavigator();
+        }
         serializedObject.ApplyModifiedProperties();
     }
 
     private void DrawMaxCountControls()
     {
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Керування кількістю фігур", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("РљРµСЂСѓРІР°РЅРЅСЏ РєС–Р»СЊРєС–СЃС‚СЋ С„С–РіСѓСЂ", EditorStyles.boldLabel);
 
         _globalMaxCount = EditorGUILayout.IntField(
-            new GUIContent("Глобальний ліміт", "Значення, яке буде застосовано до всіх фігур за допомогою кнопок нижче."),
+            new GUIContent("Р“Р»РѕР±Р°Р»СЊРЅРёР№ Р»С–РјС–С‚", "Р—РЅР°С‡РµРЅРЅСЏ, СЏРєРµ Р±СѓРґРµ Р·Р°СЃС‚РѕСЃРѕРІР°РЅРѕ РґРѕ РІСЃС–С… С„С–РіСѓСЂ Р·Р° РґРѕРїРѕРјРѕРіРѕСЋ РєРЅРѕРїРѕРє РЅРёР¶С‡Рµ."),
             _globalMaxCount);
         if (_globalMaxCount < 1) _globalMaxCount = 1;
 
         EditorGUILayout.BeginHorizontal();
 
-        if (GUILayout.Button(new GUIContent("Встановити для всіх", $"Встановлює 'Max Count' для всіх фігур у списку 'Generator Piece Config' на {_globalMaxCount}.")))
+        if (GUILayout.Button(new GUIContent("Р’СЃС‚Р°РЅРѕРІРёС‚Рё РґР»СЏ РІСЃС–С…", $"Р’СЃС‚Р°РЅРѕРІР»СЋС” 'Max Count' РґР»СЏ РІСЃС–С… С„С–РіСѓСЂ Сѓ СЃРїРёСЃРєСѓ 'Generator Piece Config' РЅР° {_globalMaxCount}.")))
         {
             if (gridDataSO.generatorPieceConfig != null)
             {
@@ -335,11 +320,11 @@ public class GridDataSOEditor : Editor
                     gridDataSO.generatorPieceConfig[i] = config;
                 }
                 EditorUtility.SetDirty(gridDataSO);
-                Debug.Log($"Встановлено ліміт {_globalMaxCount} для всіх фігур.");
+                Debug.Log($"Р’СЃС‚Р°РЅРѕРІР»РµРЅРѕ Р»С–РјС–С‚ {_globalMaxCount} РґР»СЏ РІСЃС–С… С„С–РіСѓСЂ.");
             }
         }
 
-        if (GUILayout.Button(new GUIContent("Скинути (всі по 1)", "Встановлює 'Max Count' для всіх фігур на стандартне значення 1.")))
+        if (GUILayout.Button(new GUIContent("РЎРєРёРЅСѓС‚Рё (РІСЃС– РїРѕ 1)", "Р’СЃС‚Р°РЅРѕРІР»СЋС” 'Max Count' РґР»СЏ РІСЃС–С… С„С–РіСѓСЂ РЅР° СЃС‚Р°РЅРґР°СЂС‚РЅРµ Р·РЅР°С‡РµРЅРЅСЏ 1.")))
         {
             if (gridDataSO.generatorPieceConfig != null)
             {
@@ -350,7 +335,7 @@ public class GridDataSOEditor : Editor
                     gridDataSO.generatorPieceConfig[i] = config;
                 }
                 EditorUtility.SetDirty(gridDataSO);
-                Debug.Log("Скинуто ліміти для всіх фігур. Тепер кожна фігура унікальна.");
+                Debug.Log("РЎРєРёРЅСѓС‚Рѕ Р»С–РјС–С‚Рё РґР»СЏ РІСЃС–С… С„С–РіСѓСЂ. РўРµРїРµСЂ РєРѕР¶РЅР° С„С–РіСѓСЂР° СѓРЅС–РєР°Р»СЊРЅР°.");
             }
         }
         EditorGUILayout.EndHorizontal();
@@ -368,7 +353,7 @@ public class GridDataSOEditor : Editor
             {
                 CreatePersonalityData();
             }
-            EditorGUILayout.HelpBox("Налаштування характерів для рівня не створено. Натисніть кнопку, щоб створити.", MessageType.Warning);
+            EditorGUILayout.HelpBox("РќР°Р»Р°С€С‚СѓРІР°РЅРЅСЏ С…Р°СЂР°РєС‚РµСЂС–РІ РґР»СЏ СЂС–РІРЅСЏ РЅРµ СЃС‚РІРѕСЂРµРЅРѕ. РќР°С‚РёСЃРЅС–С‚СЊ РєРЅРѕРїРєСѓ, С‰РѕР± СЃС‚РІРѕСЂРёС‚Рё.", MessageType.Warning);
             return;
         }
 
@@ -385,15 +370,15 @@ public class GridDataSOEditor : Editor
 
         if (!isSynced)
         {
-            EditorGUILayout.HelpBox("Склад фігур у рівні не співпадає з налаштуваннями характерів! Натисніть кнопку, щоб синхронізувати.", MessageType.Error);
-            if (GUILayout.Button("Примусово синхронізувати характери"))
+            EditorGUILayout.HelpBox("РЎРєР»Р°Рґ С„С–РіСѓСЂ Сѓ СЂС–РІРЅС– РЅРµ СЃРїС–РІРїР°РґР°С” Р· РЅР°Р»Р°С€С‚СѓРІР°РЅРЅСЏРјРё С…Р°СЂР°РєС‚РµСЂС–РІ! РќР°С‚РёСЃРЅС–С‚СЊ РєРЅРѕРїРєСѓ, С‰РѕР± СЃРёРЅС…СЂРѕРЅС–Р·СѓРІР°С‚Рё.", MessageType.Error);
+            if (GUILayout.Button("РџСЂРёРјСѓСЃРѕРІРѕ СЃРёРЅС…СЂРѕРЅС–Р·СѓРІР°С‚Рё С…Р°СЂР°РєС‚РµСЂРё"))
             {
                 SyncPersonalityMappings(personalityData, requiredPieceTypes);
             }
         }
         else
         {
-            EditorGUILayout.HelpBox("Характери синхронізовано.", MessageType.Info);
+            EditorGUILayout.HelpBox("РҐР°СЂР°РєС‚РµСЂРё СЃРёРЅС…СЂРѕРЅС–Р·РѕРІР°РЅРѕ.", MessageType.Info);
         }
 
         for (int i = 0; i < mappingsProp.arraySize; i++)
@@ -411,7 +396,7 @@ public class GridDataSOEditor : Editor
         }
 
         EditorGUILayout.Space();
-        if (GUILayout.Button("Рандомізувати непризначені"))
+        if (GUILayout.Button("Р Р°РЅРґРѕРјС–Р·СѓРІР°С‚Рё РЅРµРїСЂРёР·РЅР°С‡РµРЅС–"))
         {
             RandomizeUnassignedTemperaments(personalityData);
         }
@@ -462,7 +447,7 @@ public class GridDataSOEditor : Editor
         string[] guids = AssetDatabase.FindAssets("t:TemperamentSO");
         if (guids.Length == 0)
         {
-            Debug.LogWarning("Не знайдено жодного асету TemperamentSO для рандомізації.");
+            Debug.LogWarning("РќРµ Р·РЅР°Р№РґРµРЅРѕ Р¶РѕРґРЅРѕРіРѕ Р°СЃРµС‚Сѓ TemperamentSO РґР»СЏ СЂР°РЅРґРѕРјС–Р·Р°С†С–С—.");
             return;
         }
 
@@ -720,10 +705,10 @@ public class GridDataSOEditor : Editor
             for (int j = 0; j < solutionData.Count; j++)
             {
                 solutionProp.InsertArrayElementAtIndex(j);
-                var pieceDataProp = solutionProp.GetArrayElementAtIndex(j);
-                pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue = solutionData[j].pieceType;
-                pieceDataProp.FindPropertyRelative("position").vector2IntValue = solutionData[j].position;
-                pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)solutionData[j].direction;
+                var pieceData = solutionProp.GetArrayElementAtIndex(j);
+                pieceData.FindPropertyRelative("pieceType").objectReferenceValue = solutionData[j].pieceType;
+                pieceData.FindPropertyRelative("position").vector2IntValue = solutionData[j].position;
+                pieceData.FindPropertyRelative("direction").enumValueIndex = (int)solutionData[j].direction;
             }
         }
 
@@ -828,20 +813,20 @@ public class GridDataSOEditor : Editor
         EditorGUILayout.LabelField($"Displaying solution: {gridDataSO.currentSolutionIndex + 1} / {storedCount}");
 
         EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button(new GUIContent("<< First", "Перейти до першого знайденого рішення"))) SetSolutionIndex(0);
-        if (GUILayout.Button(new GUIContent("< Prev", "Перейти до попереднього рішення"))) SetSolutionIndex(gridDataSO.currentSolutionIndex - 1);
-        if (GUILayout.Button(new GUIContent("Next >", "Перейти до наступного рішення"))) SetSolutionIndex(gridDataSO.currentSolutionIndex + 1);
-        if (GUILayout.Button(new GUIContent("Last >>", "Перейти до останнього збереженого рішення"))) SetSolutionIndex(storedCount - 1);
+        if (GUILayout.Button(new GUIContent("<< First", "РџРµСЂРµР№С‚Рё РґРѕ РїРµСЂС€РѕРіРѕ Р·РЅР°Р№РґРµРЅРѕРіРѕ СЂС–С€РµРЅРЅСЏ"))) SetSolutionIndex(0);
+        if (GUILayout.Button(new GUIContent("< Prev", "РџРµСЂРµР№С‚Рё РґРѕ РїРѕРїРµСЂРµРґРЅСЊРѕРіРѕ СЂС–С€РµРЅРЅСЏ"))) SetSolutionIndex(gridDataSO.currentSolutionIndex - 1);
+        if (GUILayout.Button(new GUIContent("Next >", "РџРµСЂРµР№С‚Рё РґРѕ РЅР°СЃС‚СѓРїРЅРѕРіРѕ СЂС–С€РµРЅРЅСЏ"))) SetSolutionIndex(gridDataSO.currentSolutionIndex + 1);
+        if (GUILayout.Button(new GUIContent("Last >>", "РџРµСЂРµР№С‚Рё РґРѕ РѕСЃС‚Р°РЅРЅСЊРѕРіРѕ Р·Р±РµСЂРµР¶РµРЅРѕРіРѕ СЂС–С€РµРЅРЅСЏ"))) SetSolutionIndex(storedCount - 1);
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button(new GUIContent("-10", "Перейти на 10 рішень назад"))) SetSolutionIndex(gridDataSO.currentSolutionIndex - 10);
-        if (GUILayout.Button(new GUIContent("+10", "Перейти на 10 рішень вперед"))) SetSolutionIndex(gridDataSO.currentSolutionIndex + 10);
-        if (GUILayout.Button(new GUIContent("Random", "Перейти до випадкового рішення"))) SetSolutionIndex(Random.Range(0, storedCount));
+        if (GUILayout.Button(new GUIContent("-10", "РџРµСЂРµР№С‚Рё РЅР° 10 СЂС–С€РµРЅСЊ РЅР°Р·Р°Рґ"))) SetSolutionIndex(gridDataSO.currentSolutionIndex - 10);
+        if (GUILayout.Button(new GUIContent("+10", "РџРµСЂРµР№С‚Рё РЅР° 10 СЂС–С€РµРЅСЊ РІРїРµСЂРµРґ"))) SetSolutionIndex(gridDataSO.currentSolutionIndex + 10);
+        if (GUILayout.Button(new GUIContent("Random", "РџРµСЂРµР№С‚Рё РґРѕ РІРёРїР°РґРєРѕРІРѕРіРѕ СЂС–С€РµРЅРЅСЏ"))) SetSolutionIndex(Random.Range(0, storedCount));
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.BeginHorizontal();
-        solutionToShowIndex = EditorGUILayout.IntField(new GUIContent("Go to solution:", "Введіть номер рішення та натисніть 'Go'"), solutionToShowIndex);
+        solutionToShowIndex = EditorGUILayout.IntField(new GUIContent("Go to solution:", "Р’РІРµРґС–С‚СЊ РЅРѕРјРµСЂ СЂС–С€РµРЅРЅСЏ С‚Р° РЅР°С‚РёСЃРЅС–С‚СЊ 'Go'"), solutionToShowIndex);
         if (GUILayout.Button("Go"))
         {
             solutionToShowIndex = Mathf.Clamp(solutionToShowIndex, 1, storedCount);
@@ -1191,17 +1176,18 @@ public class GridDataSOEditor : Editor
     private void DrawPuzzlePreview()
     {
         float cellSize = 20f;
+        if (obstaclePaintMode) EditorGUILayout.Space(25); // Make room for the banner
         Rect previewRect = GUILayoutUtility.GetRect(gridDataSO.width * cellSize, gridDataSO.height * cellSize);
 
         HandlePreviewMouseInput(previewRect, cellSize);
 
         if (Event.current.type != EventType.Repaint) return;
 
+        // 1. Draw background (buildable/locked cells)
         for (int z = 0; z < gridDataSO.height; z++)
         {
             for (int x = 0; x < gridDataSO.width; x++)
             {
-                // Відображаємо Buildalbe (Яскраво-зелений), Locked (Помаранчевий) або Background (Темний)
                 Color bgColor = new Color(0.2f, 0.2f, 0.2f);
                 if (gridDataSO.buildableCells.Contains(new Vector2Int(x, z))) bgColor = new Color(0.4f, 1f, 0.4f);
                 if (gridDataSO.lockedCells.Contains(new Vector2Int(x, z))) bgColor = new Color(1f, 0.5f, 0f);
@@ -1211,6 +1197,27 @@ public class GridDataSOEditor : Editor
             }
         }
 
+        // 2. Draw static obstacles (hatched)
+        if (gridDataSO.staticObstacles != null)
+        {
+            foreach (var obstacle in gridDataSO.staticObstacles)
+            {
+                if (obstacle.pieceType == null) continue;
+                List<Vector2Int> positions = obstacle.pieceType.GetGridPositionsList(obstacle.position, obstacle.direction);
+                foreach (var pos in positions)
+                {
+                    if (pos.x >= 0 && pos.x < gridDataSO.width && pos.y >= 0 && pos.y < gridDataSO.height)
+                    {
+                        Rect cellRect = new Rect(previewRect.x + pos.x * cellSize, previewRect.y + (gridDataSO.height - 1 - pos.y) * cellSize, cellSize - 1, cellSize - 1);
+                        DrawHatchedRect(cellRect, new Color(1f, 1f, 1f, 0.4f)); 
+                        Handles.color = Color.black; // Better contrast
+                        Handles.DrawWireCube(cellRect.center, cellRect.size);
+                    }
+                }
+            }
+        }
+
+        // 3. Draw puzzle solution pieces
         if (gridDataSO.puzzleSolution != null)
         {
             var pieceInstanceTracker = new Dictionary<PlacedObjectTypeSO, int>();
@@ -1262,6 +1269,77 @@ public class GridDataSOEditor : Editor
                 }
             }
         }
+
+        // 4. Draw ghost preview (drawn last to be on top)
+        if (obstaclePaintMode && selectedObstacleType != null)
+        {
+            Vector2 mousePos = Event.current.mousePosition;
+            if (previewRect.Contains(mousePos))
+            {
+                Vector2 localPos = mousePos - previewRect.position;
+                int gx = Mathf.FloorToInt(localPos.x / cellSize);
+                int gz = gridDataSO.height - 1 - Mathf.FloorToInt(localPos.y / cellSize);
+                Vector2Int hoverCell = new Vector2Int(gx, gz);
+
+                List<Vector2Int> ghostCells = selectedObstacleType.GetGridPositionsList(hoverCell, selectedObstacleDir);
+                bool isBlocked = false;
+                
+                // Check if any ghost cell overlaps existing obstacles
+                foreach(var g in ghostCells) {
+                    foreach(var existing in gridDataSO.staticObstacles) {
+                        if (existing.pieceType != null && existing.pieceType.GetGridPositionsList(existing.position, existing.direction).Contains(g)) {
+                            isBlocked = true; break;
+                        }
+                    }
+                    if (isBlocked) break;
+                }
+
+                Color ghostColor = isBlocked ? new Color(1f, 0f, 0f, 0.7f) : new Color(1f, 1f, 0.5f, 0.6f);
+
+                foreach (var gCell in ghostCells)
+                {
+                    if (gCell.x >= 0 && gCell.x < gridDataSO.width && gCell.y >= 0 && gCell.y < gridDataSO.height)
+                    {
+                        Rect cellRect = new Rect(previewRect.x + gCell.x * cellSize, previewRect.y + (gridDataSO.height - 1 - gCell.y) * cellSize, cellSize - 1, cellSize - 1);
+                        if (!isBlocked) DrawHatchedRect(cellRect, ghostColor);
+                        else EditorGUI.DrawRect(cellRect, ghostColor);
+                        
+                        Handles.color = isBlocked ? Color.red : Color.yellow;
+                        Handles.DrawWireCube(cellRect.center, cellRect.size);
+                    }
+                }
+                Repaint();
+
+                // --- FEEDBACK OVERLAY (MOVED TO THE RIGHT) ---
+                float infoX = previewRect.xMax + 10;
+                Rect feedbackRect = new Rect(infoX, previewRect.y, 130, 20);
+                EditorGUI.DrawRect(feedbackRect, new Color(0, 0, 0, 0.7f));
+                GUI.color = isBlocked ? Color.red : Color.green;
+                GUI.Label(feedbackRect, isBlocked ? "  [OVERLAP!]" : "  [READY TO PAINT]", EditorStyles.miniBoldLabel);
+                GUI.color = Color.white;
+
+                Rect rotRect = new Rect(infoX, previewRect.y + 22, 130, 18);
+                EditorGUI.DrawRect(rotRect, new Color(0, 0, 0, 0.5f));
+                GUI.Label(rotRect, $"  ROT: {selectedObstacleDir}", EditorStyles.miniLabel);
+
+                Rect tipRect = new Rect(infoX, previewRect.y + 42, 130, 30);
+                EditorGUI.DrawRect(tipRect, new Color(0, 0, 0, 0.3f));
+                GUI.Label(tipRect, "  (R) to Rotate\n  (LMB) to Paint", EditorStyles.miniLabel);
+            }
+        }
+
+        // --- PAINT MODE ACTIVE BANNER ---
+        if (obstaclePaintMode)
+        {
+            Rect bannerRect = new Rect(previewRect.x, previewRect.y - 25, previewRect.width, 22);
+            EditorGUI.DrawRect(bannerRect, new Color(0.8f, 0.6f, 0f, 0.9f));
+            GUIStyle bannerStyle = new GUIStyle(EditorStyles.boldLabel) { 
+                alignment = TextAnchor.MiddleCenter, 
+                fontSize = 10,
+                normal = { textColor = Color.white } 
+            };
+            GUI.Label(bannerRect, $"PAINT MODE: {(selectedObstacleType ? selectedObstacleType.objectName : "NONE")} (Press 'R' to Rotate)", bannerStyle);
+        }
     }
 
     private void UpdatePuzzleState()
@@ -1272,7 +1350,7 @@ public class GridDataSOEditor : Editor
         var puzzlePiecesProp = serializedObject.FindProperty("puzzlePieces");
         var summaryProp = serializedObject.FindProperty("generatedPieceSummary");
 
-        // 1. Оновлюємо список PuzzlePieces для гри
+        // 1. РћРЅРѕРІР»СЋС”РјРѕ СЃРїРёСЃРѕРє PuzzlePieces РґР»СЏ РіСЂРё
         puzzlePiecesProp.ClearArray();
         var currentSolution = new List<GridDataSO.GeneratedPieceData>();
 
@@ -1287,13 +1365,13 @@ public class GridDataSOEditor : Editor
             if (pieceType != null)
             {
                 currentSolution.Add(pieceData);
-                // Додаємо в список спавну
+                // Р”РѕРґР°С”РјРѕ РІ СЃРїРёСЃРѕРє СЃРїР°РІРЅСѓ
                 puzzlePiecesProp.InsertArrayElementAtIndex(i);
                 puzzlePiecesProp.GetArrayElementAtIndex(i).objectReferenceValue = pieceType;
             }
         }
 
-        // 2. Оновлюємо Summary (для редактора)
+        // 2. РћРЅРѕРІР»СЋС”РјРѕ Summary (РґР»СЏ СЂРµРґР°РєС‚РѕСЂР°)
         var summary = currentSolution
             .GroupBy(s => s.pieceType)
             .Select(group => new GridDataSO.PieceCount { pieceType = group.Key, count = group.Count() })
@@ -1309,16 +1387,16 @@ public class GridDataSOEditor : Editor
             summaryElement.FindPropertyRelative("count").intValue = summary[i].count;
         }
 
-        // 3. Перевіряємо IsComplete
-        // Логіка: Всі Buildable клітинки повинні бути покриті Character-ами.
-        // Тулзи не рахуються, вони тільки заповнюють слот "Infrastructure".
+        // 3. РџРµСЂРµРІС–СЂСЏС”РјРѕ IsComplete
+        // Р›РѕРіС–РєР°: Р’СЃС– Buildable РєР»С–С‚РёРЅРєРё РїРѕРІРёРЅРЅС– Р±СѓС‚Рё РїРѕРєСЂРёС‚С– Character-Р°РјРё.
+        // РўСѓР»Р·Рё РЅРµ СЂР°С…СѓСЋС‚СЊСЃСЏ, РІРѕРЅРё С‚С–Р»СЊРєРё Р·Р°РїРѕРІРЅСЋСЋС‚СЊ СЃР»РѕС‚ "Infrastructure".
 
         int buildableCellCount = gridDataSO.buildableCells.Count;
         int occupiedCellCount = 0;
 
         foreach (var piece in currentSolution)
         {
-            // Рахуємо клітинки ТІЛЬКИ якщо це персонаж
+            // Р Р°С…СѓС”РјРѕ РєР»С–С‚РёРЅРєРё РўР†Р›Р¬РљР СЏРєС‰Рѕ С†Рµ РїРµСЂСЃРѕРЅР°Р¶
             if (piece.pieceType != null && piece.pieceType.category == PlacedObjectTypeSO.ItemCategory.Character)
             {
                 occupiedCellCount += piece.pieceType.relativeOccupiedCells.Count;
@@ -1329,7 +1407,7 @@ public class GridDataSOEditor : Editor
 
         serializedObject.ApplyModifiedProperties();
 
-        // Примусово зберігаємо асет
+        // РџСЂРёРјСѓСЃРѕРІРѕ Р·Р±РµСЂС–РіР°С”РјРѕ Р°СЃРµС‚
         EditorUtility.SetDirty(gridDataSO);
         AssetDatabase.SaveAssets();
         Repaint();
@@ -1349,16 +1427,40 @@ public class GridDataSOEditor : Editor
 
     private void DrawPieceSummary()
     {
-        var summaryProp = serializedObject.FindProperty("generatedPieceSummary");
+        // 1. Collect all pieces from Solution, LevelItems and StaticObstacles
+        var summary = new Dictionary<PlacedObjectTypeSO, int>();
+        var hiddenTypes = new HashSet<PlacedObjectTypeSO>();
+        var obstacleTypes = new HashSet<PlacedObjectTypeSO>();
+        var solutionTypes = new HashSet<PlacedObjectTypeSO>();
+        var itemTypes = new HashSet<PlacedObjectTypeSO>();
+
+        void AddToSummary(IEnumerable<GridDataSO.GeneratedPieceData> list, HashSet<PlacedObjectTypeSO> set) {
+            if (list == null) return;
+            foreach (var item in list) {
+                if (item.pieceType == null) continue;
+                if (!summary.ContainsKey(item.pieceType)) summary[item.pieceType] = 0;
+                summary[item.pieceType]++;
+                if (item.isHidden) hiddenTypes.Add(item.pieceType);
+                if (item.isObstacle) obstacleTypes.Add(item.pieceType);
+                if (set != null) set.Add(item.pieceType);
+            }
+        }
+
+        AddToSummary(gridDataSO.puzzleSolution, solutionTypes);
+        AddToSummary(gridDataSO.levelItems, itemTypes);
+        AddToSummary(gridDataSO.staticObstacles, null); // Static are always obstacles
+
+        if (summary.Count == 0) {
+            EditorGUILayout.HelpBox("No pieces placed or generated yet.", MessageType.None);
+            return;
+        }
+
         var generatorConfigProp = serializedObject.FindProperty("generatorPieceConfig");
 
-        for (int i = 0; i < summaryProp.arraySize; i++)
+        foreach (var kvp in summary)
         {
-            var summaryElement = summaryProp.GetArrayElementAtIndex(i);
-            var pieceType = (PlacedObjectTypeSO)summaryElement.FindPropertyRelative("pieceType").objectReferenceValue;
-            var count = summaryElement.FindPropertyRelative("count").intValue;
-
-            if (pieceType == null) continue;
+            var pieceType = kvp.Key;
+            var count = kvp.Value;
 
             SerializedProperty configElementProp = null;
             for (int j = 0; j < generatorConfigProp.arraySize; j++)
@@ -1371,74 +1473,123 @@ public class GridDataSOEditor : Editor
                 }
             }
 
-            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.BeginHorizontal("box");
 
-            if (configElementProp != null)
-            {
+            // --- LARGER COLOR FIELD ---
+            if (configElementProp != null) {
                 var colorProp = configElementProp.FindPropertyRelative("color");
                 EditorGUI.BeginChangeCheck();
-                var newColor = EditorGUILayout.ColorField(GUIContent.none, colorProp.colorValue, true, true, false, GUILayout.Width(40));
-                if (EditorGUI.EndChangeCheck())
-                {
+                var newColor = EditorGUILayout.ColorField(GUIContent.none, colorProp.colorValue, true, true, false, GUILayout.Width(45), GUILayout.Height(18));
+                if (EditorGUI.EndChangeCheck()) {
                     colorProp.colorValue = newColor;
                     EditorUtility.SetDirty(gridDataSO);
                 }
-            }
-            else
-            {
-                Rect colorRect = GUILayoutUtility.GetRect(18, 18, GUILayout.Width(40));
-                EditorGUI.DrawRect(colorRect, Color.magenta);
+            } else {
+                Rect colorRect = GUILayoutUtility.GetRect(45, 18, GUILayout.Width(45));
+                EditorGUI.DrawRect(colorRect, Color.gray);
             }
 
-            EditorGUILayout.ObjectField(pieceType, typeof(PlacedObjectTypeSO), false, GUILayout.Width(150));
-            EditorGUILayout.LabelField($"x {count}");
-
-            if (GUILayout.Button(new GUIContent("X", "Видалити один екземпляр цієї фігури"), GUILayout.Width(25)))
-            {
-                RemovePieceByType(pieceType);
+            // Pick / Paint ICON
+            GUI.color = (obstaclePaintMode && selectedObstacleType == pieceType) ? Color.yellow : Color.white;
+            if (GUILayout.Button(new GUIContent("? ", "Pick this piece for Obstacle Painter (Hotkeys: LMB Paint, R Rotate)"), GUILayout.Width(30), GUILayout.Height(18))) {
+                selectedObstacleType = pieceType;
+                obstaclePaintMode = true;
                 GUI.changed = true;
+            }
+            GUI.color = Color.white;
+
+            EditorGUILayout.LabelField(pieceType.objectName, EditorStyles.boldLabel, GUILayout.Width(130));
+            
+            // --- SOURCE LABELS ---
+            string source = "";
+            if (solutionTypes.Contains(pieceType)) source = "SOLVED";
+            else if (itemTypes.Contains(pieceType)) source = "ITEM";
+            else source = "STATIC";
+            
+            GUI.color = new Color(0.7f, 0.7f, 0.7f);
+            EditorGUILayout.LabelField($"[{source}]", EditorStyles.miniLabel, GUILayout.Width(50));
+            GUI.color = Color.white;
+
+            // Flags
+            string flags = "";
+            if (obstacleTypes.Contains(pieceType)) flags += "O";
+            if (hiddenTypes.Contains(pieceType)) flags += "H";
+            if (flags != "") {
+                GUI.color = Color.cyan;
+                EditorGUILayout.LabelField($"[{flags}]", EditorStyles.miniLabel, GUILayout.Width(30));
+                GUI.color = Color.white;
+            } else {
+                EditorGUILayout.Space(34, false);
+            }
+
+            EditorGUILayout.LabelField($"x {count}", EditorStyles.boldLabel, GUILayout.Width(35));
+
+            if (GUILayout.Button(new GUIContent("Wipe", "Remove ALL instances of this piece from EVERYTHING (Solution, Items, Static)"), GUILayout.Width(45)))
+            {
+                if (EditorUtility.DisplayDialog("Wipe Piece?", $"Completely remove all {count} instances of {pieceType.objectName}?", "Wipe", "Cancel")) {
+                    RemovePieceByTypeFromAll(pieceType);
+                    GUI.changed = true;
+                }
             }
 
             EditorGUILayout.EndHorizontal();
         }
     }
 
-    private void RemovePieceByType(PlacedObjectTypeSO pieceType)
+    private void RemovePieceByTypeFromAll(PlacedObjectTypeSO pieceType)
     {
-        var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
-        int pieceIndexToRemove = -1;
+        gridDataSO.puzzleSolution?.RemoveAll(p => p.pieceType == pieceType);
+        gridDataSO.levelItems?.RemoveAll(p => p.pieceType == pieceType);
+        gridDataSO.staticObstacles?.RemoveAll(p => p.pieceType == pieceType);
+        
+        serializedObject.Update();
+        UpdatePuzzleState();
+    }
 
-        for (int i = 0; i < puzzleSolutionProp.arraySize; i++)
+    private void DrawManualItemsList(string propName)
+    {
+        SerializedProperty listProp = serializedObject.FindProperty(propName);
+        if (listProp == null) return;
+
+        EditorGUILayout.BeginVertical("box");
+        for (int i = 0; i < listProp.arraySize; i++)
         {
-            var pieceDataProp = puzzleSolutionProp.GetArrayElementAtIndex(i);
-            var currentPieceType = (PlacedObjectTypeSO)pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue;
-            if (currentPieceType == pieceType)
-            {
-                pieceIndexToRemove = i;
+            SerializedProperty productProp = listProp.GetArrayElementAtIndex(i);
+            EditorGUILayout.BeginHorizontal();
+            
+            EditorGUILayout.PropertyField(productProp.FindPropertyRelative("pieceType"), GUIContent.none, GUILayout.Width(120));
+            EditorGUILayout.PropertyField(productProp.FindPropertyRelative("position"), GUIContent.none, GUILayout.Width(80));
+            EditorGUILayout.PropertyField(productProp.FindPropertyRelative("direction"), GUIContent.none, GUILayout.Width(60));
+            
+            // Small toggles for flags
+            SerializedProperty obsProp = productProp.FindPropertyRelative("isObstacle");
+            obsProp.boolValue = GUILayout.Toggle(obsProp.boolValue, new GUIContent("O", "Is Obstacle"), "Button", GUILayout.Width(20));
+            
+            SerializedProperty hiddenProp = productProp.FindPropertyRelative("isHidden");
+            hiddenProp.boolValue = GUILayout.Toggle(hiddenProp.boolValue, new GUIContent("H", "Is Hidden"), "Button", GUILayout.Width(20));
+
+            if (GUILayout.Button("-", GUILayout.Width(20))) {
+                listProp.DeleteArrayElementAtIndex(i);
                 break;
             }
+            EditorGUILayout.EndHorizontal();
         }
-
-        if (pieceIndexToRemove != -1)
-        {
-            puzzleSolutionProp.DeleteArrayElementAtIndex(pieceIndexToRemove);
-
-            // --- FIX: Зберігаємо зміни перед оновленням стану ---
-            serializedObject.ApplyModifiedProperties();
-
-            UpdatePuzzleState();
+        if (GUILayout.Button("+ Add Manual Piece", EditorStyles.miniButton)) {
+            listProp.arraySize++;
         }
+        EditorGUILayout.EndVertical();
     }
+
 
     private void ClearAllPieces()
     {
         serializedObject.FindProperty("puzzleSolution").ClearArray();
 
-        // --- FIX: Зберігаємо зміни ---
+        // --- FIX: Р—Р±РµСЂС–РіР°С”РјРѕ Р·РјС–РЅРё ---
         serializedObject.ApplyModifiedProperties();
 
         UpdatePuzzleState();
-        Debug.Log("Усі фігури з рішення очищено.");
+        Debug.Log("РЈСЃС– С„С–РіСѓСЂРё Р· СЂС–С€РµРЅРЅСЏ РѕС‡РёС‰РµРЅРѕ.");
     }
 
     private void FillEmptySpace()
@@ -1462,13 +1613,13 @@ public class GridDataSOEditor : Editor
             {
                 if (pos.x >= 0 && pos.x < gridDataSO.width && pos.y >= 0 && pos.y < gridDataSO.height)
                 {
-                    currentGrid[pos.x, pos.y] = false; // Вже зайнято
+                    currentGrid[pos.x, pos.y] = false; // Р’Р¶Рµ Р·Р°Р№РЅСЏС‚Рѕ
                 }
             }
         }
 
         var existingPieceTypes = new HashSet<PlacedObjectTypeSO>(gridDataSO.puzzleSolution.Select(p => p.pieceType));
-        // Беремо тільки характери для заповнення
+        // Р‘РµСЂРµРјРѕ С‚С–Р»СЊРєРё С…Р°СЂР°РєС‚РµСЂРё РґР»СЏ Р·Р°РїРѕРІРЅРµРЅРЅСЏ
         var allAvailableFillers = gridDataSO.availablePieceTypesForGeneration
             .Where(p => p != null && p.category == PlacedObjectTypeSO.ItemCategory.Character)
             .ToList();
@@ -1498,7 +1649,7 @@ public class GridDataSOEditor : Editor
                 pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)filledPieces[i].direction;
             }
 
-            // --- FIX: Зберігаємо зміни ---
+            // --- FIX: Р—Р±РµСЂС–РіР°С”РјРѕ Р·РјС–РЅРё ---
             serializedObject.ApplyModifiedProperties();
 
             UpdatePuzzleState();
@@ -1659,6 +1810,24 @@ public class GridDataSOEditor : Editor
     private void HandlePreviewMouseInput(Rect previewRect, float cellSize)
     {
         Event e = Event.current;
+
+        // --- ROTATION HOTKEY ---
+        if (obstaclePaintMode && e.type == EventType.KeyDown && e.keyCode == KeyCode.R)
+        {
+            selectedObstacleDir = PlacedObjectTypeSO.GetNextDir(selectedObstacleDir);
+            e.Use();
+            Repaint();
+        }
+
+        if (obstaclePaintMode && (e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && previewRect.Contains(e.mousePosition))
+        {
+            Vector2 localPos = e.mousePosition - previewRect.position;
+            int x = Mathf.FloorToInt(localPos.x / cellSize);
+            int z = gridDataSO.height - 1 - Mathf.FloorToInt(localPos.y / cellSize);
+            Vector2Int clickedCell = new Vector2Int(x, z);
+            PlaceObstacle(clickedCell);
+            e.Use();
+        }
         if (e.type == EventType.MouseDown && e.button == 1 && previewRect.Contains(e.mousePosition))
         {
             Vector2 localPos = e.mousePosition - previewRect.position;
@@ -1667,7 +1836,9 @@ public class GridDataSOEditor : Editor
             Vector2Int clickedCell = new Vector2Int(x, z);
 
             RemovePieceAt(clickedCell);
+            RemoveObstacleAt(clickedCell);
             e.Use();
+            Repaint();
         }
     }
 
@@ -1698,18 +1869,129 @@ public class GridDataSOEditor : Editor
         {
             puzzleSolutionProp.DeleteArrayElementAtIndex(pieceIndexToRemove);
 
-            // --- FIX: Зберігаємо зміни перед оновленням ---
+            // --- FIX: Р—Р±РµСЂС–РіР°С”РјРѕ Р·РјС–РЅРё РїРµСЂРµРґ РѕРЅРѕРІР»РµРЅРЅСЏРј ---
             serializedObject.ApplyModifiedProperties();
 
             UpdatePuzzleState();
             Repaint();
-            Debug.Log($"Видалено фігуру на позиції {gridPosition}.");
+            Debug.Log($"Р’РёРґР°Р»РµРЅРѕ С„С–РіСѓСЂСѓ РЅР° РїРѕР·РёС†С–С— {gridPosition}.");
         }
         else
         {
-            Debug.LogWarning($"На клітинці {gridPosition} не знайдено фігури для видалення.");
+            Debug.LogWarning($"РќР° РєР»С–С‚РёРЅС†С– {gridPosition} РЅРµ Р·РЅР°Р№РґРµРЅРѕ С„С–РіСѓСЂРё РґР»СЏ РІРёРґР°Р»РµРЅРЅСЏ.");
         }
     }
 
     #endregion
+    private void DrawManualObjectPainter()
+    {
+        EditorGUILayout.BeginVertical("box");
+        EditorGUILayout.LabelField("Manual Object Painter Settings", EditorStyles.miniBoldLabel);
+        
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.PrefixLabel("Object Type");
+        selectedObstacleType = (PlacedObjectTypeSO)EditorGUILayout.ObjectField(selectedObstacleType, typeof(PlacedObjectTypeSO), false);
+        EditorGUILayout.EndHorizontal();
+
+        selectedObstacleDir = (PlacedObjectTypeSO.Dir)EditorGUILayout.EnumPopup("Initial Direction", selectedObstacleDir);
+        
+        EditorGUILayout.HelpBox("TIP: You can also use [?] in the Summary below to pick objects. Use 'R' to rotate on preview.", MessageType.None);
+
+        if (GUILayout.Button("Clear All Hand-Placed Obstacles"))
+        {
+            if (EditorUtility.DisplayDialog("Clear Obstacles?", "Remove all manually painted obstacles?", "Yes", "No"))
+            {
+                Undo.RecordObject(gridDataSO, "Clear Obstacles");
+                gridDataSO.staticObstacles.Clear();
+                EditorUtility.SetDirty(gridDataSO);
+            }
+        }
+        EditorGUILayout.EndVertical();
+    }
+
+    private void PlaceObstacle(Vector2Int origin)
+    {
+        if (selectedObstacleType == null) return;
+        
+        // --- OVERLAP CHECK ---
+        List<Vector2Int> newPositions = selectedObstacleType.GetGridPositionsList(origin, selectedObstacleDir);
+        foreach (var obs in gridDataSO.staticObstacles)
+        {
+            if (obs.pieceType == null) continue;
+            var existingPositions = obs.pieceType.GetGridPositionsList(obs.position, obs.direction);
+            foreach (var p in newPositions)
+            {
+                if (existingPositions.Contains(p))
+                {
+                    // Already occupied
+                    return; 
+                }
+            }
+        }
+
+        Undo.RecordObject(gridDataSO, "Place Obstacle");
+        gridDataSO.staticObstacles.Add(new GridDataSO.GeneratedPieceData
+        {
+            pieceType = selectedObstacleType,
+            position = origin,
+            direction = selectedObstacleDir,
+            isObstacle = true
+        });
+        EditorUtility.SetDirty(gridDataSO);
+        Repaint();
+    }
+
+    private void RemoveObstacleAt(Vector2Int gridPosition)
+    {
+        int indexToRemove = -1;
+        for (int i = gridDataSO.staticObstacles.Count - 1; i >= 0; i--)
+        {
+            var obs = gridDataSO.staticObstacles[i];
+            if (obs.pieceType != null && obs.pieceType.GetGridPositionsList(obs.position, obs.direction).Contains(gridPosition))
+            {
+                indexToRemove = i;
+                break;
+            }
+        }
+
+        if (indexToRemove != -1)
+        {
+            Undo.RecordObject(gridDataSO, "Remove Obstacle");
+            gridDataSO.staticObstacles.RemoveAt(indexToRemove);
+            EditorUtility.SetDirty(gridDataSO);
+            Repaint();
+        }
+    }
+
+    private void DrawHatchedRect(Rect rect, Color color)
+    {
+        // Draw base transparent fill
+        EditorGUI.DrawRect(rect, new Color(color.r, color.g, color.b, color.a * 0.3f));
+
+        // Draw diagonal lines at 45 degrees
+        Handles.color = color;
+        float spacing = 4f;
+        for (float i = -rect.height; i < rect.width; i += spacing)
+        {
+            Vector3 start = new Vector3(Mathf.Clamp(rect.x + i, rect.x, rect.x + rect.width), 
+                                        Mathf.Clamp(rect.y + i, rect.y, rect.y + rect.height), 0);
+            Vector3 end = new Vector3(Mathf.Clamp(rect.x + rect.height + i, rect.x, rect.x + rect.width), 
+                                      Mathf.Clamp(rect.y + rect.height + i, rect.y, rect.y + rect.height), 0);
+            
+            // This is a bit simplified for 45 deg in a rect, but basically:
+            float x0 = rect.x + i;
+            float y0 = rect.yMax;
+            float x1 = rect.x + i + rect.height;
+            float y1 = rect.yMin;
+
+            // Clip to rect
+            float xStart = Mathf.Max(rect.x, x0);
+            float yStart = y0 - (xStart - x0);
+            float xEnd = Mathf.Min(rect.xMax, x1);
+            float yEnd = y1 + (x1 - xEnd);
+
+            if (xStart < rect.xMax && xEnd > rect.x)
+                Handles.DrawLine(new Vector3(xStart, yStart, 0), new Vector3(xEnd, yEnd, 0));
+        }
+    }
 }

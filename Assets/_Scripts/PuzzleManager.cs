@@ -53,7 +53,6 @@ public class PuzzleManager : MonoBehaviour
     private Vector3 _initialPiecePosition;
     private Quaternion _initialPieceRotation;
     // --- Initial State Tracking for Undo ---
-    // --- Initial State Tracking for Undo ---
     private bool _initialWasPlaced;
     private bool _initialWasOffGrid;
     private Vector2Int _initialOrigin;
@@ -84,9 +83,6 @@ public class PuzzleManager : MonoBehaviour
     public event Action<PuzzlePiece> OnPiecePickedUp;
     public event Action<PuzzlePiece> OnPieceDropped;
 
-    // --- ПУБЛІЧНА ВЛАСТИВІСТЬ ДЛЯ КАМЕРИ ---
-    // Повертає true, якщо гравець зараз взаємодіє з фігурою або нависає над нею.
-    // Це потрібно, щоб камера не перехоплювала клік ЛКМ.
     public bool IsInteracting =>
         _heldPiece != null ||
         _hoveredPiece != null ||
@@ -170,23 +166,19 @@ public class PuzzleManager : MonoBehaviour
 
             Ray ray = Camera.main.ScreenPointToRay(currentPos);
             
-            // Stable horizontal plane at Y=0 (or cat's base) for movement delta calculation
             Plane horizontalPlane = new Plane(Vector3.up, Vector3.zero);
             if (horizontalPlane.Raycast(ray, out float enter))
             {
                 Vector3 currentWorldPos = ray.GetPoint(enter);
                 
-                // Calculate world delta from stable plane
                 _currentWorldMouseDelta = currentWorldPos - _lastWorldMousePos;
                 _lastWorldMousePos = currentWorldPos;
                 
-                // Update hit point for visuals (still use raycast for depth/mesh)
                 if (Physics.Raycast(ray, out RaycastHit hit, 100f, offGridPlaneLayer | pieceLayer))
                 {
                     _lastHitPoint = hit.point;
                 }
                 
-                // For legacy throw velocity
                 _currentThrowVelocity = Vector3.Lerp(_currentThrowVelocity, _currentWorldMouseDelta / Time.deltaTime, Time.deltaTime * 10f);
             }
         }
@@ -271,7 +263,6 @@ public class PuzzleManager : MonoBehaviour
             _clickStartTime = Time.time;
             _isPettingActive = false;
 
-            // Capture the world point on the piece for accurate pivot calculation
             Ray ray = Camera.main.ScreenPointToRay(_clickStartPos);
             if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
             {
@@ -284,7 +275,6 @@ public class PuzzleManager : MonoBehaviour
         }
         else if (_heldPiece == null && _hoveredPiece == null)
         {
-            // Floor Tap / Rustle detection
             float currentTime = Time.time;
             bool isDragPanning = CameraController.Instance != null && CameraController.Instance.IsDragPanning;
 
@@ -370,9 +360,65 @@ public class PuzzleManager : MonoBehaviour
         _isPettingActive = false;
     }
 
+    private void CheckForWin()
+    {
+        float fill = GridBuildingSystem.Instance.CalculateGridFillPercentage();
+        if (fill >= 100f)
+        {
+             var board = GridBuildingSystem.Instance.ActiveBoard;
+             if (board != null && !board.isCompleted)
+             {
+                 board.SetCompleted(true);
+                 GameManager.Instance.SaveCurrentProgress();
+                 // Here we could trigger LevelLoader.LoadNextStep() or similar
+                 Debug.Log($"Board {board.boardId} Completed!");
+             }
+        }
+    }
+
     #endregion
 
     #region Game Logic
+
+    private void TryToPickUpPiece()
+    {
+        if (_heldPiece != null) return;
+
+        Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f, pieceLayer))
+        {
+            PuzzlePiece piece = hit.collider.GetComponentInParent<PuzzlePiece>();
+            
+            // Check if board is interactive
+            var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+            if (activeBoard != null && activeBoard.isCompleted)
+            {
+                // Cannot interact with completed boards
+                return;
+            }
+
+            if (piece != null && !piece.IsRotating && !piece.IsStaticObstacle)
+            {
+                // Can we pick it up? (Tools with passengers logic)
+                if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
+                {
+                    if (GridBuildingSystem.Instance.CanPickUpToolWithPassengers(piece, out List<PuzzlePiece> p))
+                    {
+                        foreach (var passenger in p) piece.AddPassenger(passenger);
+                        PickUpPiece(piece);
+                    }
+                    else
+                    {
+                        if (piece.Visuals != null) piece.Visuals.PlayPlaceFailed();
+                    }
+                }
+                else
+                {
+                    PickUpPiece(piece);
+                }
+            }
+        }
+    }
 
     private bool TryGiveHeldItemToHoveredCat()
     {
@@ -408,9 +454,9 @@ public class PuzzleManager : MonoBehaviour
 
     private void PickUpPiece(PuzzlePiece piece)
     {
-        if (piece == null) return;
+        if (piece == null || piece.IsStaticObstacle) return;
+        var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
 
-        // Handling passenger/parent logic
         if (piece.transform.parent != null)
         {
             PuzzlePiece parentPiece = piece.transform.parent.GetComponentInParent<PuzzlePiece>();
@@ -423,8 +469,6 @@ public class PuzzleManager : MonoBehaviour
                 }
                 else if (parentPiece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
                 {
-                    // This logic is mostly handled by CanPickUpToolWithPassengers for tools on grid
-                    // But if off-grid tool holding piece:
                     parentPiece.StoredPassengers.Remove(piece);
                     piece.transform.SetParent(null);
                     piece.EnablePhysics(Vector3.zero);
@@ -447,7 +491,7 @@ public class PuzzleManager : MonoBehaviour
                     {
                         GridBuildingSystem.Instance.RemovePieceFromGrid(passenger);
                         passenger.SetPlaced(null);
-                        piece.AddPassenger(passenger); // Фізично і логічно додаємо в тулз
+                        piece.AddPassenger(passenger); 
                         _initialPassengersSnapshot.Add(passenger);
                     }
                 }
@@ -459,7 +503,6 @@ public class PuzzleManager : MonoBehaviour
             }
             else
             {
-                // Якщо піднімаємо з OffGrid або повітря, пасажири вже в StoredPassengers
                 _initialPassengersSnapshot.AddRange(piece.StoredPassengers);
             }
         }
@@ -478,7 +521,6 @@ public class PuzzleManager : MonoBehaviour
         
         _lastSnappedGridOrigin = null;
 
-        // Use the stored world hit from the moment of initial click to fix offsets and rapid drag issues
         Vector3 hitPoint = _clickStartWorldHit;
 
         if (piece.IsPlaced || piece.IsOffGrid)
@@ -496,19 +538,30 @@ public class PuzzleManager : MonoBehaviour
             _initialOrigin = origin;
 
             Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(piece.CurrentDirection);
-            Vector3 pieceOriginWorld = piece.transform.position - new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
-
+            // Use Grid World Position to respect pivot
+            Vector3 pieceOriginWorld = GridBuildingSystem.Instance.GetGrid().GetWorldPosition(origin.x, origin.y) +
+                                     new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
+            
+            // Re-calculate visual separation
+            // Note: UpdateHeldPiecePosition uses ClickOffset to smooth drag.
+            // Click offset logic:
             GridBuildingSystem.Instance.GetGrid().GetXZ(hitPoint, out int clickX, out int clickZ);
-            GridBuildingSystem.Instance.GetGrid().GetXZ(pieceOriginWorld, out int originX, out int originZ);
-
-            // FIX: Ensure the click offset is within the piece bounds to prevent "jumping" when clicking collider edges
-            Vector2Int rawOffset = new Vector2Int(clickX - originX, clickZ - originZ);
+            GridBuildingSystem.Instance.GetGrid().GetXZ(pieceOriginWorld, out int originX, out int originZ); 
+            // Warning: pieceOriginWorld calculation above includes Rotation Offset.
+            // We want the 'Logical' Origin (bottom left) in Grid coords.
+            // pieceOriginWorld calc above is Visual TopLeft? No.
+            // piece.transform.position IS the TopLeft (or rotated) actual visual pos?
+            
+            // Revert to simple logic:
+            // piece has a pivot. GridXZ.GetXZ finds cell under that pivot.
+            // We need 'origin' (the bottom-left cell of the shape).
+            
+            Vector2Int rawOffset = new Vector2Int(clickX - origin.x, clickZ - origin.y);
+            
             var occupiedCells = piece.PieceTypeSO.GetGridPositionsList(Vector2Int.zero, piece.CurrentDirection);
             
             if (!occupiedCells.Contains(rawOffset))
             {
-                // If clicked outside the grid representation (edge of collider), snap to nearest cell
-                // This ensures we pick up the cat where it "lives", not on an empty adjacent cell
                 Vector2Int bestCell = Vector2Int.zero;
                 float minDist = float.MaxValue;
                 foreach (var cell in occupiedCells)
@@ -534,7 +587,7 @@ public class PuzzleManager : MonoBehaviour
         }
         else if (piece.IsOffGrid)
         {
-            OffGridManager.RemovePiece(piece);
+            activeBoard?.OffGridTracker.RemovePiece(piece);
             piece.SetOffGrid(false);
         }
 
@@ -715,7 +768,6 @@ public class PuzzleManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("Invalid placement position.");
             if (_heldPiece.Visuals != null) _heldPiece.Visuals.PlayPlaceFailed();
         }
     }
@@ -749,6 +801,8 @@ public class PuzzleManager : MonoBehaviour
         if (_heldPiece == null) return;
 
         var grid = GridBuildingSystem.Instance.GetGrid();
+        var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+
         List<Vector2Int> pieceCells = _heldPiece.PieceTypeSO.GetGridPositionsList(origin, _heldPiece.CurrentDirection);
 
         bool allOnGrid = pieceCells.All(cell => grid.GetGridObject(cell.x, cell.y) != null);
@@ -758,17 +812,22 @@ public class PuzzleManager : MonoBehaviour
         {
             canOnGrid = GridBuildingSystem.Instance.CanPlacePiece(_heldPiece, origin, _heldPiece.CurrentDirection);
         }
-        else if (allOffGrid)
+        else if (allOffGrid && activeBoard != null)
         {
-            canOffGrid = OffGridManager.CanPlacePiece(_heldPiece, origin);
+            canOffGrid = activeBoard.OffGridTracker.CanPlacePiece(_heldPiece, origin);
         }
         else
         {
+            // Edge case: partly on grid?
+            // Current bounds check: all must be off grid to be valid off grid.
+            // If partly on grid -> Invalid.
+            
+            // Wait, previous code allowed off-grid if it doesn't overlap "Buildable" cells?
             bool occupiesBuildable = pieceCells.Any(cell => {
                 GridObject go = grid.GetGridObject(cell.x, cell.y);
                 return go != null && go.IsBuildable();
             });
-            if (!occupiesBuildable) canOffGrid = OffGridManager.CanPlacePiece(_heldPiece, origin);
+            if (!occupiesBuildable && activeBoard != null) canOffGrid = activeBoard.OffGridTracker.CanPlacePiece(_heldPiece, origin);
         }
     }
 
@@ -799,32 +858,6 @@ public class PuzzleManager : MonoBehaviour
         }
         _piecesBeingFlownOver = currentOver;
     }
-
-    private void CheckForWin()
-    {
-        if (!_isLevelComplete && GridBuildingSystem.Instance.CalculateGridFillPercentage() > 99.9f)
-        {
-            _isLevelComplete = true;
-            GameManager.Instance.OnLevelComplete();
-        }
-    }
-
+    
     #endregion
-
-    public void SaveCurrentProgress() => GameManager.Instance.SaveCurrentProgress();
-    public void OnLevelComplete() => GameManager.Instance.OnLevelComplete();
-
-#if UNITY_EDITOR
-    private void OnDrawGizmos()
-    {
-        if (Application.isPlaying && Time.time - _debugTapTime < 1.5f)
-        {
-            Gizmos.color = new Color(1f, 1f, 0f, 0.5f);
-            Gizmos.DrawWireSphere(_debugTapPos, _debugTapRadius);
-            Gizmos.color = new Color(1f, 1f, 0f, 0.1f);
-            Gizmos.DrawSphere(_debugTapPos, _debugTapRadius);
-        }
-    }
-#endif
 }
-

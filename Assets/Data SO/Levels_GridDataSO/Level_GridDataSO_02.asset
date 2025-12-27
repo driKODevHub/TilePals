@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 187a4d228514abd47aeb8772198b1abe, type: 3}
   m_Name: Level_GridDataSO_02
   m_EditorClassIdentifier: 
+  environmentPrefab: {fileID: 9205577837163595881, guid: ebda710d83024e74b898c25033124bab, type: 3}
+  levelSpawnOffset: {x: 30, y: 0, z: 0}
   width: 4
   height: 4
   cellSize: 1
@@ -28,6 +30,7 @@ MonoBehaviour:
   - {x: 2, y: 3}
   - {x: 3, y: 1}
   - {x: 3, y: 2}
+  lockedCells: []
   cameraBoundsCenter: {x: 1.8537439, y: 9.341887}
   cameraBoundsSize: {x: 4.104074, y: 1.3162215}
   cameraBoundsYRotation: 0
@@ -47,21 +50,27 @@ MonoBehaviour:
     requiredCount: 1
     color: {r: 0.9271002, g: 0.013230776, b: 0.45701098, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.62956625, g: 0.98270726, b: 0.030529663, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 650e992d58e274e44b0bb69da2961424, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.15914695, g: 0.5644191, b: 0.9817752, a: 1}
     maxCount: 1
+    isObstacle: 0
   - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
     isRequired: 0
     requiredCount: 1
     color: {r: 0.9737016, g: 0.9521117, b: 0.047564335, a: 1}
     maxCount: 1
+    isObstacle: 0
+  levelItems: []
+  staticObstacles: []
   puzzlePieces:
   - {fileID: 11400000, guid: 650e992d58e274e44b0bb69da2961424, type: 2}
   - {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
@@ -80,15 +89,23 @@ MonoBehaviour:
   - pieceType: {fileID: 11400000, guid: 650e992d58e274e44b0bb69da2961424, type: 2}
     position: {x: 0, y: 0}
     direction: 1
+    isObstacle: 0
+    isHidden: 0
   - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
     position: {x: 2, y: 1}
     direction: 1
+    isObstacle: 0
+    isHidden: 0
   - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
     position: {x: 0, y: 2}
     direction: 0
+    isObstacle: 0
+    isHidden: 0
   - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
     position: {x: 1, y: 2}
     direction: 1
+    isObstacle: 0
+    isHidden: 0
   isComplete: 1
   solutionVariantsCount: 1
   allFoundSolutions:
@@ -96,13 +113,21 @@ MonoBehaviour:
     - pieceType: {fileID: 11400000, guid: 650e992d58e274e44b0bb69da2961424, type: 2}
       position: {x: 0, y: 0}
       direction: 1
+      isObstacle: 0
+      isHidden: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 2, y: 1}
       direction: 1
+      isObstacle: 0
+      isHidden: 0
     - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
       position: {x: 0, y: 2}
       direction: 0
+      isObstacle: 0
+      isHidden: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 1, y: 2}
       direction: 1
+      isObstacle: 0
+      isHidden: 0
   currentSolutionIndex: 0

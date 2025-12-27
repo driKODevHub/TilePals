@@ -26,7 +26,7 @@ public class PlacedObjectTypeSO : ScriptableObject
     }
 
     // --- ��ò�� ������ʲ� ---
-    public static Dir GetNextDirencion(Dir dir)
+    public static Dir GetNextDir(Dir dir)
     {
         return dir switch
         {

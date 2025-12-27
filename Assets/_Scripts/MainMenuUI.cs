@@ -1,7 +1,7 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEngine.UI;
 
-// Вішайте цей скрипт на КОРІНЬ префабу MainMenu
+// Main Menu UI Controller
 public class MainMenuUI : MonoBehaviour
 {
     [Header("Buttons")]
@@ -9,16 +9,14 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button levelSelectButton;
     [SerializeField] private Button quitButton;
 
-    // Використовуємо Awake, щоб ініціалізація пройшла відразу після Instantiate, 
-    // навіть якщо об'єкт потім вимкнуть.
     private void Awake()
     {
         if (continueButton)
         {
             continueButton.onClick.AddListener(() =>
             {
-                int lastLevelIndex = SaveSystem.LoadCurrentLevelIndex();
-                GameManager.Instance.StartGameAtLevel(lastLevelIndex, true);
+                int lastLocationIndex = SaveSystem.LoadCurrentLevelIndex();
+                GameManager.Instance.SelectLocation(lastLocationIndex);
             });
         }
 

@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 187a4d228514abd47aeb8772198b1abe, type: 3}
   m_Name: Level_GridDataSO_01
   m_EditorClassIdentifier: 
+  environmentPrefab: {fileID: 9205577837163595881, guid: ebda710d83024e74b898c25033124bab, type: 3}
+  levelSpawnOffset: {x: 0, y: 0, z: 0}
   width: 4
   height: 4
   cellSize: 1
@@ -79,6 +81,7 @@ MonoBehaviour:
     maxCount: 1
     isObstacle: 0
   levelItems: []
+  staticObstacles: []
   puzzlePieces:
   - {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
   - {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
@@ -100,18 +103,28 @@ MonoBehaviour:
   - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
     position: {x: 0, y: 0}
     direction: 3
+    isObstacle: 0
+    isHidden: 0
   - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
     position: {x: 1, y: 0}
     direction: 0
+    isObstacle: 0
+    isHidden: 0
   - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
     position: {x: 0, y: 1}
     direction: 1
+    isObstacle: 0
+    isHidden: 0
   - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
     position: {x: 1, y: 1}
     direction: 3
+    isObstacle: 0
+    isHidden: 0
   - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
     position: {x: 0, y: 3}
     direction: 3
+    isObstacle: 0
+    isHidden: 0
   isComplete: 1
   solutionVariantsCount: 1
   allFoundSolutions:
@@ -119,16 +132,26 @@ MonoBehaviour:
     - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
       position: {x: 0, y: 0}
       direction: 3
+      isObstacle: 0
+      isHidden: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 0}
       direction: 0
+      isObstacle: 0
+      isHidden: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 0, y: 1}
       direction: 1
+      isObstacle: 0
+      isHidden: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 1, y: 1}
       direction: 3
+      isObstacle: 0
+      isHidden: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 3}
       direction: 3
+      isObstacle: 0
+      isHidden: 0
   currentSolutionIndex: 0
