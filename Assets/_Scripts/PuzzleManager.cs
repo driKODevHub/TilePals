@@ -430,7 +430,7 @@ public class PuzzleManager : MonoBehaviour
             PuzzlePiece targetPiece = hit.collider.GetComponentInParent<PuzzlePiece>();
             if (targetPiece != null && targetPiece != _heldPiece)
             {
-                if (targetPiece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Character)
+                if (targetPiece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
                 {
                     var personality = targetPiece.GetComponent<PiecePersonality>();
                     if (personality != null)
@@ -600,7 +600,7 @@ public class PuzzleManager : MonoBehaviour
         if (_heldPiece == null || _heldPiece.IsRotating) return;
 
         _hoveredToolForDrop = null;
-        if (_heldPiece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Character)
+        if (_heldPiece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
         {
             Ray hoverRay = Camera.main.ScreenPointToRay(inputReader.MousePosition);
             RaycastHit[] hits = Physics.RaycastAll(hoverRay, 100f, pieceLayer);

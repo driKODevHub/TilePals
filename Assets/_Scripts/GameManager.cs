@@ -26,7 +26,6 @@ public class GameManager : MonoBehaviour
     private GameState _gameState;
 
     private bool _isDebugTextVisible = false;
-    private GridDataSO _activeLevelData;
     private LevelCollectionSO _currentLocation;
 
     private void Awake()
@@ -128,7 +127,6 @@ public class GameManager : MonoBehaviour
         if (levelCompleteScreen != null) levelCompleteScreen.SetActive(false);
 
         _currentLocation = location;
-        _activeLevelData = null; 
 
         if (PuzzleManager.Instance != null) PuzzleManager.Instance.ResetState();
         CommandHistory.Clear();

@@ -6,26 +6,26 @@ using System;
 [CreateAssetMenu(fileName = "PlacedObjectType", menuName = "GridBuildingSystem/PlacedObjectType", order = 1)]
 public class PlacedObjectTypeSO : ScriptableObject
 {
-    // --- ENUMS ��� ��ϲ��ֲ� ---
+    // --- ENUMS ---
     public enum ItemCategory
     {
-        Character,  // ���� (���������� ��������)
-        Prop,       // �����, ���� (�������� ���, ��� ����� ��� � ���)
-        Toy,        // ������� (����� ������ �����, ������)
-        Food,       // ��� (�������� �����)
-        Tool        // ����������� (���������� ���)
+        PuzzleShape, // Фігури (основний геймплей)
+        Prop,       
+        Toy,        
+        Food,       
+        Tool        // Інструменти (зазвичай для UnlockGrid)
     }
 
     public enum UsageType
     {
         None,
-        HoldInMouth,    // ʳ� ���� � ����
-        AttractAttention, // ʳ� ��������
-        UnlockGrid,     // ���������� �������
-        Bounce          // ������ ������� ��'���
+        HoldInMouth,    
+        AttractAttention, 
+        UnlockGrid,     
+        Bounce          
     }
 
-    // --- ��ò�� ������ʲ� ---
+    // --- Static Helpers ---
     public static Dir GetNextDir(Dir dir)
     {
         return dir switch
@@ -65,18 +65,16 @@ public class PlacedObjectTypeSO : ScriptableObject
     public List<Vector2Int> relativeOccupiedCells;
 
     [Header("Item Settings")]
-    public ItemCategory category = ItemCategory.Character;
+    public ItemCategory category = ItemCategory.PuzzleShape;
     public UsageType usageType = UsageType.None;
 
-    [Header("Physics Settings (For Non-Characters)")]
-    [Tooltip("�� ��������������� ����� ��� ����� (��� �������/��������).")]
+    [Header("Physics Settings (For Non-PuzzleShapes)")]
     public bool usePhysics = false;
     public float mass = 1.0f;
     public float bounciness = 0.5f;
     public float throwForceMultiplier = 1.0f;
 
     [Header("Grid Expansion (For Tools)")]
-    [Tooltip("����� ������������� ������� (���� �� Tool).")]
     public int unlockRadius = 1;
 
     public Vector2Int size => GetMaxDimensions();

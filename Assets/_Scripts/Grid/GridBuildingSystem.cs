@@ -268,7 +268,7 @@ public class GridBuildingSystem : MonoBehaviour
                     {
                         PuzzlePiece piece = po.GetComponent<PuzzlePiece>();
                         if (piece != null && !piece.IsObstacle && 
-                            piece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Character)
+                            piece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
                         {
                             hasRequiredCat = true;
                         }

@@ -146,13 +146,13 @@ MonoBehaviour:
   - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
     isRequired: 0
     requiredCount: 1
-    color: {r: 0.5, g: 0.7, b: 1, a: 1}
+    color: {r: 0.1141567, g: 0.45548585, b: 0.9811321, a: 1}
     maxCount: 1
     isObstacle: 0
   - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
     isRequired: 0
     requiredCount: 1
-    color: {r: 0.6, g: 0.4, b: 1, a: 1}
+    color: {r: 0.5279327, g: 0.30762222, b: 0.9685534, a: 1}
     maxCount: 1
     isObstacle: 0
   - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
@@ -474,12 +474,17 @@ MonoBehaviour:
     isHidden: 0
   staticObstacles:
   - pieceType: {fileID: 11400000, guid: 0fd9ff360ab207140a06964822a0ccdc, type: 2}
-    position: {x: 5, y: 2}
+    position: {x: 4, y: 1}
     direction: 0
     isObstacle: 1
     isHidden: 0
   - pieceType: {fileID: 11400000, guid: 0fd9ff360ab207140a06964822a0ccdc, type: 2}
-    position: {x: 5, y: 3}
+    position: {x: 4, y: 4}
+    direction: 0
+    isObstacle: 1
+    isHidden: 0
+  - pieceType: {fileID: 11400000, guid: 0fd9ff360ab207140a06964822a0ccdc, type: 2}
+    position: {x: 4, y: 5}
     direction: 0
     isObstacle: 1
     isHidden: 0
@@ -487,15 +492,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d1f4ee20de4e6f14e9e169f9bfbca7fc, type: 2}
   - {fileID: 11400000, guid: e3b4a7d4c280d3842a0ac0c34fde6b68, type: 2}
   - {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
-  - {fileID: 11400000, guid: 7a5242c9ac025de43b4c63e7720087ee, type: 2}
   - {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
   - {fileID: 11400000, guid: 92622559682d572449b4fe821070796c, type: 2}
   - {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
   - {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
   generatedPieceSummary:
   - pieceType: {fileID: 11400000, guid: d1f4ee20de4e6f14e9e169f9bfbca7fc, type: 2}
-    count: 1
-  - pieceType: {fileID: 11400000, guid: 7a5242c9ac025de43b4c63e7720087ee, type: 2}
     count: 1
   - pieceType: {fileID: 11400000, guid: 92622559682d572449b4fe821070796c, type: 2}
     count: 1
@@ -525,11 +527,6 @@ MonoBehaviour:
     direction: 3
     isObstacle: 0
     isHidden: 0
-  - pieceType: {fileID: 11400000, guid: 7a5242c9ac025de43b4c63e7720087ee, type: 2}
-    position: {x: 3, y: 1}
-    direction: 2
-    isObstacle: 0
-    isHidden: 0
   - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
     position: {x: 0, y: 3}
     direction: 2
@@ -550,7 +547,7 @@ MonoBehaviour:
     direction: 3
     isObstacle: 0
     isHidden: 0
-  isComplete: 1
+  isComplete: 0
   solutionVariantsCount: 944
   allFoundSolutions:
   - solution:
