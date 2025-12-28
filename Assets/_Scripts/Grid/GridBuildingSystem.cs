@@ -128,6 +128,9 @@ public class GridBuildingSystem : MonoBehaviour
         placedObject.PlacedObjectTypeSO = piece.PieceTypeSO;
         placedObject.Origin = origin;
         placedObject.Direction = dir;
+        
+        // ВАЖЛИВО: Прив'язуємо фігуру до дошки
+        piece.OwnerBoard = targetBoard;
 
         List<Vector2Int> gridPositionList = placedObject.GetGridPositionList();
         bool isTool = piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid;
@@ -147,18 +150,21 @@ public class GridBuildingSystem : MonoBehaviour
                 obj.SetPlacedObject(placedObject);
             }
         }
+        
         return placedObject;
     }
 
     public void RemovePieceFromGrid(PuzzlePiece piece)
     {
-        // Find which board the piece belongs to or use active
-        PuzzleBoard targetBoard = activeBoard; // Default
+        // 1. Спробуємо взяти дошку з самої фігури
+        PuzzleBoard targetBoard = piece.OwnerBoard;
         
-        // If the piece is already placed, it should know its board
-        // But for now, we'll try to find it or assume active.
-        // Better: piece should have a reference to its board.
-        // Let's assume piece is from active board for now, or find it by search if needed.
+        // 2. Якщо немає, спробуємо знайти дошку за координатами фігури (повільніше, але надійно)
+        if (targetBoard == null && GridBuildingSystem.Instance.ActiveBoard != null)
+        {
+             targetBoard = GridBuildingSystem.Instance.ActiveBoard;
+             // Можна додати перевірку, чи фігура дійсно на цьому гріді, але поки вважаємо ActiveBoard дефолтним
+        }
 
         RemovePieceFromGridExplicit(targetBoard, piece);
     }
@@ -168,6 +174,7 @@ public class GridBuildingSystem : MonoBehaviour
         if (targetBoard == null || targetBoard.Grid == null) return;
         var targetGrid = targetBoard.Grid;
 
+        // Шукаємо PlacedObject компонент (він може бути основним або збереженим в посиланнях)
         PlacedObject placedObject = piece.GetComponent<PlacedObject>();
         if (placedObject == null) placedObject = piece.InfrastructureComponent;
         if (placedObject == null) placedObject = piece.PlacedObjectComponent;
@@ -183,19 +190,40 @@ public class GridBuildingSystem : MonoBehaviour
                 gridPosition.y >= 0 && gridPosition.y < targetGrid.GetHeight())
             {
                 GridObject obj = targetGrid.GetGridObject(gridPosition.x, gridPosition.y);
+                
                 if (isTool)
                 {
-                    if (obj.GetInfrastructureObject() == placedObject)
+                    // Перевіряємо, чи це та сама тулза
+                    var infrastructure = obj.GetInfrastructureObject();
+                    // Relaxe check: if infrastructure is not null and matches current object OR if placedObject matches component
+                    bool isSameObj = (infrastructure == placedObject);
+                    if (!isSameObj && infrastructure != null && infrastructure.GetComponent<PuzzlePiece>() == piece) isSameObj = true;
+
+                    if (isSameObj)
                     {
                         obj.ClearInfrastructureObject();
-                        obj.SetLocked(true); 
+                        obj.SetLocked(true); // Повертаємо заблокований стан
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"RemovePiece (Tool): Mismatch at {gridPosition}. Grid has {infrastructure}, removing {placedObject}");
                     }
                 }
                 else
                 {
-                    if (obj.GetPlacedObject() == placedObject)
+                    // Перевіряємо, чи це та сама фігура
+                    var placed = obj.GetPlacedObject();
+                    bool isSameObj = (placed == placedObject);
+                    if (!isSameObj && placed != null && placed.GetComponent<PuzzlePiece>() == piece) isSameObj = true;
+
+                    if (isSameObj)
                     {
                         obj.ClearPlacedObject();
+                    }
+                    else
+                    {
+                         // Warning is okay here if we are just clearing ghost pieces or similar, but for real pieces it's suspicious
+                         if (placed != null) Debug.LogWarning($"RemovePiece: Mismatch at {gridPosition}. Grid has {placed}, removing {placedObject}");
                     }
                 }
             }

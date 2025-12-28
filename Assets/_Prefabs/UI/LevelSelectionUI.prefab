@@ -396,10 +396,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 498628a137078514f806b4706b47fec7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelSelectionUI
-  locations:
-  - {fileID: 11400000, guid: 92b0923f1ed07f54b9bf8e2ccaf02662, type: 2}
   buttonsContainer: {fileID: 8967278674839249232}
-  locationButtonPrefab: {fileID: 0}
+  locationButtonPrefab: {fileID: 3980116844882204939, guid: c09ecd5ba7ffafb4fa4e71fec794eed6, type: 3}
   backButton: {fileID: 8808443898461183933}
 --- !u!222 &1957799901126476127
 CanvasRenderer:

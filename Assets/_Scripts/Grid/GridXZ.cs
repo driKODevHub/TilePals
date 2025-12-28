@@ -181,4 +181,9 @@ public class GridXZ<TGridObject>
             Mathf.Clamp(gridPosition.y, 0, height - 1)
         );
     }
+
+    public bool IsValidGridPosition(Vector2Int gridPosition)
+    {
+        return gridPosition.x >= 0 && gridPosition.y >= 0 && gridPosition.x < width && gridPosition.y < height;
+    }
 }

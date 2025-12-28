@@ -200,9 +200,16 @@ public class GridDataSOEditor : Editor
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("2. Piece Summary (Live Inventory)", EditorStyles.boldLabel);
+        serializedObject.Update();
+
+        // --- LEVEL VALIDATION CHECK ---
+        ValidateLevelSolvability();
+        
+        EditorGUILayout.Space(10);
         DrawPieceSummary();
 
-        EditorGUILayout.Space(20);
+        EditorGUILayout.Space(10);
+        DrawGridDimensions();
         EditorGUILayout.LabelField("3. Topology (Hold Click to Paint)", EditorStyles.boldLabel);
         DrawBuildableCellsEditor();
 
@@ -2093,6 +2100,57 @@ public class GridDataSOEditor : Editor
 
         EditorUtility.SetDirty(gridDataSO);
         Repaint();
+    }
+
+    private void ValidateLevelSolvability()
+    {
+        if (gridDataSO == null) return;
+
+        int buildableCount = gridDataSO.buildableCells.Count;
+        int lockedCount = gridDataSO.lockedCells.Count;
+        
+        int occupiedBuildable = 0;
+
+        // Check Puzzle Solution (Shapes only)
+        if (gridDataSO.puzzleSolution != null)
+        {
+            foreach (var piece in gridDataSO.puzzleSolution)
+            {
+                if (piece.pieceType == null) continue;
+                if (piece.pieceType.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
+                {
+                    var cells = piece.pieceType.GetGridPositionsList(piece.position, piece.direction);
+                    foreach(var c in cells) {
+                         if (gridDataSO.buildableCells.Contains(c)) occupiedBuildable++;
+                    }
+                }
+            }
+        }
+        
+        bool buildableCovered = occupiedBuildable >= buildableCount;
+
+        if (!buildableCovered)
+        {
+            EditorGUILayout.HelpBox($"Level Incomplete! Buildable Coverage: {occupiedBuildable}/{buildableCount} ({(float)occupiedBuildable/Mathf.Max(1, buildableCount):P0}).\nGenerate a solution or add manual pieces.", MessageType.Error);
+        }
+        else if (buildableCount == 0 && lockedCount == 0) {
+             EditorGUILayout.HelpBox("Grid is empty! Paint some Buildable/Locked cells.", MessageType.Warning);
+        }
+        else
+        {
+             EditorGUILayout.HelpBox("Level Valid: 100% Solvable.", MessageType.Info);
+        }
+    }
+
+
+
+    private void DrawGridDimensions()
+    {
+         EditorGUILayout.BeginVertical("box");
+         EditorGUILayout.PropertyField(serializedObject.FindProperty("width"));
+         EditorGUILayout.PropertyField(serializedObject.FindProperty("height"));
+         EditorGUILayout.PropertyField(serializedObject.FindProperty("cellSize"));
+         EditorGUILayout.EndVertical();
     }
 
     private void RemoveManualEntryAt(Vector2Int gridPosition, bool onlyObstacles)

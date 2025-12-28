@@ -634,6 +634,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   availableLocations:
   - {fileID: 11400000, guid: 92b0923f1ed07f54b9bf8e2ccaf02662, type: 2}
+  - {fileID: 11400000, guid: 922f6d2db4ab94a4fbe4f06bf5b9c74c, type: 2}
   levelLoader: {fileID: 1463119169}
   cameraController: {fileID: 1353730455}
   levelCompleteScreen: {fileID: 31567854}
@@ -2308,6 +2309,10 @@ PrefabInstance:
     - target: {fileID: 9205577837163595881, guid: ebda710d83024e74b898c25033124bab, type: 3}
       propertyPath: m_Name
       value: LevelEnvironment_Test
+      objectReference: {fileID: 0}
+    - target: {fileID: 9205577837163595881, guid: ebda710d83024e74b898c25033124bab, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

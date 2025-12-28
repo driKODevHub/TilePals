@@ -44,8 +44,6 @@ public class PlaceCommand : ICommand
     public bool Execute()
     {
         // 1. Placing Piece Logic
-        // Note: GridBuildingSystem.PlacePieceOnGrid handles registration to grid objects
-        
         var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
         if (activeBoard == null) return false;
 
@@ -56,51 +54,131 @@ public class PlaceCommand : ICommand
         if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
         {
             piece.SetInfrastructure(po);
-            // Handling tools placement
+            // Тулз сам по собі не "забирає" пасажирів при постановці, 
+            // якщо тільки ми не реалізуємо логіку "поставити корзину на котів".
+            // Поки що залишаємо як є - пасажири додаються коли ставимо КІТІВ на ТУЛЗ.
         }
         else
         {
             piece.SetPlaced(po);
+            
+            // Check if we are landing ON A TOOL (Logic: All cells must belong to the SAME tool)
+            PuzzleBoard board = GridBuildingSystem.Instance.ActiveBoard; 
+            if (board != null)
+            {
+                List<Vector2Int> cells = piece.PlacedObjectComponent.GetGridPositionList();
+                PuzzlePiece potentialTool = null;
+                bool allCellsOnSameTool = true;
+                bool foundAnyTool = false;
+
+                foreach(var cell in cells) 
+                {
+                    if (!board.Grid.IsValidGridPosition(cell)) { allCellsOnSameTool = false; break; }
+                    var obj = board.Grid.GetGridObject(cell.x, cell.y);
+                    var infra = obj.GetInfrastructureObject();
+                    
+                    if (infra == null) 
+                    { 
+                        // Якщо хоч одна клітинка не має інфраструктури (тулза), то ми не "в тулзі"
+                        allCellsOnSameTool = false; 
+                        break; 
+                    }
+
+                    var toolPiece = infra.GetComponent<PuzzlePiece>();
+                    if (toolPiece == null) { allCellsOnSameTool = false; break; }
+
+                    if (potentialTool == null) 
+                    {
+                        potentialTool = toolPiece;
+                        foundAnyTool = true;
+                    }
+                    else if (potentialTool != toolPiece) 
+                    { 
+                        // Різні тулзи під однією фігурою
+                        allCellsOnSameTool = false; 
+                        break; 
+                    }
+                }
+
+                if (foundAnyTool && allCellsOnSameTool && potentialTool != null)
+                {
+                    potentialTool.AddPassenger(piece);
+                    // Debug.Log($"Piece {piece.name} added as passenger to {potentialTool.name}");
+                }
+            }
         }
 
         piece.SetOffGrid(false);
         
         // 3. Update Transform
         float cellSize = activeBoard.Grid.GetCellSize();
-        // Use Grid World Position to ensure Board pivot is respected
-        // Note: targetPosition passed into constructor might be stale if we relied on it. 
-        // Better to recalculate snap position here based on Grid.
         Vector3 cellWorldPos = activeBoard.Grid.GetWorldPosition(origin.x, origin.y);
         
         Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(direction);
         Vector3 snapPos = cellWorldPos + new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
         
+        // Оновлюємо трансформ. Якщо це пасажир, він вже прикріплений до батька в AddPassenger?, 
+        // АЛЕ AddPassenger робить SetParent.
+        // UpdateTransform може збити локальні координати, якщо ми не обережні.
+        // Проте тут ми ставимо глобальну позицію, що правильно для початкового розміщення.
         piece.UpdateTransform(snapPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(direction), 0));
 
-        // 4. Handle Passengers (if any were stored)
-        if (passengersSnapshot.Count > 0)
+        // 4. Handle Passengers (if any were stored - e.g. moving a tool with passengers)
+        if (passengersSnapshot != null && passengersSnapshot.Count > 0)
         {
-            piece.StoredPassengers.Clear();
+            // Ми перемістили тулз. Пасажири вже в StoredPassengers (якщо ми їх не чистили).
+            // АЛЕ в PickUpPiece ми їх могли очистити з гріда.
+            // Тут треба їх повернути НА ГРІД.
+
+            piece.StoredPassengers.Clear(); // Очищаємо, щоб перезаповнити з snapshot (надійніше)
 
             foreach (var p in passengersSnapshot)
             {
                 if (p == null) continue;
 
-                p.SyncDirectionFromRotation(p.transform.rotation);
-                p.transform.SetParent(piece.transform.parent);
-
-                // Calculate where passenger lands relative to grid
-                Vector3 pWorldPos = p.transform.position;
-                activeBoard.Grid.GetXZ(pWorldPos, out int px, out int pz);
+                // Відновлюємо батьківство (воно могло збитися при Pickup, якщо ми робили detach)
+                // Але usually we kept them as children if we moved the tool.
+                if (p.transform.parent != piece.transform)
+                {
+                    p.transform.SetParent(piece.transform);
+                }
                 
+                piece.AddPassenger(p); // Додаємо в список і фіксуємо батьківство
+
+                // Повертаємо на грід
+                // Логіка: позиція пасажира відносно тулза має зберегтися.
+                // Ми знаємо поточну позицію тулза (origin).
+                // Але простіше взяти поточну world position пасажира і знайти клітинку.
+                
+                // ВАЖЛИВО: Оновити ротацію visual ДО розрахунку гріда, якщо вона змінилася?
+                // Ні, ротація тулза змінилася, пасажири обернулися разом з ним (бо діти).
+                // Тому їх world position і rotation правильні візуально.
+                
+                p.SyncDirectionFromRotation(p.transform.rotation); // Синхронізуємо логічний напрям
+
+                Vector3 pWorldPos = p.transform.position;
+                Vector3 gridOriginPos = activeBoard.Grid.GetWorldPosition(0, 0); // Get origin of grid
+                // cellSize already defined in scope
+                // float cellSize = activeBoard.Grid.GetCellSize();
+                
+                // Використовуємо RoundToInt для уникнення проблем з плаваючою комою (0.99 -> 1, not 0)
+                int px = Mathf.RoundToInt((pWorldPos.x - gridOriginPos.x) / cellSize);
+                int pz = Mathf.RoundToInt((pWorldPos.z - gridOriginPos.z) / cellSize);
+                
+                // Перевірка
+                // activeBoard.Grid.GetXZ(pWorldPos, out int px, out int pz); // OLD WAY causing drift
+
                 Vector2Int pRotOffset = p.PieceTypeSO.GetRotationOffset(p.CurrentDirection);
                 Vector2Int pOrigin = new Vector2Int(px, pz) - pRotOffset;
 
                 var poPassenger = GridBuildingSystem.Instance.PlacePieceOnGrid(p, pOrigin, p.CurrentDirection);
                 p.SetPlaced(poPassenger);
-
+                
+                // Вирівнюємо ідеально по гріду, щоб уникнути дріфту
                 Vector3 pSnapPos = activeBoard.Grid.GetWorldPosition(pOrigin.x, pOrigin.y) +
                                   new Vector3(pRotOffset.x, 0, pRotOffset.y) * cellSize;
+                
+                // Використовуємо локальну корекцію, щоб не смикати
                 p.UpdateTransform(pSnapPos, p.transform.rotation);
             }
         }
@@ -113,23 +191,33 @@ public class PlaceCommand : ICommand
 
     public void Undo()
     {
-        CleanupCurrentState();
+        CleanupCurrentState(); // Забираємо з гріда
         var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
-        if (activeBoard == null) return; // Should not happen during Undo context usually
+        if (activeBoard == null) return;
 
-        // Restore passengers to Stored
-        if (passengersSnapshot.Count > 0)
+        // Повертаємо фігуру на попередню позицію
+        piece.UpdateTransform(prevPosition, prevRotation);
+        piece.SyncDirectionFromRotation(prevRotation);
+
+        // ВІДНОВЛЕННЯ ПАСАЖИРІВ (Якщо це ТУЛЗ)
+        if (passengersSnapshot != null && passengersSnapshot.Count > 0)
         {
+            // Очищаємо поточних, якщо є (хоча Cleanup мав би забрати)
+            piece.StoredPassengers.Clear();
+
             foreach (var p in passengersSnapshot)
             {
                 if (p == null) continue;
-                piece.AddPassenger(p); 
+                
+                // Повертаємо як дитину
+                p.transform.SetParent(piece.transform);
+                p.DisablePhysics(); // Пасажири не мають фізики
+                
+                piece.AddPassenger(p);
             }
+            // Синхронізуємо їх позиції/ротації, оскільки батько стрибнув
+            piece.SyncPassengersRotation(); 
         }
-
-        piece.UpdateTransform(prevPosition, prevRotation);
-        if (piece.PieceTypeSO.category != PlacedObjectTypeSO.ItemCategory.Tool && piece.PieceTypeSO.category != PlacedObjectTypeSO.ItemCategory.Food && piece.PieceTypeSO.category != PlacedObjectTypeSO.ItemCategory.Toy)
-             piece.SyncPassengersRotation(); // Sync only for cats? Or logic depends on piece type. 
 
         if (wasOnGrid)
         {
@@ -138,6 +226,14 @@ public class PlaceCommand : ICommand
             if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
             {
                 piece.SetInfrastructure(po);
+                // Тепер треба повернути пасажирів НА ГРІД (логічно), бо ми відкотили "PickUp -> Drop" (або Move).
+                // Якщо це Undo Placement, то ми тулз ЗАБИРАЄМО (Cleanup зробив це). 
+                // А стоп... Цей Undo викликається коли ми хочемо СКАСУВАТИ дію PlaceCommand.
+                // Дія: Ми взяли фігуру (вона була десь) і поставили сюди.
+                // Undo: Забрати звідси і повернути "де була".
+                
+                // Якщо фігура була "on grid" раніше (PickAndMove), то ми її повернули на prevGridOrigin.
+                // І пасажирів теж треба "поставити" на старе місце.
                 RestorePassengersOnGridAfterUndo(piece);
             }
             else
@@ -147,6 +243,7 @@ public class PlaceCommand : ICommand
         }
         else if (wasOffGrid)
         {
+            // Якщо була OffGrid, то пасажири (якщо є) просто висять на ній в OffGrid.
             activeBoard.OffGridTracker.PlacePiece(piece, prevOffGridOrigin);
             piece.SetOffGrid(true, prevOffGridOrigin);
         }
@@ -174,22 +271,22 @@ public class PlaceCommand : ICommand
         }
         piece.SetOffGrid(false);
 
-        if (passengersSnapshot.Count > 0)
+        // Якщо це ТУЛЗ, нам треба також забрати з гріда його ПАСАЖИРІВ, 
+        // бо ми зараз будемо переміщати тулз назад.
+        if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
         {
-            foreach (var p in passengersSnapshot)
-            {
-                if (p == null) continue;
-                if (p.IsPlaced)
-                {
-                    GridBuildingSystem.Instance.RemovePieceFromGrid(p);
-                    p.SetPlaced(null);
-                }
-                else if (p.IsOffGrid)
-                {
-                    activeBoard?.OffGridTracker.RemovePiece(p);
-                    p.SetOffGrid(false);
-                }
-            }
+             // Копіюємо список, бо RemovePieceFromGrid може не чіпати StoredPassengers,
+             // але ми хочемо бути певні.
+             var passengers = new List<PuzzlePiece>(piece.StoredPassengers);
+             foreach(var p in passengers)
+             {
+                 if(p.IsPlaced) 
+                 {
+                     GridBuildingSystem.Instance.RemovePieceFromGrid(p);
+                     p.SetPlaced(null);
+                 }
+                 // Не видаляємо з StoredPassengers, бо вони нам треба для переміщення разом з тулзом
+             }
         }
     }
 
@@ -201,15 +298,23 @@ public class PlaceCommand : ICommand
         var grid = activeBoard.Grid;
         float cellSize = grid.GetCellSize();
         
-        List<PuzzlePiece> currentPassengers = new List<PuzzlePiece>(tool.StoredPassengers);
+        // Пасажири вже є дітьми тулза і знаходяться в правильній локальній позиції (після UpdateTransform батька).
+        // Нам треба просто зареєструвати їх на гріді.
 
-        foreach (var p in currentPassengers)
+        foreach (var p in tool.StoredPassengers)
         {
-            p.transform.SetParent(tool.transform.parent);
+            if (p == null) continue;
+
             p.SyncDirectionFromRotation(p.transform.rotation);
 
             Vector3 worldPos = p.transform.position;
-            grid.GetXZ(worldPos, out int x, out int z);
+            Vector3 gridOriginPos = activeBoard.Grid.GetWorldPosition(0, 0); 
+            // float cellSize = grid.GetCellSize(); // Already defined in scope
+            
+            // RoundToInt fix
+            int x = Mathf.RoundToInt((worldPos.x - gridOriginPos.x) / cellSize);
+            int z = Mathf.RoundToInt((worldPos.z - gridOriginPos.z) / cellSize);
+            
             Vector2Int pRotOffset = p.PieceTypeSO.GetRotationOffset(p.CurrentDirection);
             Vector2Int pOrigin = new Vector2Int(x, z) - pRotOffset;
 
@@ -217,10 +322,10 @@ public class PlaceCommand : ICommand
             var po = GridBuildingSystem.Instance.PlacePieceOnGrid(p, pOrigin, p.CurrentDirection);
             p.SetPlaced(po);
             
+            // Snap visual perfectly just in case
             Vector3 snapPos = grid.GetWorldPosition(pOrigin.x, pOrigin.y) +
                                   new Vector3(pRotOffset.x, 0, pRotOffset.y) * cellSize;
             p.UpdateTransform(snapPos, p.transform.rotation);
         }
-        tool.StoredPassengers.Clear();
     }
 }

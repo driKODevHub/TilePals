@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eeea9ece034ff54aa256eccf406e70d, type: 3}
   m_Name: _LevelCollection_BoardTest
   m_EditorClassIdentifier: 
+  locationName: New Location Test
   levels:
   - {fileID: 11400000, guid: bc07e985bcdc7b5438010424cbb9f33c, type: 2}
   - {fileID: 11400000, guid: cdb5b2f1560c95b4292f5d539be35611, type: 2}

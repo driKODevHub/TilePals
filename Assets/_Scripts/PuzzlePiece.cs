@@ -28,6 +28,7 @@ public class PuzzlePiece : MonoBehaviour
 
     public bool IsPlaced { get; private set; } = false;
     public bool IsOffGrid { get; private set; } = false;
+    public PuzzleBoard OwnerBoard { get; set; } // Track which board this piece belongs to
     public Vector2Int OffGridOrigin { get; private set; }
     public PlacedObject PlacedObjectComponent { get; private set; }
     public PlacedObject InfrastructureComponent { get; private set; }

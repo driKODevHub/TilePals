@@ -45,50 +45,70 @@ public class LevelLoader : MonoBehaviour
         _currentLocation = location;
         ClearLocation();
 
-        if (location == null || location.levels == null) return;
+        if (location == null || location.levels == null || location.levels.Count == 0) return;
 
-        PuzzleBoard lastActiveBoard = null;
+        // Determine which level to load.
+        // For now, start from 0 or load from save if we tracked global location progress.
+        // Since we don't have a "LocationSaveData" distinct from "LevelSaveData" yet, 
+        // we'll iterate to find the first INCOMPLETE level, or just load the first one.
+        
+        // Simple logic: Load Board Index 0.
+        // If we want "Room 1 -> Room 2", we should spawn Room 1.
+        // But the user might want to see the whole house? 
+        // User said: "Next levels should spawn after we complete the previous".
+        // So strict sequential.
 
-        for (int i = 0; i < location.levels.Count; i++)
+
+        
+        // Advanced: Check save to see which is the furthest unlocked level?
+        // Let's implement a simple "Load Level By Index" inside the location.
+        LoadLevelAtIndex(0, loadFromSave);
+    }
+    
+    public void LoadLevelAtIndex(int index, bool loadFromSave)
+    {
+         if (_currentLocation == null || index < 0 || index >= _currentLocation.levels.Count) return;
+         
+         GridDataSO levelData = _currentLocation.levels[index];
+         if (levelData == null) return;
+         
+         // 1. Create Board
+         PuzzleBoard board = Instantiate(boardPrefab, transform.position, Quaternion.identity, transform);
+         // Use index in name/ID to ensure uniqueness
+         board.name = $"Board_{index}_{levelData.name}";
+         board.boardId = $"{_currentLocation.name}_{index}"; 
+         
+         // Custom positioning could go here (e.g. usage of GridAnchor from the Environment prefab?)
+         // For now, spawn at 0,0 or let the BoardSwitcher handle camera. 
+         // If we have multiple rooms, maybe we hide/show them?
+         // User requested: "Spawn next AFTER complete".
+         
+         _activeLocationBoards.Add(board);
+         board.InitializeBoard(levelData);
+
+         LevelSaveData saveData = loadFromSave ? SaveSystem.LoadLevelProgress(board.boardId) : null;
+         
+         // 2. Spawn Content
+         SpawnObstacles(board, levelData);
+         SpawnPieces(board, levelData);
+         
+         if (saveData != null) ApplySavedState(board);
+         
+         SetCurrentBoard(board);
+    }
+    
+    public void LoadNextLevel()
+    {
+        if (_currentLocation == null || _currentBoard == null) return;
+        
+        // Parse current index from ID? Or track it?
+        // Let's assume sequential ID: "LocName_Index"
+        string currentId = _currentBoard.boardId;
+        int lastUnderscore = currentId.LastIndexOf('_');
+        if (lastUnderscore != -1 && int.TryParse(currentId.Substring(lastUnderscore + 1), out int currentIndex))
         {
-            GridDataSO levelData = location.levels[i];
-            if (levelData == null) continue;
-
-            PuzzleBoard board = Instantiate(boardPrefab, transform.position, Quaternion.identity, transform);
-            board.name = $"Board_{i}_{levelData.name}";
-            board.boardId = $"{location.name}_{i}"; 
-            
-            _activeLocationBoards.Add(board);
-            board.InitializeBoard(levelData);
-
-            LevelSaveData saveData = loadFromSave ? SaveSystem.LoadLevelProgress(board.boardId) : null;
-            bool isAlreadyCompleted = saveData != null && saveData.isCompleted;
-
-            if (isAlreadyCompleted)
-            {
-                board.SetCompleted(true);
-                SpawnObstacles(board, levelData);
-                SpawnPieces(board, levelData);
-                ApplySavedState(board);
-            }
-            else if (lastActiveBoard == null)
-            {
-                lastActiveBoard = board;
-                SpawnObstacles(board, levelData);
-                SpawnPieces(board, levelData);
-                if (saveData != null) ApplySavedState(board);
-                
-                SetCurrentBoard(board);
-            }
-            else
-            {
-                board.SetLocked(true);
-            }
-        }
-
-        if (lastActiveBoard == null && _activeLocationBoards.Count > 0)
-        {
-            SetCurrentBoard(_activeLocationBoards.Last());
+             int nextIndex = currentIndex + 1;
+             LoadLevelAtIndex(nextIndex, true); // Load next
         }
     }
 
@@ -122,6 +142,7 @@ public class LevelLoader : MonoBehaviour
             var po = GridBuildingSystem.Instance.PlacePieceOnGridExplicit(board, piece, obsData.position, obsData.direction);
             piece.SetPlaced(po);
             
+            piece.OwnerBoard = board; // Assign board ownership
             board.RegisterPiece(piece);
             _allSpawnedPieces.Add(piece);
         }
@@ -148,6 +169,7 @@ public class LevelLoader : MonoBehaviour
             PuzzlePiece piece = pieceObj.GetComponent<PuzzlePiece>();
             piece.IsObstacle = pData.isObstacle;
             piece.IsHidden = pData.isHidden;
+            piece.OwnerBoard = board; // Assign board ownership
             board.RegisterPiece(piece);
             _allSpawnedPieces.Add(piece);
             boardPieces.Add(piece);

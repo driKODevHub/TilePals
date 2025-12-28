@@ -370,8 +370,13 @@ public class PuzzleManager : MonoBehaviour
              {
                  board.SetCompleted(true);
                  GameManager.Instance.SaveCurrentProgress();
-                 // Here we could trigger LevelLoader.LoadNextStep() or similar
                  Debug.Log($"Board {board.boardId} Completed!");
+                 
+                 // Spawn next level
+                 if (LevelLoader.Instance != null)
+                 {
+                     LevelLoader.Instance.LoadNextLevel();
+                 }
              }
         }
     }
@@ -397,8 +402,11 @@ public class PuzzleManager : MonoBehaviour
                 return;
             }
 
-            if (piece != null && !piece.IsRotating && !piece.IsStaticObstacle)
+            if (piece != null && !piece.IsRotating)
             {
+                // Note: We removed !piece.IsStaticObstacle check because user wants props/obstacles to be movable.
+                // If we need true static walls, we should check a different flag or category.
+
                 // Can we pick it up? (Tools with passengers logic)
                 if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
                 {
@@ -454,7 +462,9 @@ public class PuzzleManager : MonoBehaviour
 
     private void PickUpPiece(PuzzlePiece piece)
     {
-        if (piece == null || piece.IsStaticObstacle) return;
+        if (piece == null) return;
+        // removed IsStaticObstacle check
+
         var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
 
         if (piece.transform.parent != null)

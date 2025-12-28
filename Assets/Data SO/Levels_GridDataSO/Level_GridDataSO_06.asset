@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Level_GridDataSO_06
   m_EditorClassIdentifier: 
   environmentPrefab: {fileID: 9205577837163595881, guid: ebda710d83024e74b898c25033124bab, type: 3}
-  levelSpawnOffset: {x: -60, y: 60, z: 0}
+  levelSpawnOffset: {x: -60, y: 0, z: 60}
   width: 10
   height: 10
   cellSize: 1
