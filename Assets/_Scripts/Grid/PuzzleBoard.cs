@@ -78,7 +78,16 @@ public class PuzzleBoard : MonoBehaviour
             (GridXZ<GridObject> g, int x, int z) => new GridObject(g, x, z)
         );
 
-        // 4. Populate initial state (blocked cells, etc)
+        // 4. Populate initial state (blocked cells, buildable state, etc)
+        for (int x = 0; x < levelData.width; x++)
+        {
+            for (int z = 0; z < levelData.height; z++)
+            {
+                bool isBuildable = levelData.buildableCells.Contains(new Vector2Int(x, z));
+                Grid.GetGridObject(x, z).SetBuildable(isBuildable);
+            }
+        }
+
         foreach (var lockedPos in levelData.lockedCells)
         {
             var gridObj = Grid.GetGridObject(lockedPos.x, lockedPos.y);

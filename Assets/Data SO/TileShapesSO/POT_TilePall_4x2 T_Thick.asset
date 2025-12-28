@@ -22,3 +22,10 @@ MonoBehaviour:
   - {x: 2, y: 0}
   - {x: 2, y: 1}
   - {x: 3, y: 0}
+  category: 0
+  usageType: 0
+  usePhysics: 0
+  mass: 1
+  bounciness: 0.5
+  throwForceMultiplier: 1
+  unlockRadius: 1

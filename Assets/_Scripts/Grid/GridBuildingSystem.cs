@@ -174,7 +174,6 @@ public class GridBuildingSystem : MonoBehaviour
         if (targetBoard == null || targetBoard.Grid == null) return;
         var targetGrid = targetBoard.Grid;
 
-        // Шукаємо PlacedObject компонент (він може бути основним або збереженим в посиланнях)
         PlacedObject placedObject = piece.GetComponent<PlacedObject>();
         if (placedObject == null) placedObject = piece.InfrastructureComponent;
         if (placedObject == null) placedObject = piece.PlacedObjectComponent;
@@ -186,53 +185,56 @@ public class GridBuildingSystem : MonoBehaviour
 
         foreach (Vector2Int gridPosition in gridPositionList)
         {
-            if (gridPosition.x >= 0 && gridPosition.x < targetGrid.GetWidth() && 
-                gridPosition.y >= 0 && gridPosition.y < targetGrid.GetHeight())
+            if (IsValidGridPosition(gridPosition.x, gridPosition.y))
             {
                 GridObject obj = targetGrid.GetGridObject(gridPosition.x, gridPosition.y);
                 
                 if (isTool)
                 {
-                    // Перевіряємо, чи це та сама тулза
                     var infrastructure = obj.GetInfrastructureObject();
-                    // Relaxe check: if infrastructure is not null and matches current object OR if placedObject matches component
-                    bool isSameObj = (infrastructure == placedObject);
-                    if (!isSameObj && infrastructure != null && infrastructure.GetComponent<PuzzlePiece>() == piece) isSameObj = true;
-
-                    if (isSameObj)
+                    // Robust check: if it's a tool, we clear it and RELOCK regardless of minor mismatch
+                    // if the grid says it's this piece or IF the grid has NO infrastructure but we think it should.
+                    bool isMismatched = (infrastructure != null && infrastructure != placedObject && infrastructure.GetComponent<PuzzlePiece>() != piece);
+                    
+                    if (!isMismatched)
                     {
                         obj.ClearInfrastructureObject();
-                        obj.SetLocked(true); // Повертаємо заблокований стан
+                        obj.SetLocked(true); // Always relock
                     }
                     else
                     {
-                        Debug.LogWarning($"RemovePiece (Tool): Mismatch at {gridPosition}. Grid has {infrastructure}, removing {placedObject}");
+                        Debug.LogWarning($"[Grid] RemovePiece (Tool): Mismatch at {gridPosition} on board {targetBoard.boardId}. Grid has {infrastructure}, removing {placedObject}. Skipping relock for safety.");
                     }
                 }
                 else
                 {
-                    // Перевіряємо, чи це та сама фігура
                     var placed = obj.GetPlacedObject();
-                    bool isSameObj = (placed == placedObject);
-                    if (!isSameObj && placed != null && placed.GetComponent<PuzzlePiece>() == piece) isSameObj = true;
+                    bool isSameObj = (placed == placedObject || (placed != null && placed.GetComponent<PuzzlePiece>() == piece));
 
                     if (isSameObj)
                     {
                         obj.ClearPlacedObject();
                     }
-                    else
+                    else if (placed != null)
                     {
-                         // Warning is okay here if we are just clearing ghost pieces or similar, but for real pieces it's suspicious
-                         if (placed != null) Debug.LogWarning($"RemovePiece: Mismatch at {gridPosition}. Grid has {placed}, removing {placedObject}");
+                         Debug.LogWarning($"[Grid] RemovePiece: Mismatch at {gridPosition} on board {targetBoard.boardId}. Grid has {placed}, removing {placedObject}");
                     }
                 }
             }
         }
+
+        if (GridVisualManager.Instance != null) GridVisualManager.Instance.RefreshAllCellVisuals();
     }
 
     public bool CanPickUpToolWithPassengers(PuzzlePiece tool, out List<PuzzlePiece> passengers)
     {
         passengers = new List<PuzzlePiece>();
+        
+        // Use the board the tool belongs to
+        PuzzleBoard board = tool.OwnerBoard != null ? tool.OwnerBoard : activeBoard;
+        if (board == null || board.Grid == null) return true;
+        var toolGrid = board.Grid;
+
         PlacedObject infraComp = tool.InfrastructureComponent;
         if (infraComp == null) infraComp = tool.GetComponent<PlacedObject>();
 
@@ -244,8 +246,8 @@ public class GridBuildingSystem : MonoBehaviour
 
         foreach (var cell in toolCells)
         {
-            if (!IsValidGridPosition(cell.x, cell.y)) continue;
-            GridObject obj = grid.GetGridObject(cell.x, cell.y);
+            if (!IsValidGridPosition(toolGrid, cell.x, cell.y)) continue;
+            GridObject obj = toolGrid.GetGridObject(cell.x, cell.y);
             if (obj.IsOccupied())
             {
                 PlacedObject po = obj.GetPlacedObject();
@@ -313,8 +315,13 @@ public class GridBuildingSystem : MonoBehaviour
 
     public bool IsValidGridPosition(int x, int z)
     {
-        if (grid == null) return false;
-        return x >= 0 && x < grid.GetWidth() && z >= 0 && z < grid.GetHeight();
+        return IsValidGridPosition(grid, x, z);
+    }
+
+    public bool IsValidGridPosition(GridXZ<GridObject> targetGrid, int x, int z)
+    {
+        if (targetGrid == null) return false;
+        return x >= 0 && x < targetGrid.GetWidth() && z >= 0 && z < targetGrid.GetHeight();
     }
 
     public Vector3 GetMouseWorldPosition()

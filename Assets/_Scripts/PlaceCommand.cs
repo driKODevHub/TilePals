@@ -47,6 +47,12 @@ public class PlaceCommand : ICommand
         var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
         if (activeBoard == null) return false;
 
+        // Ensure we are not already on grid elsewhere (important for Redo/Move)
+        if (piece.IsPlaced)
+        {
+            GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
+        }
+
         var po = GridBuildingSystem.Instance.PlacePieceOnGrid(piece, origin, direction);
         if (po == null) return false;
 
@@ -85,7 +91,11 @@ public class PlaceCommand : ICommand
                     }
 
                     var toolPiece = infra.GetComponent<PuzzlePiece>();
-                    if (toolPiece == null) { allCellsOnSameTool = false; break; }
+                    if (toolPiece == null) 
+                    { 
+                        allCellsOnSameTool = false; 
+                        break; 
+                    }
 
                     if (potentialTool == null) 
                     {
@@ -96,6 +106,7 @@ public class PlaceCommand : ICommand
                     { 
                         // Різні тулзи під однією фігурою
                         allCellsOnSameTool = false; 
+                        Debug.Log($"[PlaceCommand] Piece overlaps multiple tools: {potentialTool.name} and {toolPiece.name}");
                         break; 
                     }
                 }
@@ -103,8 +114,8 @@ public class PlaceCommand : ICommand
                 if (foundAnyTool && allCellsOnSameTool && potentialTool != null)
                 {
                     potentialTool.AddPassenger(piece);
-                    // Debug.Log($"Piece {piece.name} added as passenger to {potentialTool.name}");
                 }
+
             }
         }
 

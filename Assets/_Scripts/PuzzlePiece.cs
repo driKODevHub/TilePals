@@ -137,7 +137,7 @@ public class PuzzlePiece : MonoBehaviour
         if (!StoredPassengers.Contains(passenger))
         {
             StoredPassengers.Add(passenger);
-            passenger.transform.SetParent(transform); // Р РѕР±РёРјРѕ РґРёС‚РёРЅРѕСЋ С‚СѓР»Р·Р°
+            passenger.transform.SetParent(transform);
 
             // Р’РёРјРёРєР°С”РјРѕ С„С–Р·РёРєСѓ РїР°СЃР°Р¶РёСЂСѓ
             passenger.DisablePhysics();
@@ -246,8 +246,11 @@ public class PuzzlePiece : MonoBehaviour
     public void SetOffGrid(bool isOffGrid, Vector2Int origin = default)
     {
         IsOffGrid = isOffGrid;
-        IsPlaced = false;
-        if (isOffGrid) OffGridOrigin = origin;
+        if (isOffGrid)
+        {
+            IsPlaced = false;
+            OffGridOrigin = origin;
+        }
     }
 
     public void SetInitialRotation(PlacedObjectTypeSO.Dir direction)
