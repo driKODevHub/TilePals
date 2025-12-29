@@ -287,7 +287,8 @@ public class GridBuildingSystem : MonoBehaviour
             for (int z = 0; z < targetGrid.GetHeight(); z++)
             {
                 GridObject gridObject = targetGrid.GetGridObject(x, z);
-                bool isTargetCell = gridObject.IsBuildable() || gridObject.IsLocked();
+                // A cell is a target if it's buildable OR if it's currently locked OR if it HAS infrastructure (meaning it was unlocked by a tool)
+                bool isTargetCell = gridObject.IsBuildable() || gridObject.IsLocked() || gridObject.HasInfrastructure();
                 if (isTargetCell)
                 {
                     totalRequiredCells++;

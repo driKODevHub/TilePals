@@ -47,22 +47,20 @@ public class LevelLoader : MonoBehaviour
 
         if (location == null || location.levels == null || location.levels.Count == 0) return;
 
-        // Determine which level to load.
-        // For now, start from 0 or load from save if we tracked global location progress.
-        // Since we don't have a "LocationSaveData" distinct from "LevelSaveData" yet, 
-        // we'll iterate to find the first INCOMPLETE level, or just load the first one.
+        // Find the first incomplete level index
+        int startLevelIndex = 0;
+        for (int i = 0; i < location.levels.Count; i++)
+        {
+            string boardId = $"{location.name}_{i}";
+            LevelSaveData saveData = SaveSystem.LoadLevelProgress(boardId);
+            if (saveData == null || !saveData.isCompleted)
+            {
+                startLevelIndex = i;
+                break;
+            }
+        }
         
-        // Simple logic: Load Board Index 0.
-        // If we want "Room 1 -> Room 2", we should spawn Room 1.
-        // But the user might want to see the whole house? 
-        // User said: "Next levels should spawn after we complete the previous".
-        // So strict sequential.
-
-
-        
-        // Advanced: Check save to see which is the furthest unlocked level?
-        // Let's implement a simple "Load Level By Index" inside the location.
-        LoadLevelAtIndex(0, loadFromSave);
+        LoadLevelAtIndex(startLevelIndex, loadFromSave);
     }
     
     public void LoadLevelAtIndex(int index, bool loadFromSave)
@@ -92,7 +90,7 @@ public class LevelLoader : MonoBehaviour
          SpawnObstacles(board, levelData);
          SpawnPieces(board, levelData);
          
-         if (saveData != null) ApplySavedState(board);
+         FinalizePlacement(board, saveData);
          
          SetCurrentBoard(board);
     }
@@ -122,7 +120,6 @@ public class LevelLoader : MonoBehaviour
     private void SpawnObstacles(PuzzleBoard board, GridDataSO data)
     {
         if (data.staticObstacles == null) return;
-        float cellSize = board.Grid.GetCellSize();
         
         foreach (var obsData in data.staticObstacles)
         {
@@ -132,17 +129,11 @@ public class LevelLoader : MonoBehaviour
             piece.IsStaticObstacle = true;
             piece.IsObstacle = obsData.isObstacle;
             piece.IsHidden = obsData.isHidden;
-            piece.SetInitialRotation(obsData.direction);
-            
-            Vector2Int rotationOffset = obsData.pieceType.GetRotationOffset(obsData.direction);
-            Vector3 worldPos = board.Grid.GetWorldPosition(obsData.position.x, obsData.position.y);
-            Vector3 finalPos = worldPos + new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
-            
-            piece.UpdateTransform(finalPos, Quaternion.Euler(0, obsData.pieceType.GetRotationAngle(obsData.direction), 0));
-            var po = GridBuildingSystem.Instance.PlacePieceOnGridExplicit(board, piece, obsData.position, obsData.direction);
-            piece.SetPlaced(po);
-            
             piece.OwnerBoard = board; // Assign board ownership
+            
+            // Store default data for fallback
+            piece.SetEditorPlacement(obsData.position, obsData.direction);
+
             board.RegisterPiece(piece);
             _allSpawnedPieces.Add(piece);
         }
@@ -179,8 +170,13 @@ public class LevelLoader : MonoBehaviour
                 var personality = piece.GetComponent<PiecePersonality>();
                 if (personality != null) personality.Setup(temperament);
             }
+
+            // If it's a level item (manual placement in editor), store it for fallback
+            if (data.levelItems != null && data.levelItems.Contains(pData))
+            {
+                piece.SetEditorPlacement(pData.position, pData.direction);
+            }
         }
-        PlacePiecesAroundBoard(board, data, boardPieces);
     }
 
     private void PlacePiecesAroundBoard(PuzzleBoard board, GridDataSO data, List<PuzzlePiece> pieces)
@@ -265,18 +261,31 @@ public class LevelLoader : MonoBehaviour
 
         foreach (var piece in board.GetSpawnedPieces())
         {
-            if (piece == null || piece.IsStaticObstacle) continue;
+            if (piece == null) continue;
+            
             if (piece.IsPlaced)
             {
-                PlacedObject placedObj = piece.PlacedObjectComponent ?? piece.InfrastructureComponent ?? piece.GetComponent<PlacedObject>();
+                // Note: For Tools, PlacedObjectComponent might be null if strictly Infrastructure.
+                // But GridBuildingSystem.PlacePieceOnGridExplicit adds PlacedObject component anyway.
+                PlacedObject placedObj = piece.GetComponent<PlacedObject>();
                 if (placedObj != null)
                 {
-                    saveData.onGridPieces.Add(new PiecePlacementData { pieceTypeName = piece.PieceTypeSO.name, origin = placedObj.Origin, direction = placedObj.Direction });
+                    saveData.onGridPieces.Add(new PiecePlacementData 
+                    { 
+                        pieceTypeName = piece.PieceTypeSO.name, 
+                        origin = placedObj.Origin, 
+                        direction = placedObj.Direction 
+                    });
                 }
             }
             else if (piece.IsOffGrid)
             {
-                saveData.offGridPieces.Add(new PiecePlacementData { pieceTypeName = piece.PieceTypeSO.name, origin = piece.OffGridOrigin, direction = piece.CurrentDirection });
+                saveData.offGridPieces.Add(new PiecePlacementData 
+                { 
+                    pieceTypeName = piece.PieceTypeSO.name, 
+                    origin = piece.OffGridOrigin, 
+                    direction = piece.CurrentDirection 
+                });
             }
         }
         SaveSystem.SaveLevelProgress(board.boardId, saveData);
@@ -313,27 +322,69 @@ public class LevelLoader : MonoBehaviour
         board.OffGridTracker.PlacePiece(piece, origin);
     }
 
-    private void ApplySavedState(PuzzleBoard board)
+    private void FinalizePlacement(PuzzleBoard board, LevelSaveData saveData)
     {
-        if (board == null || string.IsNullOrEmpty(board.boardId)) return;
-        LevelSaveData saveData = SaveSystem.LoadLevelProgress(board.boardId);
-        if (saveData == null) return;
-        board.isLocked = saveData.isLocked;
-        board.isCompleted = saveData.isCompleted;
-
-        List<PuzzlePiece> availablePieces = new List<PuzzlePiece>(board.GetSpawnedPieces().Where(p => !p.IsStaticObstacle));
-        var toolsToPlace = new List<PiecePlacementData>();
-        var othersToPlace = new List<PiecePlacementData>();
-
-        foreach (var data in saveData.onGridPieces)
+        if (board == null) return;
+        List<PuzzlePiece> availablePieces = new List<PuzzlePiece>(board.GetSpawnedPieces());
+        
+        // 1. Restore from Save (if exists)
+        if (saveData != null)
         {
-            var p = availablePieces.FirstOrDefault(ap => ap != null && ap.PieceTypeSO.name == data.pieceTypeName);
-            if (p != null && p.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid) toolsToPlace.Add(data);
-            else othersToPlace.Add(data);
+            board.isLocked = saveData.isLocked;
+            board.isCompleted = saveData.isCompleted;
+
+            var toolsToPlace = new List<PiecePlacementData>();
+            var othersToPlace = new List<PiecePlacementData>();
+
+            foreach (var data in saveData.onGridPieces)
+            {
+                var p = availablePieces.FirstOrDefault(ap => ap != null && ap.PieceTypeSO.name == data.pieceTypeName);
+                if (p != null && p.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid) toolsToPlace.Add(data);
+                else othersToPlace.Add(data);
+            }
+            
+            foreach (var pieceData in toolsToPlace) PlacePieceFromSave(board, pieceData, availablePieces);
+            foreach (var pieceData in othersToPlace) PlacePieceFromSave(board, pieceData, availablePieces);
+            foreach (var pieceData in saveData.offGridPieces) PlacePieceFromSaveOffGrid(board, pieceData, availablePieces);
         }
-        foreach (var pieceData in toolsToPlace) PlacePieceFromSave(board, pieceData, availablePieces);
-        foreach (var pieceData in othersToPlace) PlacePieceFromSave(board, pieceData, availablePieces);
-        foreach (var pieceData in saveData.offGridPieces) PlacePieceFromSaveOffGrid(board, pieceData, availablePieces);
+
+        // 2. Handle remaining pieces (Fallback to Editor Data or Random)
+        float cellSize = board.Grid.GetCellSize();
+        List<PuzzlePiece> needsRandomPlacement = new List<PuzzlePiece>();
+
+        var remaining = new List<PuzzlePiece>(availablePieces);
+        foreach (var piece in remaining)
+        {
+            if (piece.EditorPlacement.hasData)
+            {
+                // Fallback to editor position
+                Vector3 targetWorldPos = board.Grid.GetWorldPosition(piece.EditorPlacement.origin.x, piece.EditorPlacement.origin.y);
+                Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(piece.EditorPlacement.direction);
+                targetWorldPos += new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
+                
+                piece.UpdateTransform(targetWorldPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(piece.EditorPlacement.direction), 0));
+                var po = GridBuildingSystem.Instance.PlacePieceOnGridExplicit(board, piece, piece.EditorPlacement.origin, piece.EditorPlacement.direction);
+                
+                if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
+                    piece.SetInfrastructure(po);
+                else
+                    piece.SetPlaced(po);
+                
+                TeleportPieceAndResetPhysics(piece, targetWorldPos, piece.transform.rotation);
+                availablePieces.Remove(piece);
+            }
+            else
+            {
+                needsRandomPlacement.Add(piece);
+            }
+        }
+
+        // 3. Random placement for generated pieces
+        if (needsRandomPlacement.Count > 0)
+        {
+            PlacePiecesAroundBoard(board, board.LevelData, needsRandomPlacement);
+        }
+
         CommandHistory.Clear();
     }
 
@@ -347,7 +398,11 @@ public class LevelLoader : MonoBehaviour
             targetWorldPos += new Vector3(rotationOffset.x, 0, rotationOffset.y) * board.Grid.GetCellSize();
             piece.UpdateTransform(targetWorldPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(data.direction), 0));
             var po = GridBuildingSystem.Instance.PlacePieceOnGridExplicit(board, piece, data.origin, data.direction);
-            piece.SetPlaced(po);
+            if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
+                piece.SetInfrastructure(po);
+            else
+                piece.SetPlaced(po);
+            
             TeleportPieceAndResetPhysics(piece, targetWorldPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(data.direction), 0));
             availablePieces.Remove(piece);
         }

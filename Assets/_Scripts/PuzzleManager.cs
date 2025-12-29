@@ -205,6 +205,9 @@ public class PuzzleManager : MonoBehaviour
                 PuzzlePiece p = hit.collider.GetComponentInParent<PuzzlePiece>();
                 if (p == null) continue;
 
+                // Restrict to active board
+                if (p.OwnerBoard != GridBuildingSystem.Instance.ActiveBoard) continue;
+
                 float score = 0f;
                 var cat = p.PieceTypeSO.category;
 
@@ -259,6 +262,14 @@ public class PuzzleManager : MonoBehaviour
             }
 
             _potentialInteractionPiece = _hoveredPiece;
+
+            // Double check owner board for safety
+            if (_potentialInteractionPiece != null && _potentialInteractionPiece.OwnerBoard != GridBuildingSystem.Instance.ActiveBoard)
+            {
+                _potentialInteractionPiece = null;
+                return;
+            }
+
             _clickStartPos = inputReader.MousePosition;
             _clickStartTime = Time.time;
             _isPettingActive = false;
@@ -404,6 +415,9 @@ public class PuzzleManager : MonoBehaviour
 
             if (piece != null && !piece.IsRotating)
             {
+                // Restrict to active board
+                if (piece.OwnerBoard != GridBuildingSystem.Instance.ActiveBoard) return;
+
                 // Note: We removed !piece.IsStaticObstacle check because user wants props/obstacles to be movable.
                 // If we need true static walls, we should check a different flag or category.
 

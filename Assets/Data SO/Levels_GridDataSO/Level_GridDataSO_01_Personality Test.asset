@@ -13,19 +13,21 @@ MonoBehaviour:
   m_Name: Level_GridDataSO_01_Personality Test
   m_EditorClassIdentifier: 
   personalityMappings:
-  - pieceType: {fileID: 11400000, guid: c1cbd36cf540a1d4f807d386c84452cd, type: 2}
-    temperament: {fileID: 11400000, guid: a4f1df805ce5afb41adfeda26888f169, type: 2}
-  - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
-    temperament: {fileID: 11400000, guid: a4f1df805ce5afb41adfeda26888f169, type: 2}
-  - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
-    temperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
-  - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
-    temperament: {fileID: 11400000, guid: a4f1df805ce5afb41adfeda26888f169, type: 2}
   - pieceType: {fileID: 11400000, guid: b69a537316040fc4b914d216f5e0e94d, type: 2}
     temperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
-  - pieceType: {fileID: 11400000, guid: 07d2348d4a95d2b4fa04f6b97d10d8f3, type: 2}
-    temperament: {fileID: 11400000, guid: 843a6bf9c8657d14caeb68bb48c33ce1, type: 2}
-  - pieceType: {fileID: 11400000, guid: fba45b4fbe2537c48bddeacfb692bbc6, type: 2}
-    temperament: {fileID: 11400000, guid: 843a6bf9c8657d14caeb68bb48c33ce1, type: 2}
-  - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
+  - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
     temperament: {fileID: 11400000, guid: a5a66253112afc7469e2433954d3fa89, type: 2}
+  - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
+    temperament: {fileID: 11400000, guid: a5a66253112afc7469e2433954d3fa89, type: 2}
+  - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
+    temperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
+  - pieceType: {fileID: 11400000, guid: c1cbd36cf540a1d4f807d386c84452cd, type: 2}
+    temperament: {fileID: 11400000, guid: a4f1df805ce5afb41adfeda26888f169, type: 2}
+  - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
+    temperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
+  - pieceType: {fileID: 11400000, guid: 277036584edd59e41ba4f82b07346b00, type: 2}
+    temperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
+  - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
+    temperament: {fileID: 11400000, guid: f45542495337f4141876bb5b51156818, type: 2}
+  - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
+    temperament: {fileID: 11400000, guid: 87d93a92828096b458e2a3b471058c38, type: 2}

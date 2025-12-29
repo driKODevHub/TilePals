@@ -987,6 +987,22 @@ public class GridDataSOEditor : Editor
             }
         }
 
+        // --- NEW: Occupy cells with Manual Items and Static Obstacles ---
+        void OccupyManualCells(IEnumerable<GridDataSO.GeneratedPieceData> pieceList) {
+            if (pieceList == null) return;
+            foreach (var piece in pieceList) {
+                if (piece.pieceType == null) continue;
+                var positions = piece.pieceType.GetGridPositionsList(piece.position, piece.direction);
+                foreach (var pos in positions) {
+                    if (pos.x >= 0 && pos.x < gridDataSO.width && pos.y >= 0 && pos.y < gridDataSO.height) {
+                        tempGrid[pos.x, pos.y] = false; // Mark as occupied
+                    }
+                }
+            }
+        }
+        OccupyManualCells(gridDataSO.levelItems);
+        OccupyManualCells(gridDataSO.staticObstacles);
+
         List<GridDataSO.GeneratedPieceData> solution = new List<GridDataSO.GeneratedPieceData>();
         List<PlacedObjectTypeSO> requiredPiecesToPlace = new List<PlacedObjectTypeSO>();
 
@@ -1421,8 +1437,14 @@ public class GridDataSOEditor : Editor
             }
         }
 
-        // 2. Оновлюємо Summary (для редактора)
-        var summary = currentSolution
+        // --- NEW: Collect all pieces for a consolidated Summary ---
+        var allPiecesForSummary = new List<GridDataSO.GeneratedPieceData>(currentSolution);
+        if (gridDataSO.levelItems != null) allPiecesForSummary.AddRange(gridDataSO.levelItems);
+        if (gridDataSO.staticObstacles != null) allPiecesForSummary.AddRange(gridDataSO.staticObstacles);
+
+        // 2. Оновлюємо Summary (для редактора та гри)
+        var summary = allPiecesForSummary
+            .Where(s => s.pieceType != null)
             .GroupBy(s => s.pieceType)
             .Select(group => new GridDataSO.PieceCount { pieceType = group.Key, count = group.Count() })
             .OrderByDescending(s => s.pieceType.relativeOccupiedCells.Count)
@@ -1437,23 +1459,31 @@ public class GridDataSOEditor : Editor
             summaryElement.FindPropertyRelative("count").intValue = summary[i].count;
         }
 
-        // 3. Перевіряємо IsComplete
-        // Логіка: Всі Buildable клітинки повинні бути покриті Character-ами.
-        // Тулзи не рахуються, вони тільки заповнюють слот "Infrastructure".
-
         int buildableCellCount = gridDataSO.buildableCells.Count;
         int occupiedCellCount = 0;
 
-        foreach (var piece in currentSolution)
-        {
-            // Рахуємо клітинки ТІЛЬКИ якщо це персонаж
-            if (piece.pieceType != null && piece.pieceType.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
-            {
-                occupiedCellCount += piece.pieceType.relativeOccupiedCells.Count;
+        // 3. Перевіряємо IsComplete
+        // Логіка: Всі Buildable клітинки повинні бути покриті Character-ами.
+        // Це і автоматично згенеровані, і поставлені вручну (levelItems).
+        
+        void CountOccupiedBuildable(IEnumerable<GridDataSO.GeneratedPieceData> pieceList) {
+            if (pieceList == null) return;
+            foreach (var piece in pieceList) {
+                if (piece.pieceType != null && piece.pieceType.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape && !piece.isObstacle) {
+                    var positions = piece.pieceType.GetGridPositionsList(piece.position, piece.direction);
+                    foreach (var pos in positions) {
+                        if (gridDataSO.buildableCells.Contains(pos)) {
+                            occupiedCellCount++;
+                        }
+                    }
+                }
             }
         }
 
-        serializedObject.FindProperty("isComplete").boolValue = (buildableCellCount == occupiedCellCount);
+        CountOccupiedBuildable(currentSolution);
+        CountOccupiedBuildable(gridDataSO.levelItems);
+
+        serializedObject.FindProperty("isComplete").boolValue = (occupiedCellCount >= buildableCellCount);
 
         serializedObject.ApplyModifiedProperties();
 
@@ -1686,6 +1716,23 @@ public class GridDataSOEditor : Editor
                 }
             }
         }
+
+        // --- NEW: Occupy cells with Manual Items and Static Obstacles in FillEmptySpace ---
+        void OccupyManualCellsFill(IEnumerable<GridDataSO.GeneratedPieceData> pieceList) {
+            if (pieceList == null) return;
+            foreach (var piece in pieceList) {
+                if (piece.pieceType == null) continue;
+                pieceCountsInSolution[piece.pieceType] = pieceCountsInSolution.GetValueOrDefault(piece.pieceType, 0) + 1;
+                var positions = piece.pieceType.GetGridPositionsList(piece.position, piece.direction);
+                foreach (var pos in positions) {
+                    if (pos.x >= 0 && pos.x < gridDataSO.width && pos.y >= 0 && pos.y < gridDataSO.height) {
+                        currentGrid[pos.x, pos.y] = false; // Already occupied
+                    }
+                }
+            }
+        }
+        OccupyManualCellsFill(gridDataSO.levelItems);
+        OccupyManualCellsFill(gridDataSO.staticObstacles);
 
         var existingPieceTypes = new HashSet<PlacedObjectTypeSO>(gridDataSO.puzzleSolution.Select(p => p.pieceType));
         // Беремо тільки характери для заповнення
@@ -2099,6 +2146,7 @@ public class GridDataSOEditor : Editor
         else gridDataSO.levelItems.Add(newData);
 
         EditorUtility.SetDirty(gridDataSO);
+        UpdatePuzzleState(); // Force Refresh Summary and Completion
         Repaint();
     }
 
@@ -2117,6 +2165,22 @@ public class GridDataSOEditor : Editor
             foreach (var piece in gridDataSO.puzzleSolution)
             {
                 if (piece.pieceType == null) continue;
+                if (piece.pieceType.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
+                {
+                    var cells = piece.pieceType.GetGridPositionsList(piece.position, piece.direction);
+                    foreach(var c in cells) {
+                         if (gridDataSO.buildableCells.Contains(c)) occupiedBuildable++;
+                    }
+                }
+            }
+        }
+
+        // --- NEW: Check Manual Items (Shapes only) ---
+        if (gridDataSO.levelItems != null)
+        {
+            foreach (var piece in gridDataSO.levelItems)
+            {
+                if (piece.pieceType == null || piece.isObstacle) continue;
                 if (piece.pieceType.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
                 {
                     var cells = piece.pieceType.GetGridPositionsList(piece.position, piece.direction);
@@ -2185,6 +2249,7 @@ public class GridDataSOEditor : Editor
         if (removed)
         {
             EditorUtility.SetDirty(gridDataSO);
+            UpdatePuzzleState(); // Force Refresh Summary and Completion
             Repaint();
         }
     }

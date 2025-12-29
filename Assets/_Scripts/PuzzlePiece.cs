@@ -46,6 +46,20 @@ public class PuzzlePiece : MonoBehaviour
 
     public Vector2Int ClickOffset { get; set; }
 
+    // --- FALLBACK PLACEMENT ---
+    public struct EditorPlacementData
+    {
+        public Vector2Int origin;
+        public PlacedObjectTypeSO.Dir direction;
+        public bool hasData;
+    }
+    public EditorPlacementData EditorPlacement { get; private set; }
+
+    public void SetEditorPlacement(Vector2Int origin, PlacedObjectTypeSO.Dir direction)
+    {
+        EditorPlacement = new EditorPlacementData { origin = origin, direction = direction, hasData = true };
+    }
+
     private void Awake()
     {
         Movement = GetComponent<PieceMovement>();
