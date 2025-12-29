@@ -45,19 +45,21 @@ public class PuzzlePiece : MonoBehaviour
     public List<PuzzlePiece> StoredPassengers { get; private set; } = new List<PuzzlePiece>();
 
     public Vector2Int ClickOffset { get; set; }
+    public bool StartOnGrid { get; set; } = true;
 
     // --- FALLBACK PLACEMENT ---
     public struct EditorPlacementData
     {
         public Vector2Int origin;
         public PlacedObjectTypeSO.Dir direction;
+        public bool startOnGrid;
         public bool hasData;
     }
     public EditorPlacementData EditorPlacement { get; private set; }
 
-    public void SetEditorPlacement(Vector2Int origin, PlacedObjectTypeSO.Dir direction)
+    public void SetEditorPlacement(Vector2Int origin, PlacedObjectTypeSO.Dir direction, bool startOnGrid = true)
     {
-        EditorPlacement = new EditorPlacementData { origin = origin, direction = direction, hasData = true };
+        EditorPlacement = new EditorPlacementData { origin = origin, direction = direction, startOnGrid = startOnGrid, hasData = true };
     }
 
     private void Awake()

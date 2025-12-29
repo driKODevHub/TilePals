@@ -992,6 +992,9 @@ public class GridDataSOEditor : Editor
             if (pieceList == null) return;
             foreach (var piece in pieceList) {
                 if (piece.pieceType == null) continue;
+                // ONLY occupy cells if they are actually intended to stay on grid
+                if (!piece.startOnGrid) continue; 
+
                 var positions = piece.pieceType.GetGridPositionsList(piece.position, piece.direction);
                 foreach (var pos in positions) {
                     if (pos.x >= 0 && pos.x < gridDataSO.width && pos.y >= 0 && pos.y < gridDataSO.height) {
@@ -1001,7 +1004,8 @@ public class GridDataSOEditor : Editor
             }
         }
         OccupyManualCells(gridDataSO.levelItems);
-        OccupyManualCells(gridDataSO.staticObstacles);
+        // --- MODIFIED: Shapes ignore obstacles. For generation purposes, we skip OccupyManualCells for staticObstacles ---
+        // OccupyManualCells(gridDataSO.staticObstacles);
 
         List<GridDataSO.GeneratedPieceData> solution = new List<GridDataSO.GeneratedPieceData>();
         List<PlacedObjectTypeSO> requiredPiecesToPlace = new List<PlacedObjectTypeSO>();
@@ -1089,7 +1093,13 @@ public class GridDataSOEditor : Editor
                         if (tryingRequired) nextRequired.Remove(pieceType);
 
                         Place(currentGrid, piecePositions, false);
-                        solution.Add(new GridDataSO.GeneratedPieceData { pieceType = pieceType, position = startPosition, direction = dir });
+                        bool overlapsLocked = piecePositions.Any(p => gridDataSO.lockedCells.Contains(p));
+                        solution.Add(new GridDataSO.GeneratedPieceData { 
+                            pieceType = pieceType, 
+                            position = startPosition, 
+                            direction = dir,
+                            startOnGrid = !overlapsLocked 
+                        });
                         pieceCounts[pieceType] = pieceCounts.GetValueOrDefault(pieceType, 0) + 1;
 
                         if (SolvePuzzleRecursiveGeneration(currentGrid, solution, nextRequired, fillers, pieceCounts, activeStopwatch)) return true;
@@ -1136,6 +1146,9 @@ public class GridDataSOEditor : Editor
             pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue = solution[i].pieceType;
             pieceDataProp.FindPropertyRelative("position").vector2IntValue = solution[i].position;
             pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)solution[i].direction;
+            pieceDataProp.FindPropertyRelative("isObstacle").boolValue = solution[i].isObstacle;
+            pieceDataProp.FindPropertyRelative("isHidden").boolValue = solution[i].isHidden;
+            pieceDataProp.FindPropertyRelative("startOnGrid").boolValue = solution[i].startOnGrid;
         }
 
         serializedObject.FindProperty("solutionVariantsCount").intValue = 1;
@@ -1153,6 +1166,9 @@ public class GridDataSOEditor : Editor
             pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue = solution[j].pieceType;
             pieceDataProp.FindPropertyRelative("position").vector2IntValue = solution[j].position;
             pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)solution[j].direction;
+            pieceDataProp.FindPropertyRelative("isObstacle").boolValue = solution[j].isObstacle;
+            pieceDataProp.FindPropertyRelative("isHidden").boolValue = solution[j].isHidden;
+            pieceDataProp.FindPropertyRelative("startOnGrid").boolValue = solution[j].startOnGrid;
         }
 
         serializedObject.ApplyModifiedProperties();
@@ -1223,55 +1239,55 @@ public class GridDataSOEditor : Editor
             }
         }
 
-        // 2. Draw puzzle solution pieces (DRAWN FIRST)
-        if (gridDataSO.puzzleSolution != null)
-        {
-            var pieceInstanceTracker = new Dictionary<PlacedObjectTypeSO, int>();
-            List<GridDataSO.GeneratedPieceData> piecesInOrder = gridDataSO.puzzleSolution.ToList();
-            int sequenceCounter = 0;
+        // 2. Draw puzzle solution pieces (Solution + Manual Shapes)
+        var allShapes = (gridDataSO.puzzleSolution ?? new List<GridDataSO.GeneratedPieceData>()).ToList();
+        if (gridDataSO.levelItems != null) {
+            allShapes.AddRange(gridDataSO.levelItems.Where(p => p.pieceType != null && p.pieceType.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape && !p.isObstacle));
+        }
 
-            foreach (var pieceData in piecesInOrder)
-            {
-                if (pieceData.pieceType == null) continue;
+        var pieceInstanceTracker = new Dictionary<PlacedObjectTypeSO, int>();
+        int sequenceCounter = 0;
 
-                sequenceCounter++;
+        foreach (var pieceData in allShapes) {
+            if (pieceData.pieceType == null) continue;
+            sequenceCounter++;
 
-                var colorEntry = gridDataSO.generatorPieceConfig.FirstOrDefault(c => c.pieceType == pieceData.pieceType);
-                Color pieceColor = colorEntry.pieceType != null ? colorEntry.color : Color.magenta;
-                List<Vector2Int> positions = pieceData.pieceType.GetGridPositionsList(pieceData.position, pieceData.direction);
+            var colorEntry = gridDataSO.generatorPieceConfig.FirstOrDefault(c => c.pieceType == pieceData.pieceType);
+            Color pieceColor = colorEntry.pieceType != null ? colorEntry.color : Color.magenta;
+            List<Vector2Int> positions = pieceData.pieceType.GetGridPositionsList(pieceData.position, pieceData.direction);
 
-                foreach (var pos in positions)
-                {
-                    if (pos.x >= 0 && pos.x < gridDataSO.width && pos.y >= 0 && pos.y < gridDataSO.height)
-                    {
-                        Rect cellRect = new Rect(previewRect.x + pos.x * cellSize, previewRect.y + (gridDataSO.height - 1 - pos.y) * cellSize, cellSize - 1, cellSize - 1);
-                        EditorGUI.DrawRect(cellRect, pieceColor);
-                    }
+            foreach (var pos in positions) {
+                if (pos.x >= 0 && pos.x < gridDataSO.width && pos.y >= 0 && pos.y < gridDataSO.height) {
+                    Rect cellRect = new Rect(previewRect.x + pos.x * cellSize, previewRect.y + (gridDataSO.height - 1 - pos.y) * cellSize, cellSize - 1, cellSize - 1);
+                    EditorGUI.DrawRect(cellRect, pieceColor);
                 }
+            }
 
-                float brightness = (pieceColor.r * 0.299f + pieceColor.g * 0.587f + pieceColor.b * 0.114f);
-                Color textColor = brightness > 0.5f ? Color.black : Color.white;
+            float brightness = (pieceColor.r * 0.299f + pieceColor.g * 0.587f + pieceColor.b * 0.114f);
+            Color textColor = brightness > 0.5f ? Color.black : Color.white;
 
-                if (positions.Count > 0)
-                {
-                    if (!pieceInstanceTracker.ContainsKey(pieceData.pieceType))
-                    {
-                        pieceInstanceTracker[pieceData.pieceType] = 0;
-                    }
+            if (positions.Count > 0) {
+                Vector2Int firstCellPos = positions[0];
+                if (firstCellPos.x >= 0 && firstCellPos.x < gridDataSO.width && firstCellPos.y >= 0 && firstCellPos.y < gridDataSO.height) {
+                    if (!pieceInstanceTracker.ContainsKey(pieceData.pieceType)) pieceInstanceTracker[pieceData.pieceType] = 0;
                     pieceInstanceTracker[pieceData.pieceType]++;
                     int instanceId = pieceInstanceTracker[pieceData.pieceType];
 
                     var summaryEntry = gridDataSO.generatedPieceSummary.FirstOrDefault(s => s.pieceType == pieceData.pieceType);
                     int totalCount = (summaryEntry.pieceType != null) ? summaryEntry.count : 0;
 
-                    Vector2Int firstCellPos = positions[0];
                     Rect labelCellRect = new Rect(previewRect.x + firstCellPos.x * cellSize, previewRect.y + (gridDataSO.height - 1 - firstCellPos.y) * cellSize, cellSize, cellSize);
 
                     string labelText = (totalCount > 1) ? instanceId.ToString() : sequenceCounter.ToString();
-
                     labelStyle.normal.textColor = textColor;
                     labelStyle.alignment = TextAnchor.MiddleCenter;
                     GUI.Label(labelCellRect, labelText, labelStyle);
+
+                    // --- NEW: Draw 'G' indicator for On-Grid spawning ---
+                    if (pieceData.startOnGrid) {
+                        labelStyle.alignment = TextAnchor.UpperRight;
+                        GUI.Label(labelCellRect, "G", labelStyle);
+                    }
                 }
             }
         }
@@ -1281,6 +1297,11 @@ public class GridDataSOEditor : Editor
             if (list == null) return;
             foreach (var piece in list) {
                 if (piece.pieceType == null) continue;
+
+                // Shapes are already drawn in Step 2 for numbering sequence
+                bool isShape = piece.pieceType.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape && !piece.isObstacle;
+                if (isShape && list == gridDataSO.levelItems) continue;
+
                 List<Vector2Int> positions = piece.pieceType.GetGridPositionsList(piece.position, piece.direction);
                 
                 // For items, use their config color but with lower alpha and white border
@@ -1302,6 +1323,13 @@ public class GridDataSOEditor : Editor
 
                         Handles.color = piece.isObstacle ? Color.black : Color.white; 
                         Handles.DrawWireCube(cellRect.center, cellRect.size);
+
+                        // 'G' indicator for non-shapes too
+                        if (piece.startOnGrid && pos == piece.position) {
+                            labelStyle.normal.textColor = piece.isObstacle ? Color.black : Color.white;
+                            labelStyle.alignment = TextAnchor.UpperRight;
+                            GUI.Label(cellRect, "G", labelStyle);
+                        }
                     }
                 }
             }
@@ -1324,19 +1352,51 @@ public class GridDataSOEditor : Editor
                 int gz = gridDataSO.height - 1 - Mathf.FloorToInt(localPos.y / cellSize);
                 Vector2Int hoverCell = new Vector2Int(gx, gz);
 
-                List<Vector2Int> ghostCells = selectedObstacleType.GetGridPositionsList(hoverCell, selectedObstacleDir);
+                // --- NEW: Calculate Anchor Offset (keep piece under mouse) ---
+                Vector2Int anchorOffset = Vector2Int.zero;
+                if (selectedObstacleType.relativeOccupiedCells != null && selectedObstacleType.relativeOccupiedCells.Count > 0) {
+                    anchorOffset = GetRotatedCell(selectedObstacleType.relativeOccupiedCells[0], selectedObstacleDir, selectedObstacleType.GetMaxDimensions());
+                }
+                Vector2Int placementOrigin = hoverCell - anchorOffset;
+
+                List<Vector2Int> ghostCells = selectedObstacleType.GetGridPositionsList(placementOrigin, selectedObstacleDir);
                 isBlocked = false;
-                bool isToolOnBuildable = false;
+                bool isRuleViolation = false;
 
                 // --- 1. DETERMINE PLACEMENT RULES BASED ON TYPE ---
                 bool isTool = selectedObstacleType.category == PlacedObjectTypeSO.ItemCategory.Tool || selectedObstacleType.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid;
                 
-                // --- 2. CHECK TOOL RESTRICTIONS (Must be on Locked) ---
-                if (isTool) {
-                    foreach (var g in ghostCells) {
-                        if (!gridDataSO.lockedCells.Contains(g)) {
-                            isToolOnBuildable = true; break;
-                        }
+                // --- 2. ENFORCE STRICT PLACEMENT RULES ---
+                // NOTE: If NOT painting as Obstacle and NOT isTool, we might want to spawn it Off-Grid.
+                // For simplicity: If "On Grid" toggle is ever added to Ghost, we'd check it here.
+                // For now, let's assume if it spawns off-grid (controlled in list), it can be placed anywhere.
+                // BUT ghost doesn't know the list yet. 
+                // Suggestion: In Paint Mode, always validate, but if user wants to place something purely for off-grid, 
+                // they can toggle it in the list after placement.
+                
+                bool isAltPressed = Event.current.alt || Event.current.control;
+                foreach (var g in ghostCells) {
+                    bool isBuildable = gridDataSO.buildableCells.Contains(g);
+                    bool isLocked = gridDataSO.lockedCells.Contains(g);
+
+                    if (isTool) {
+                        // TOOLS: MUST be on Locked.
+                        if (!isLocked) { isRuleViolation = true; break; }
+                    } else if (paintAsObstacle) {
+                        // OBSTACLES: FORBIDDEN on Locked. MUST be on Buildable.
+                        if (isLocked) { isRuleViolation = true; break; }
+                        if (!isBuildable) { isRuleViolation = true; break; }
+                    } else if (!isAltPressed) {
+                        // SNAPPED SHAPES: FORBIDDEN on Locked. MUST be on Buildable.
+                        if (isLocked) { isRuleViolation = true; break; }
+                        if (!isBuildable) { isRuleViolation = true; break; }
+                    } else {
+                        // OFF-GRID SHAPES (Alt/Ctrl): Allowed on Buildable OR Locked.
+                        if (!isBuildable && !isLocked) { isRuleViolation = true; break; }
+                    }
+                    
+                    if (g.x < 0 || g.x >= gridDataSO.width || g.y < 0 || g.y >= gridDataSO.height) {
+                        isRuleViolation = true; break;
                     }
                 }
 
@@ -1350,11 +1410,11 @@ public class GridDataSOEditor : Editor
                         // OBSTACLES: Only collide with other Obstacles. Can overlap Shapes.
                         collisionLayer = gridDataSO.staticObstacles ?? new List<GridDataSO.GeneratedPieceData>();
                     } else {
-                        // PUZZLE SHAPES: Collide with EVERYTHING (Solutions, Items, Obstacles).
+                        // PUZZLE SHAPES: Collide with Solutions and Manual Shapes only. Ignore Obstacles.
                         var solutionList = (gridDataSO.puzzleSolution != null) ? gridDataSO.puzzleSolution.ToList() : new List<GridDataSO.GeneratedPieceData>();
-                         collisionLayer = solutionList
+                        collisionLayer = solutionList
                                         .Concat(gridDataSO.levelItems ?? new List<GridDataSO.GeneratedPieceData>())
-                                        .Concat(gridDataSO.staticObstacles ?? new List<GridDataSO.GeneratedPieceData>());
+                                        .Where(p => !p.isObstacle);
                     }
 
                     foreach(var g in ghostCells) {
@@ -1370,7 +1430,7 @@ public class GridDataSOEditor : Editor
                     }
                 }
                 
-                if (isToolOnBuildable) isBlocked = true;
+                if (isRuleViolation) isBlocked = true;
 
                 Color ghostColor = isBlocked ? new Color(1f, 0.1f, 0.1f, 0.75f) : new Color(1f, 1f, 0.5f, 0.65f);
 
@@ -1459,20 +1519,20 @@ public class GridDataSOEditor : Editor
             summaryElement.FindPropertyRelative("count").intValue = summary[i].count;
         }
 
-        int buildableCellCount = gridDataSO.buildableCells.Count;
+        int targetCellCount = gridDataSO.buildableCells.Union(gridDataSO.lockedCells).Count();
         int occupiedCellCount = 0;
 
         // 3. Перевіряємо IsComplete
-        // Логіка: Всі Buildable клітинки повинні бути покриті Character-ами.
-        // Це і автоматично згенеровані, і поставлені вручну (levelItems).
+        // Логіка: Всі Buildable/Locked клітинки повинні бути покриті Character-ами.
         
         void CountOccupiedBuildable(IEnumerable<GridDataSO.GeneratedPieceData> pieceList) {
             if (pieceList == null) return;
+            var targetSet = new HashSet<Vector2Int>(gridDataSO.buildableCells.Concat(gridDataSO.lockedCells));
             foreach (var piece in pieceList) {
                 if (piece.pieceType != null && piece.pieceType.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape && !piece.isObstacle) {
                     var positions = piece.pieceType.GetGridPositionsList(piece.position, piece.direction);
                     foreach (var pos in positions) {
-                        if (gridDataSO.buildableCells.Contains(pos)) {
+                        if (targetSet.Contains(pos)) {
                             occupiedCellCount++;
                         }
                     }
@@ -1483,7 +1543,7 @@ public class GridDataSOEditor : Editor
         CountOccupiedBuildable(currentSolution);
         CountOccupiedBuildable(gridDataSO.levelItems);
 
-        serializedObject.FindProperty("isComplete").boolValue = (occupiedCellCount >= buildableCellCount);
+        serializedObject.FindProperty("isComplete").boolValue = (occupiedCellCount >= targetCellCount);
 
         serializedObject.ApplyModifiedProperties();
 
@@ -1667,6 +1727,9 @@ public class GridDataSOEditor : Editor
             SerializedProperty hiddenProp = productProp.FindPropertyRelative("isHidden");
             hiddenProp.boolValue = GUILayout.Toggle(hiddenProp.boolValue, new GUIContent("H", "Is Hidden"), "Button", GUILayout.Width(20));
 
+            SerializedProperty onGridProp = productProp.FindPropertyRelative("startOnGrid");
+            onGridProp.boolValue = GUILayout.Toggle(onGridProp.boolValue, new GUIContent("G", "Spawn On Grid"), "Button", GUILayout.Width(20));
+
             if (GUILayout.Button("-", GUILayout.Width(20))) {
                 listProp.DeleteArrayElementAtIndex(i);
                 break;
@@ -1732,7 +1795,8 @@ public class GridDataSOEditor : Editor
             }
         }
         OccupyManualCellsFill(gridDataSO.levelItems);
-        OccupyManualCellsFill(gridDataSO.staticObstacles);
+        // OccupyManualCellsFill(gridDataSO.staticObstacles); // Shapes ignore obstacles
+
 
         var existingPieceTypes = new HashSet<PlacedObjectTypeSO>(gridDataSO.puzzleSolution.Select(p => p.pieceType));
         // Беремо тільки характери для заповнення
@@ -1958,7 +2022,10 @@ public class GridDataSOEditor : Editor
             int x = Mathf.FloorToInt(localPos.x / cellSize);
             int z = gridDataSO.height - 1 - Mathf.FloorToInt(localPos.y / cellSize);
             Vector2Int clickedCell = new Vector2Int(x, z);
-            PlaceManualPiece(clickedCell);
+            
+            // Check if Alt or Ctrl is held to place as "Off-Grid Always"
+            bool placeOffGrid = e.alt || e.control;
+            PlaceManualPieceRefined(clickedCell, placeOffGrid);
             e.Use();
         }
         if (e.type == EventType.MouseDown && e.button == 1 && previewRect.Contains(e.mousePosition))
@@ -2039,7 +2106,7 @@ public class GridDataSOEditor : Editor
         }
         EditorGUILayout.EndHorizontal();
 
-        EditorGUILayout.HelpBox("TIP: Use [?] in Summary to pick. 'R' rotates. RMB removes based on MODE.\nTOOLS: Only on Locked Cells (Orange).", MessageType.None);
+        EditorGUILayout.HelpBox("TIP: [?] = Pick. 'R' = Rotate. RMB = Remove (by Mode).\nTOOLS: Only Locked (Orange). SNAPPED (Default): Only Buildable (Green).\nOFF-GRID (Alt/Ctrl): Buildable (Green) OR Locked (Orange).", MessageType.None);
 
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Clear [GRID OBSTACLES]")) {
@@ -2092,13 +2159,48 @@ public class GridDataSOEditor : Editor
         EditorGUILayout.EndVertical();
     }
 
-    private void PlaceManualPiece(Vector2Int origin)
+    private void PlaceManualPieceRefined(Vector2Int anchorCell, bool placeOffGrid = false)
     {
         if (selectedObstacleType == null) return;
+
+        // --- NEW: Calculate Anchor Offset ---
+        Vector2Int anchorOffset = Vector2Int.zero;
+        if (selectedObstacleType.relativeOccupiedCells != null && selectedObstacleType.relativeOccupiedCells.Count > 0) {
+            anchorOffset = GetRotatedCell(selectedObstacleType.relativeOccupiedCells[0], selectedObstacleDir, selectedObstacleType.GetMaxDimensions());
+        }
+        Vector2Int origin = anchorCell - anchorOffset;
         
         // --- 1. DETERMINE PLACEMENT RULES BASED ON TYPE ---
         List<Vector2Int> newPositions = selectedObstacleType.GetGridPositionsList(origin, selectedObstacleDir);
         bool isTool = selectedObstacleType.category == PlacedObjectTypeSO.ItemCategory.Tool || selectedObstacleType.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid;
+
+        // --- 2. ENFORCE BOUNDARIES (Always) ---
+        foreach (var p in newPositions) {
+            if (p.x < 0 || p.x >= gridDataSO.width || p.y < 0 || p.y >= gridDataSO.height) return;
+        }
+
+        // --- 3. ENFORCE STRICT PLACEMENT RULES (Only if on-grid) ---
+        if (isTool) {
+            foreach (var p in newPositions) {
+                if (!gridDataSO.lockedCells.Contains(p)) return; // Tools only on Locked
+            }
+        } else if (paintAsObstacle) {
+            foreach (var p in newPositions) {
+                if (gridDataSO.lockedCells.Contains(p)) return; // Obstacles FORBIDDEN on Locked
+                if (!gridDataSO.buildableCells.Contains(p)) return; // Obstacles ONLY on Buildable
+            }
+        } else if (!placeOffGrid) {
+            // Snapped shapes FORBIDDEN on Locked, ONLY on Buildable
+            foreach (var p in newPositions) {
+                if (gridDataSO.lockedCells.Contains(p)) return;
+                if (!gridDataSO.buildableCells.Contains(p)) return;
+            }
+        } else {
+            // Off-grid shapes allowed on Buildable or Locked
+            foreach (var p in newPositions) {
+                if (!gridDataSO.buildableCells.Contains(p) && !gridDataSO.lockedCells.Contains(p)) return;
+            }
+        }
 
         if (!isTool)
         {
@@ -2109,11 +2211,11 @@ public class GridDataSOEditor : Editor
                 // OBSTACLES: Only collide with other Obstacles. Can overlap Shapes.
                 collisionLayer = gridDataSO.staticObstacles ?? new List<GridDataSO.GeneratedPieceData>();
             } else {
-                // PUZZLE SHAPES: Collide with EVERYTHING (Solutions, Items, Obstacles).
+                // PUZZLE SHAPES: Collide with Solutions and Manual Shapes only. Ignore Obstacles.
                 var solutionList = (gridDataSO.puzzleSolution != null) ? gridDataSO.puzzleSolution.ToList() : new List<GridDataSO.GeneratedPieceData>();
-                    collisionLayer = solutionList
-                                .Concat(gridDataSO.levelItems ?? new List<GridDataSO.GeneratedPieceData>())
-                                .Concat(gridDataSO.staticObstacles ?? new List<GridDataSO.GeneratedPieceData>());
+                collisionLayer = solutionList
+                            .Concat(gridDataSO.levelItems ?? new List<GridDataSO.GeneratedPieceData>())
+                            .Where(p => !p.isObstacle);
             }
 
             foreach (var existing in collisionLayer)
@@ -2125,11 +2227,6 @@ public class GridDataSOEditor : Editor
                     if (existingPositions.Contains(p)) return; // Occupied
                 }
             }
-        } else {
-             // --- 2. TOOL RESTRICTION (Only on Locked) ---
-             foreach (var p in newPositions) {
-                if (!gridDataSO.lockedCells.Contains(p)) return; // Tools cannot be on buildable
-            }
         }
 
         Undo.RecordObject(gridDataSO, "Place Manual Piece");
@@ -2139,7 +2236,8 @@ public class GridDataSOEditor : Editor
             pieceType = selectedObstacleType,
             position = origin,
             direction = selectedObstacleDir,
-            isObstacle = paintAsObstacle
+            isObstacle = paintAsObstacle,
+            startOnGrid = !placeOffGrid
         };
 
         if (paintAsObstacle) gridDataSO.staticObstacles.Add(newData);
@@ -2154,10 +2252,10 @@ public class GridDataSOEditor : Editor
     {
         if (gridDataSO == null) return;
 
-        int buildableCount = gridDataSO.buildableCells.Count;
-        int lockedCount = gridDataSO.lockedCells.Count;
+        var targetCells = new HashSet<Vector2Int>(gridDataSO.buildableCells.Concat(gridDataSO.lockedCells));
+        int totalTargetCount = targetCells.Count;
         
-        int occupiedBuildable = 0;
+        int occupiedTarget = 0;
 
         // Check Puzzle Solution (Shapes only)
         if (gridDataSO.puzzleSolution != null)
@@ -2169,7 +2267,7 @@ public class GridDataSOEditor : Editor
                 {
                     var cells = piece.pieceType.GetGridPositionsList(piece.position, piece.direction);
                     foreach(var c in cells) {
-                         if (gridDataSO.buildableCells.Contains(c)) occupiedBuildable++;
+                         if (targetCells.Contains(c)) occupiedTarget++;
                     }
                 }
             }
@@ -2185,19 +2283,19 @@ public class GridDataSOEditor : Editor
                 {
                     var cells = piece.pieceType.GetGridPositionsList(piece.position, piece.direction);
                     foreach(var c in cells) {
-                         if (gridDataSO.buildableCells.Contains(c)) occupiedBuildable++;
+                         if (targetCells.Contains(c)) occupiedTarget++;
                     }
                 }
             }
         }
         
-        bool buildableCovered = occupiedBuildable >= buildableCount;
+        bool buildableCovered = occupiedTarget >= totalTargetCount;
 
         if (!buildableCovered)
         {
-            EditorGUILayout.HelpBox($"Level Incomplete! Buildable Coverage: {occupiedBuildable}/{buildableCount} ({(float)occupiedBuildable/Mathf.Max(1, buildableCount):P0}).\nGenerate a solution or add manual pieces.", MessageType.Error);
+            EditorGUILayout.HelpBox($"Level Incomplete! Grid Coverage: {occupiedTarget}/{totalTargetCount} ({(float)occupiedTarget/Mathf.Max(1, totalTargetCount):P0}).\nGenerate a solution or add manual pieces.", MessageType.Error);
         }
-        else if (buildableCount == 0 && lockedCount == 0) {
+        else if (totalTargetCount == 0) {
              EditorGUILayout.HelpBox("Grid is empty! Paint some Buildable/Locked cells.", MessageType.Warning);
         }
         else

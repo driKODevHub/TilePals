@@ -48,10 +48,7 @@ public class PlaceCommand : ICommand
         if (activeBoard == null) return false;
 
         // Ensure we are not already on grid elsewhere (important for Redo/Move)
-        if (piece.IsPlaced)
-        {
-            GridBuildingSystem.Instance.RemovePieceFromGrid(piece);
-        }
+        CleanupCurrentState();
 
         var po = GridBuildingSystem.Instance.PlacePieceOnGrid(piece, origin, direction);
         if (po == null) return false;

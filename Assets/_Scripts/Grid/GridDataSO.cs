@@ -25,6 +25,7 @@ public class GridDataSO : ScriptableObject
         public PlacedObjectTypeSO.Dir direction;
         public bool isObstacle; // Items that occupy grid but don't count towards win
         public bool isHidden;   // Pieces that are hidden in containers
+        public bool startOnGrid = true; // Whether to spawn exactly at coordinates or randomly off-grid
     }
 
     [Serializable]

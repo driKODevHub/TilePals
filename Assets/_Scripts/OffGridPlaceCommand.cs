@@ -111,28 +111,32 @@ public class OffGridPlaceCommand : ICommand
     private void RestorePassengersOnGridAfterUndo(PuzzlePiece tool)
     {
         var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
-        if (activeBoard == null) return;
+        if (activeBoard == null || activeBoard.Grid == null) return;
         
         var grid = activeBoard.Grid;
-        List<PuzzlePiece> currentPassengers = new List<PuzzlePiece>(tool.StoredPassengers);
-
-        foreach (var p in currentPassengers)
+        float cellSize = grid.GetCellSize();
+        
+        foreach (var p in tool.StoredPassengers)
         {
-            p.transform.SetParent(tool.transform.parent);
+            if (p == null) continue;
+
             p.SyncDirectionFromRotation(p.transform.rotation);
 
             Vector3 worldPos = p.transform.position;
-            grid.GetXZ(worldPos, out int x, out int z);
-
+            Vector3 gridOriginPos = activeBoard.Grid.GetWorldPosition(0, 0); 
+            
+            int x = Mathf.RoundToInt((worldPos.x - gridOriginPos.x) / cellSize);
+            int z = Mathf.RoundToInt((worldPos.z - gridOriginPos.z) / cellSize);
+            
             Vector2Int pRotOffset = p.PieceTypeSO.GetRotationOffset(p.CurrentDirection);
             Vector2Int pOrigin = new Vector2Int(x, z) - pRotOffset;
 
-            if (GridBuildingSystem.Instance.CanPlacePiece(p, pOrigin, p.CurrentDirection))
-            {
-                var po = GridBuildingSystem.Instance.PlacePieceOnGrid(p, pOrigin, p.CurrentDirection);
-                p.SetPlaced(po);
-            }
+            var po = GridBuildingSystem.Instance.PlacePieceOnGrid(p, pOrigin, p.CurrentDirection);
+            p.SetPlaced(po);
+            
+            Vector3 snapPos = grid.GetWorldPosition(pOrigin.x, pOrigin.y) +
+                                  new Vector3(pRotOffset.x, 0, pRotOffset.y) * cellSize;
+            p.UpdateTransform(snapPos, p.transform.rotation);
         }
-        tool.StoredPassengers.Clear();
     }
 }

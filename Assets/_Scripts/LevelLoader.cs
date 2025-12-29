@@ -15,6 +15,7 @@ public class LevelLoader : MonoBehaviour
     private PuzzleBoard _currentBoard;
     private LevelCollectionSO _currentLocation;
     
+    private int _currentLevelIndex = -1;
     private List<PuzzlePiece> _allSpawnedPieces = new List<PuzzlePiece>();
 
     private void Awake()
@@ -40,7 +41,7 @@ public class LevelLoader : MonoBehaviour
 
     #endregion
 
-    public void LoadLocation(LevelCollectionSO location, bool loadFromSave)
+    public void LoadLocation(LevelCollectionSO location, bool loadFromSave, int forceIndex = -1)
     {
         _currentLocation = location;
         ClearLocation();
@@ -48,19 +49,24 @@ public class LevelLoader : MonoBehaviour
         if (location == null || location.levels == null || location.levels.Count == 0) return;
 
         // Find the first incomplete level index
-        int startLevelIndex = 0;
-        for (int i = 0; i < location.levels.Count; i++)
+        int startLevelIndex = forceIndex;
+        if (startLevelIndex == -1)
         {
-            string boardId = $"{location.name}_{i}";
-            LevelSaveData saveData = SaveSystem.LoadLevelProgress(boardId);
-            if (saveData == null || !saveData.isCompleted)
+            startLevelIndex = 0;
+            for (int i = 0; i < location.levels.Count; i++)
             {
-                startLevelIndex = i;
-                break;
+                string boardId = $"{location.name}_{i}";
+                LevelSaveData saveData = SaveSystem.LoadLevelProgress(boardId);
+                if (saveData == null || !saveData.isCompleted)
+                {
+                    startLevelIndex = i;
+                    break;
+                }
             }
         }
         
-        LoadLevelAtIndex(startLevelIndex, loadFromSave);
+        _currentLevelIndex = startLevelIndex;
+        LoadLevelAtIndex(_currentLevelIndex, loadFromSave);
     }
     
     public void LoadLevelAtIndex(int index, bool loadFromSave)
@@ -81,6 +87,8 @@ public class LevelLoader : MonoBehaviour
          // If we have multiple rooms, maybe we hide/show them?
          // User requested: "Spawn next AFTER complete".
          
+         _currentBoard = board;
+         _currentLevelIndex = index;
          _activeLocationBoards.Add(board);
          board.InitializeBoard(levelData);
 
@@ -95,18 +103,22 @@ public class LevelLoader : MonoBehaviour
          SetCurrentBoard(board);
     }
     
+    public void RestartCurrentLevel()
+    {
+        if (_currentLocation != null && _currentLevelIndex != -1)
+        {
+            LoadLocation(_currentLocation, false, _currentLevelIndex); 
+        }
+    }
+
     public void LoadNextLevel()
     {
         if (_currentLocation == null || _currentBoard == null) return;
         
-        // Parse current index from ID? Or track it?
-        // Let's assume sequential ID: "LocName_Index"
-        string currentId = _currentBoard.boardId;
-        int lastUnderscore = currentId.LastIndexOf('_');
-        if (lastUnderscore != -1 && int.TryParse(currentId.Substring(lastUnderscore + 1), out int currentIndex))
+        int nextIndex = _currentLevelIndex + 1;
+        if (nextIndex < _currentLocation.levels.Count)
         {
-             int nextIndex = currentIndex + 1;
-             LoadLevelAtIndex(nextIndex, true); // Load next
+             LoadLevelAtIndex(nextIndex, true); 
         }
     }
 
@@ -132,8 +144,8 @@ public class LevelLoader : MonoBehaviour
             piece.OwnerBoard = board; // Assign board ownership
             
             // Store default data for fallback
-            piece.SetEditorPlacement(obsData.position, obsData.direction);
-
+            piece.SetEditorPlacement(obsData.position, obsData.direction, obsData.startOnGrid);
+            piece.StartOnGrid = obsData.startOnGrid;
             board.RegisterPiece(piece);
             _allSpawnedPieces.Add(piece);
         }
@@ -142,10 +154,17 @@ public class LevelLoader : MonoBehaviour
     private void SpawnPieces(PuzzleBoard board, GridDataSO data)
     {
         List<GridDataSO.GeneratedPieceData> piecesToSpawn = new List<GridDataSO.GeneratedPieceData>();
-        if (data.puzzlePieces != null)
+        
+        // Prefer baked solution as it contains startOnGrid and positions
+        if (data.puzzleSolution != null && data.puzzleSolution.Count > 0)
+        {
+            piecesToSpawn.AddRange(data.puzzleSolution);
+        }
+        else if (data.puzzlePieces != null)
         {
             foreach (var type in data.puzzlePieces) piecesToSpawn.Add(new GridDataSO.GeneratedPieceData { pieceType = type });
         }
+
         if (data.levelItems != null) piecesToSpawn.AddRange(data.levelItems);
         if (piecesToSpawn.Count == 0) return;
 
@@ -174,8 +193,15 @@ public class LevelLoader : MonoBehaviour
             // If it's a level item (manual placement in editor), store it for fallback
             if (data.levelItems != null && data.levelItems.Contains(pData))
             {
-                piece.SetEditorPlacement(pData.position, pData.direction);
+                piece.SetEditorPlacement(pData.position, pData.direction, pData.startOnGrid);
             }
+            // Also store it for auto-generated pieces if they were passed (e.g. from puzzleSolution)
+            else if (data.puzzleSolution != null && data.puzzleSolution.Contains(pData))
+            {
+                piece.SetEditorPlacement(pData.position, pData.direction, pData.startOnGrid);
+            }
+
+            piece.StartOnGrid = pData.startOnGrid;
         }
     }
 
@@ -362,17 +388,23 @@ public class LevelLoader : MonoBehaviour
                 Vector2Int rotationOffset = piece.PieceTypeSO.GetRotationOffset(piece.EditorPlacement.direction);
                 targetWorldPos += new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
                 
-                piece.UpdateTransform(targetWorldPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(piece.EditorPlacement.direction), 0));
-                var po = GridBuildingSystem.Instance.PlacePieceOnGridExplicit(board, piece, piece.EditorPlacement.origin, piece.EditorPlacement.direction);
-                
-                if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
-                    piece.SetInfrastructure(po);
+                if (piece.EditorPlacement.startOnGrid)
+                {
+                    var po = GridBuildingSystem.Instance.PlacePieceOnGridExplicit(board, piece, piece.EditorPlacement.origin, piece.EditorPlacement.direction);
+                    if (piece.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid)
+                        piece.SetInfrastructure(po);
+                    else
+                        piece.SetPlaced(po);
+                    
+                    TeleportPieceAndResetPhysics(piece, targetWorldPos, piece.transform.rotation);
+                    availablePieces.Remove(piece);
+                }
                 else
-                    piece.SetPlaced(po);
-                
-                TeleportPieceAndResetPhysics(piece, targetWorldPos, piece.transform.rotation);
-                availablePieces.Remove(piece);
-            }
+                {
+                    // It has data but is NOT on grid -> treat as regular piece for random placement
+                    needsRandomPlacement.Add(piece);
+                }
+           }
             else
             {
                 needsRandomPlacement.Add(piece);

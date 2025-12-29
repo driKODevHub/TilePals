@@ -143,9 +143,9 @@ public class GameManager : MonoBehaviour
 
     public void RestartCurrentLevel()
     {
-        if (_currentLocation != null)
+        if (levelLoader != null)
         {
-            LoadLocation(_currentLocation, false); // Reload without save to reset pieces if needed
+            levelLoader.RestartCurrentLevel();
         }
     }
 
