@@ -105,26 +105,31 @@ MonoBehaviour:
     direction: 3
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
     position: {x: 1, y: 0}
     direction: 0
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
     position: {x: 0, y: 1}
     direction: 1
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
     position: {x: 1, y: 1}
     direction: 3
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
     position: {x: 0, y: 3}
     direction: 3
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   isComplete: 1
   solutionVariantsCount: 1
   allFoundSolutions:
@@ -134,24 +139,29 @@ MonoBehaviour:
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 1
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 1
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 0, y: 1}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 1
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 1, y: 1}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 1
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 1
   currentSolutionIndex: 0

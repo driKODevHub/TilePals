@@ -283,6 +283,17 @@ public class GridDataSOEditor : Editor
             if (EditorUtility.DisplayDialog("Clear All Pieces?", "Remove all pieces from the current solution?", "Yes", "No")) ClearAllPieces();
         }
 
+        EditorGUILayout.Space(5);
+        GUI.color = new Color(0.7f, 1f, 0.7f);
+        if (GUILayout.Button("Fix Solution: Move All to Tray ('G' off)"))
+        {
+            if (EditorUtility.DisplayDialog("Fix Solution?", "Set 'Start On Grid' to false for all pieces in the solution? This will move them to the tray in-game.", "Fix", "Cancel"))
+            {
+                FixSolutionSpawning();
+            }
+        }
+        GUI.color = Color.white;
+
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Solution Analysis", EditorStyles.boldLabel);
 
@@ -872,6 +883,11 @@ public class GridDataSOEditor : Editor
             destElement.FindPropertyRelative("pieceType").objectReferenceValue = sourceElement.FindPropertyRelative("pieceType").objectReferenceValue;
             destElement.FindPropertyRelative("position").vector2IntValue = sourceElement.FindPropertyRelative("position").vector2IntValue;
             destElement.FindPropertyRelative("direction").enumValueIndex = sourceElement.FindPropertyRelative("direction").enumValueIndex;
+            
+            // --- FIX: Preserve all flags during solution navigation ---
+            destElement.FindPropertyRelative("isObstacle").boolValue = sourceElement.FindPropertyRelative("isObstacle").boolValue;
+            destElement.FindPropertyRelative("isHidden").boolValue = sourceElement.FindPropertyRelative("isHidden").boolValue;
+            destElement.FindPropertyRelative("startOnGrid").boolValue = sourceElement.FindPropertyRelative("startOnGrid").boolValue;
         }
 
         serializedObject.ApplyModifiedProperties();
@@ -1093,12 +1109,14 @@ public class GridDataSOEditor : Editor
                         if (tryingRequired) nextRequired.Remove(pieceType);
 
                         Place(currentGrid, piecePositions, false);
-                        bool overlapsLocked = piecePositions.Any(p => gridDataSO.lockedCells.Contains(p));
+                        
+                        // --- MODIFIED: Generated puzzle pieces (Shapes) for the player to solve 
+                        // should ALWAYS start in the tray (startOnGrid = false)
                         solution.Add(new GridDataSO.GeneratedPieceData { 
                             pieceType = pieceType, 
                             position = startPosition, 
                             direction = dir,
-                            startOnGrid = !overlapsLocked 
+                            startOnGrid = false 
                         });
                         pieceCounts[pieceType] = pieceCounts.GetValueOrDefault(pieceType, 0) + 1;
 
@@ -1486,8 +1504,18 @@ public class GridDataSOEditor : Editor
             var pieceType = (PlacedObjectTypeSO)pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue;
             var pos = pieceDataProp.FindPropertyRelative("position").vector2IntValue;
             var dir = (PlacedObjectTypeSO.Dir)pieceDataProp.FindPropertyRelative("direction").enumValueIndex;
+            var startOnGrid = pieceDataProp.FindPropertyRelative("startOnGrid").boolValue;
+            var isObstacle = pieceDataProp.FindPropertyRelative("isObstacle").boolValue;
+            var isHidden = pieceDataProp.FindPropertyRelative("isHidden").boolValue;
 
-            var pieceData = new GridDataSO.GeneratedPieceData { pieceType = pieceType, position = pos, direction = dir };
+            var pieceData = new GridDataSO.GeneratedPieceData { 
+                pieceType = pieceType, 
+                position = pos, 
+                direction = dir,
+                startOnGrid = startOnGrid,
+                isObstacle = isObstacle,
+                isHidden = isHidden
+            };
             if (pieceType != null)
             {
                 currentSolution.Add(pieceData);
@@ -1571,6 +1599,7 @@ public class GridDataSOEditor : Editor
         var summary = new Dictionary<PlacedObjectTypeSO, int>();
         var hiddenTypes = new HashSet<PlacedObjectTypeSO>();
         var obstacleTypes = new HashSet<PlacedObjectTypeSO>();
+        var onGridTypes = new HashSet<PlacedObjectTypeSO>();
         var solutionTypes = new HashSet<PlacedObjectTypeSO>();
         var itemTypes = new HashSet<PlacedObjectTypeSO>();
 
@@ -1582,6 +1611,7 @@ public class GridDataSOEditor : Editor
                 summary[item.pieceType]++;
                 if (item.isHidden) hiddenTypes.Add(item.pieceType);
                 if (item.isObstacle) obstacleTypes.Add(item.pieceType);
+                if (item.startOnGrid) onGridTypes.Add(item.pieceType);
                 if (set != null) set.Add(item.pieceType);
             }
         }
@@ -1643,6 +1673,22 @@ public class GridDataSOEditor : Editor
 
             EditorGUILayout.LabelField(pieceType.objectName, EditorStyles.boldLabel, GUILayout.Width(130));
             
+            // --- PIECE FLAGS TOGGLES (Moved here for layout alignment) ---
+            EditorGUI.BeginChangeCheck();
+            bool isObs = obstacleTypes.Contains(pieceType);
+            bool isHidden = hiddenTypes.Contains(pieceType);
+            bool isOnGrid = onGridTypes.Contains(pieceType);
+
+            EditorGUILayout.BeginHorizontal(GUILayout.Width(75));
+            bool newObs = GUILayout.Toggle(isObs, new GUIContent("O", "Is Obstacle"), "Button", GUILayout.Width(22));
+            bool newHidden = GUILayout.Toggle(isHidden, new GUIContent("H", "Is Hidden"), "Button", GUILayout.Width(22));
+            bool newOnGrid = GUILayout.Toggle(isOnGrid, new GUIContent("G", "Spawn On Grid"), "Button", GUILayout.Width(22));
+            EditorGUILayout.EndHorizontal();
+
+            if (EditorGUI.EndChangeCheck()) {
+                SetPieceFlagsByType(pieceType, newObs, newHidden, newOnGrid);
+            }
+
             // --- SOURCE LABELS ---
             string source = "";
             var cat = pieceType.category;
@@ -1654,25 +1700,12 @@ public class GridDataSOEditor : Editor
                 if (solutionTypes.Contains(pieceType)) source = "[PUZZLE SHAPE] (Auto)";
                 else source = "[PUZZLE SHAPE] (Manual)";
             } else {
-                // Props, Toys, Food are all obstacles when on grid
                 source = "[GRID OBSTACLE]";
             }
 
             labelStyle.normal.textColor = Color.gray;
             EditorGUILayout.LabelField(source, labelStyle, GUILayout.Width(180));
             GUI.color = Color.white;
-
-            // Flags
-            string flags = "";
-            if (obstacleTypes.Contains(pieceType)) flags += "O";
-            if (hiddenTypes.Contains(pieceType)) flags += "H";
-            if (flags != "") {
-                GUI.color = Color.cyan;
-                EditorGUILayout.LabelField($"[{flags}]", EditorStyles.miniLabel, GUILayout.Width(30));
-                GUI.color = Color.white;
-            } else {
-                EditorGUILayout.Space(34, false);
-            }
 
             EditorGUILayout.LabelField($"x {count}", EditorStyles.boldLabel, GUILayout.Width(35));
 
@@ -1827,6 +1860,7 @@ public class GridDataSOEditor : Editor
                 pieceDataProp.FindPropertyRelative("pieceType").objectReferenceValue = filledPieces[i].pieceType;
                 pieceDataProp.FindPropertyRelative("position").vector2IntValue = filledPieces[i].position;
                 pieceDataProp.FindPropertyRelative("direction").enumValueIndex = (int)filledPieces[i].direction;
+                pieceDataProp.FindPropertyRelative("startOnGrid").boolValue = false; // Filled pieces are also part of solution
             }
 
             // --- FIX: Зберігаємо зміни ---
@@ -2382,5 +2416,56 @@ public class GridDataSOEditor : Editor
             if (xStart < rect.xMax && xEnd > rect.x)
                 Handles.DrawLine(new Vector3(xStart, yStart, 0), new Vector3(xEnd, yEnd, 0));
         }
+    }
+
+    private void FixSolutionSpawning()
+    {
+        serializedObject.Update();
+        var puzzleSolutionProp = serializedObject.FindProperty("puzzleSolution");
+        for (int i = 0; i < puzzleSolutionProp.arraySize; i++)
+        {
+            var pieceProp = puzzleSolutionProp.GetArrayElementAtIndex(i);
+            pieceProp.FindPropertyRelative("startOnGrid").boolValue = false;
+        }
+
+        var allFoundSolutionsProp = serializedObject.FindProperty("allFoundSolutions");
+        for (int i = 0; i < allFoundSolutionsProp.arraySize; i++)
+        {
+            var solutionProp = allFoundSolutionsProp.GetArrayElementAtIndex(i).FindPropertyRelative("solution");
+            for (int j = 0; j < solutionProp.arraySize; j++)
+            {
+                var pieceProp = solutionProp.GetArrayElementAtIndex(j);
+                pieceProp.FindPropertyRelative("startOnGrid").boolValue = false;
+            }
+        }
+
+        serializedObject.ApplyModifiedProperties();
+        UpdatePuzzleState();
+        Debug.Log("<color=green>Solution migration complete: All pieces moved to tray.</color>");
+    }
+
+    private void SetPieceFlagsByType(PlacedObjectTypeSO pieceType, bool isObstacle, bool isHidden, bool startOnGrid)
+    {
+        Undo.RecordObject(gridDataSO, $"Update {pieceType.objectName} Flags");
+
+        void UpdateList(List<GridDataSO.GeneratedPieceData> list) {
+            if (list == null) return;
+            for (int i = 0; i < list.Count; i++) {
+                if (list[i].pieceType == pieceType) {
+                    var data = list[i];
+                    data.isObstacle = isObstacle;
+                    data.isHidden = isHidden;
+                    data.startOnGrid = startOnGrid;
+                    list[i] = data;
+                }
+            }
+        }
+
+        UpdateList(gridDataSO.puzzleSolution);
+        UpdateList(gridDataSO.levelItems);
+        UpdateList(gridDataSO.staticObstacles);
+
+        EditorUtility.SetDirty(gridDataSO);
+        UpdatePuzzleState();
     }
 }

@@ -71,6 +71,16 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        // Debug: Navigate levels with mouse side buttons
+        if (Input.GetKeyDown(KeyCode.Mouse3)) // Back button
+        {
+            DebugNavigateLevel(-1);
+        }
+        if (Input.GetKeyDown(KeyCode.Mouse4)) // Forward button
+        {
+            DebugNavigateLevel(1);
+        }
+
         if (Input.GetKeyDown(KeyCode.R)) RestartCurrentLevel();
 
         if (_gameState == GameState.Playing)
@@ -91,6 +101,34 @@ public class GameManager : MonoBehaviour
                 if (GridVisualManager.Instance != null) GridVisualManager.Instance.RefreshAllCellVisuals();
             }
         }
+    }
+
+    private void DebugNavigateLevel(int direction)
+    {
+        if (levelLoader == null || _currentLocation == null) return;
+        
+        int currentIndex = levelLoader.GetCurrentLevelIndex();
+        int targetIndex = currentIndex + direction;
+        
+        if (targetIndex < 0 || targetIndex >= _currentLocation.levels.Count) return;
+        
+        // Save current progress before switching
+        SaveCurrentProgress();
+        
+        if (direction < 0) // Going backward
+        {
+            // Clear ALL levels (current and future) and reload target fresh
+            levelLoader.ClearAllBoards();
+            levelLoader.LoadLevelAtIndex(targetIndex, false); // false = fresh start, no save data
+        }
+        else // Going forward
+        {
+            // Clear only future levels (after target), keep previous levels as-is
+            levelLoader.ClearBoardsAfter(targetIndex);
+            levelLoader.LoadLevelAtIndex(targetIndex, false); // false = fresh start, no save data
+        }
+        
+        Debug.Log($"[Debug Navigation] Switched to level {targetIndex} in {_currentLocation.name}");
     }
 
     // --- SENIOR API ---
@@ -139,6 +177,12 @@ public class GameManager : MonoBehaviour
         }
         
         _gameState = GameState.Playing;
+
+        // Sync debug visibility state for the new grid
+        if (GridBuildingSystem.Instance != null && GridBuildingSystem.Instance.GetGrid() != null)
+        {
+            GridBuildingSystem.Instance.GetGrid().SetDebugTextVisibility(_isDebugTextVisible);
+        }
     }
 
     public void RestartCurrentLevel()

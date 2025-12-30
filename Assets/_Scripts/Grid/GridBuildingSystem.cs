@@ -36,11 +36,11 @@ public class GridBuildingSystem : MonoBehaviour
         this.gridData = data;
         if (gridData == null)
         {
-            grid = new GridXZ<GridObject>(10, 10, 1f, Vector3.zero, (g, x, z) => new GridObject(g, x, z));
+            grid = new GridXZ<GridObject>(10, 10, 1f, Vector3.zero, null, (g, x, z) => new GridObject(g, x, z));
         }
         else
         {
-            grid = new GridXZ<GridObject>(gridData.width, gridData.height, gridData.cellSize, Vector3.zero, (g, x, z) => new GridObject(g, x, z));
+            grid = new GridXZ<GridObject>(gridData.width, gridData.height, gridData.cellSize, Vector3.zero, null, (g, x, z) => new GridObject(g, x, z));
 
             for (int x = 0; x < grid.GetWidth(); x++)
             {
@@ -71,7 +71,7 @@ public class GridBuildingSystem : MonoBehaviour
             grid.ClearDebugText();
             grid = null;
         }
-        grid = new GridXZ<GridObject>(0, 0, 1f, Vector3.zero, (g, x, z) => new GridObject(g, x, z));
+        grid = new GridXZ<GridObject>(0, 0, 1f, Vector3.zero, null, (g, x, z) => new GridObject(g, x, z));
     }
 
     public bool CanPlacePiece(PuzzlePiece piece, Vector2Int origin, PlacedObjectTypeSO.Dir dir)

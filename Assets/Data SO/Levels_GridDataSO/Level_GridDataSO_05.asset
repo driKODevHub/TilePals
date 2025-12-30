@@ -571,56 +571,67 @@ MonoBehaviour:
     direction: 1
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
     position: {x: 4, y: 0}
     direction: 3
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
     position: {x: 7, y: 0}
     direction: 3
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
     position: {x: 9, y: 0}
     direction: 2
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
     position: {x: 4, y: 1}
     direction: 0
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
     position: {x: 0, y: 2}
     direction: 2
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
     position: {x: 2, y: 2}
     direction: 3
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
     position: {x: 6, y: 2}
     direction: 0
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
     position: {x: 1, y: 3}
     direction: 1
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
     position: {x: 8, y: 3}
     direction: 3
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
     position: {x: 4, y: 4}
     direction: 3
     isObstacle: 0
     isHidden: 0
+    startOnGrid: 0
   isComplete: 1
   solutionVariantsCount: 64
   allFoundSolutions:
@@ -630,3582 +641,4286 @@ MonoBehaviour:
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   - solution:
     - pieceType: {fileID: 11400000, guid: 98a1397195639e24fba235e76f5b664e, type: 2}
       position: {x: 0, y: 0}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 35a1dd9d28832d749b9195516d5d6aef, type: 2}
       position: {x: 4, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 44e3164233a43cf4db4695313248caa2, type: 2}
       position: {x: 7, y: 0}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: d34fb08903f66fd498b3328216f14534, type: 2}
       position: {x: 9, y: 0}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 0c78ce51f363134478cc256b09d11188, type: 2}
       position: {x: 4, y: 1}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: bb3b413aa889f05408ab741c53583d14, type: 2}
       position: {x: 0, y: 2}
       direction: 2
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 9f0b6372ef769db408267391bff72d6c, type: 2}
       position: {x: 2, y: 2}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 566fc27d2afdc584899fb0cef07e33a1, type: 2}
       position: {x: 6, y: 2}
       direction: 0
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
       position: {x: 1, y: 3}
       direction: 1
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 6a5803bae5a897d44aeef7ca8d4c1755, type: 2}
       position: {x: 8, y: 3}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
     - pieceType: {fileID: 11400000, guid: 2667eba76604d85498fb32b3b5e3d6f3, type: 2}
       position: {x: 4, y: 4}
       direction: 3
       isObstacle: 0
       isHidden: 0
+      startOnGrid: 0
   currentSolutionIndex: 47

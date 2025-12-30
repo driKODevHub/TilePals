@@ -4,6 +4,12 @@ using UnityEngine;
 using CodeMonkey.Utils;
 using Object = UnityEngine.Object;
 
+public class FaceCamera : MonoBehaviour {
+    private Transform cam;
+    void Start() { cam = Camera.main?.transform; }
+    void LateUpdate() { if (cam != null) transform.forward = cam.forward; }
+}
+
 public class GridXZ<TGridObject>
 {
     public event EventHandler<OnGridObjectChangedEventArgs> OnGridObjectChanged;
@@ -21,14 +27,17 @@ public class GridXZ<TGridObject>
 
     // --- ПОЛЕ ДЛЯ ДЕБАГУ ---
     private List<GameObject> _debugTextObjects;
-    private bool _showDebug = false; // Початковий стан: ВИМКНЕНО
+    private TextMesh[,] _debugTextArray;
+    private bool _showDebug = false;
+    private Transform _debugParent;
 
-    public GridXZ(int width, int height, float cellSize, Vector3 originPosition, Func<GridXZ<TGridObject>, int, int, TGridObject> createGridObject)
+    public GridXZ(int width, int height, float cellSize, Vector3 originPosition, Transform debugParent, Func<GridXZ<TGridObject>, int, int, TGridObject> createGridObject)
     {
         this.width = width;
         this.height = height;
         this.cellSize = cellSize;
         this.originPosition = originPosition;
+        this._debugParent = debugParent;
 
         gridArray = new TGridObject[width, height];
 
@@ -48,53 +57,112 @@ public class GridXZ<TGridObject>
     private void InitializeDebugText()
     {
         _debugTextObjects = new List<GameObject>();
-        TextMesh[,] debugTextArray = new TextMesh[width, height];
+        _debugTextArray = new TextMesh[width, height];
 
+        OnGridObjectChanged += (object sender, OnGridObjectChangedEventArgs eventArgs) => {
+            if (_showDebug && eventArgs.x >= 0 && eventArgs.x < width && eventArgs.z >= 0 && eventArgs.z < height)
+            {
+                if (_debugTextArray != null && _debugTextArray[eventArgs.x, eventArgs.z] != null)
+                {
+                    var textMesh = _debugTextArray[eventArgs.x, eventArgs.z];
+                    textMesh.text = gridArray[eventArgs.x, eventArgs.z]?.ToString();
+                    FitToCell(textMesh.gameObject);
+                }
+            }
+        };
+
+        if (_showDebug) ShowDebugText();
+    }
+
+    // --- НАЛАШТУВАННЯ ДЕБАГУ ---
+    private const float DEBUG_TEXT_MAX_SCALE = 0.06f; // Можна змінювати цей коефіцієнт
+    private const float DEBUG_TEXT_MAX_WIDTH_PERCENT = 0.9f;
+
+    private void FitToCell(GameObject textObj)
+    {
+        if (textObj == null) return;
+        
+        TextMesh textMesh = textObj.GetComponent<TextMesh>();
+        if (textMesh != null)
+        {
+            // Simple "column" wrap: replace underscores/spaces with newlines
+            // Also adds a newline after every 15 characters if no separators
+            textMesh.text = WrapText(textMesh.text, 12);
+        }
+
+        textObj.transform.localScale = Vector3.one * (cellSize * DEBUG_TEXT_MAX_SCALE); 
+        
+        MeshRenderer renderer = textObj.GetComponent<MeshRenderer>();
+        if (renderer == null) return;
+
+        float maxWidth = cellSize * DEBUG_TEXT_MAX_WIDTH_PERCENT;
+        float currentWidth = renderer.bounds.size.x;
+
+        if (currentWidth > maxWidth)
+        {
+            float scaleFactor = maxWidth / currentWidth;
+            textObj.transform.localScale *= scaleFactor;
+        }
+    }
+
+    private string WrapText(string input, int maxLineLength)
+    {
+        if (string.IsNullOrEmpty(input)) return "";
+        
+        // Don't wrap if it looks like coordinates (e.g., "0,1" or "2,3")
+        // Simple check: if it contains only digits, commas, and spaces, keep it as-is
+        bool looksLikeCoordinates = System.Text.RegularExpressions.Regex.IsMatch(input, @"^[\d,\s]+$");
+        if (looksLikeCoordinates) return input;
+        
+        // For other text (like POT_TilePall_3x2), wrap by replacing separators
+        string result = input.Replace("_", "\n").Replace(" ", "\n");
+        return result;
+    }
+
+    private void ShowDebugText()
+    {
+        ClearDebugText(); 
+
+        int createdCount = 0;
         for (int x = 0; x < width; x++)
         {
             for (int z = 0; z < height; z++)
             {
+                // We pass NULL as parent to utility to ensure it treats the position as World Coordinates.
+                // We also add Y=0.2f to avoid Z-fighting with the floor.
+                Vector3 worldPos = GetWorldPosition(x, z) + new Vector3(cellSize, 0.4f, cellSize) * .5f;
+                
                 GameObject textGameObject = UtilsClass.CreateWorldText(
                     gridArray[x, z]?.ToString(),
-                    null,
-                    GetWorldPosition(x, z) + new Vector3(cellSize, 0, cellSize) * .5f,
+                    null, 
+                    worldPos,
                     35,
                     Color.white,
                     TextAnchor.MiddleCenter,
                     TextAlignment.Center
                 ).gameObject;
 
-                textGameObject.transform.localScale = Vector3.one * 0.03f;
-                debugTextArray[x, z] = textGameObject.GetComponent<TextMesh>();
+                // Now we attach it to our parent but KEEP world position (true)
+                if (_debugParent != null) textGameObject.transform.SetParent(_debugParent, true);
 
-                // Встановлюємо видимість відповідно до початкового стану _showDebug
-                textGameObject.SetActive(_showDebug);
+                textGameObject.AddComponent<FaceCamera>();
+                FitToCell(textGameObject);
 
+                _debugTextArray[x, z] = textGameObject.GetComponent<TextMesh>();
                 _debugTextObjects.Add(textGameObject);
+                createdCount++;
             }
         }
-
-        OnGridObjectChanged += (object sender, OnGridObjectChangedEventArgs eventArgs) => {
-            if (eventArgs.x >= 0 && eventArgs.x < width && eventArgs.z >= 0 && eventArgs.z < height && debugTextArray[eventArgs.x, eventArgs.z] != null)
-                debugTextArray[eventArgs.x, eventArgs.z].text = gridArray[eventArgs.x, eventArgs.z]?.ToString();
-        };
     }
 
     // --- ПУБЛІЧНИЙ МЕТОД: Перемикання видимості дебаг-тексту (Fix CS1061) ---
     public void SetDebugTextVisibility(bool isVisible)
     {
         if (_showDebug == isVisible) return;
-
         _showDebug = isVisible;
-        if (_debugTextObjects == null) return;
 
-        foreach (var textObject in _debugTextObjects)
-        {
-            if (textObject != null)
-            {
-                textObject.SetActive(isVisible);
-            }
-        }
+        if (_showDebug) ShowDebugText();
+        else ClearDebugText();
     }
 
     public void ClearDebugText()
@@ -103,9 +171,10 @@ public class GridXZ<TGridObject>
 
         foreach (var textObject in _debugTextObjects)
         {
-            Object.Destroy(textObject);
+            if (textObject != null) Object.Destroy(textObject);
         }
         _debugTextObjects.Clear();
+        _debugTextArray = new TextMesh[width, height];
     }
 
 

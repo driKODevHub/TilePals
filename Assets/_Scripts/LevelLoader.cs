@@ -39,6 +39,8 @@ public class LevelLoader : MonoBehaviour
         LoadLocation(dummyLocation, loadFromSave);
     }
 
+    public int GetCurrentLevelIndex() => _currentLevelIndex;
+
     #endregion
 
     public void LoadLocation(LevelCollectionSO location, bool loadFromSave, int forceIndex = -1)
@@ -190,18 +192,20 @@ public class LevelLoader : MonoBehaviour
                 if (personality != null) personality.Setup(temperament);
             }
 
-            // If it's a level item (manual placement in editor), store it for fallback
-            if (data.levelItems != null && data.levelItems.Contains(pData))
+            // Safety Check: Even if startOnGrid is true, if a PuzzleShape overlaps a lockedCell, force it off-grid.
+            // This fixes old data where shapes were saved as on-grid on tools/locked areas.
+            bool finalStartOnGrid = pData.startOnGrid;
+            if (finalStartOnGrid && !pData.isObstacle && pData.pieceType.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
             {
-                piece.SetEditorPlacement(pData.position, pData.direction, pData.startOnGrid);
-            }
-            // Also store it for auto-generated pieces if they were passed (e.g. from puzzleSolution)
-            else if (data.puzzleSolution != null && data.puzzleSolution.Contains(pData))
-            {
-                piece.SetEditorPlacement(pData.position, pData.direction, pData.startOnGrid);
+                var positions = pData.pieceType.GetGridPositionsList(pData.position, pData.direction);
+                if (positions.Any(pos => data.lockedCells.Contains(pos)))
+                {
+                    finalStartOnGrid = false;
+                }
             }
 
-            piece.StartOnGrid = pData.startOnGrid;
+            piece.StartOnGrid = finalStartOnGrid;
+            piece.SetEditorPlacement(pData.position, pData.direction, finalStartOnGrid);
         }
     }
 
@@ -326,6 +330,45 @@ public class LevelLoader : MonoBehaviour
         }
         _activeLocationBoards.Clear();
         _allSpawnedPieces.Clear();
+        CommandHistory.Clear();
+    }
+
+    public void ClearAllBoards()
+    {
+        // Clear all boards and pieces
+        foreach (var board in _activeLocationBoards)
+        {
+            if (board != null) board.Clear();
+            if (board != null) Destroy(board.gameObject);
+        }
+        _activeLocationBoards.Clear();
+        _allSpawnedPieces.Clear();
+        CommandHistory.Clear();
+    }
+
+    public void ClearBoardsAfter(int targetIndex)
+    {
+        // Remove boards with index >= targetIndex
+        for (int i = _activeLocationBoards.Count - 1; i >= 0; i--)
+        {
+            var board = _activeLocationBoards[i];
+            if (board == null) continue;
+            
+            // Extract index from boardId (format: "LocationName_Index")
+            string[] parts = board.boardId.Split('_');
+            if (parts.Length >= 2 && int.TryParse(parts[parts.Length - 1], out int boardIndex))
+            {
+                if (boardIndex >= targetIndex)
+                {
+                    board.Clear();
+                    Destroy(board.gameObject);
+                    _activeLocationBoards.RemoveAt(i);
+                }
+            }
+        }
+        
+        // Clean up pieces that no longer have a board
+        _allSpawnedPieces.RemoveAll(p => p == null || p.OwnerBoard == null);
         CommandHistory.Clear();
     }
 

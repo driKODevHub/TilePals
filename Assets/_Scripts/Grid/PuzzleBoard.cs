@@ -70,11 +70,16 @@ public class PuzzleBoard : MonoBehaviour
         }
 
         // 3. Create the GridXZ relative to our Origin
+        GameObject debugParentObj = new GameObject("[Grid Debug]");
+        debugParentObj.transform.SetParent(originPivot, false);
+        debugParentObj.transform.localPosition = Vector3.zero;
+
         Grid = new GridXZ<GridObject>(
             levelData.width, 
             levelData.height, 
             levelData.cellSize, 
             OriginPosition, 
+            debugParentObj.transform,
             (GridXZ<GridObject> g, int x, int z) => new GridObject(g, x, z)
         );
 

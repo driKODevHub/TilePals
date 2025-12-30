@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &25307428155358528
+--- !u!1 &6538971525432586821
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3725887889664556196}
-  - component: {fileID: 5166644139537196083}
-  - component: {fileID: 1351925539620329597}
+  - component: {fileID: 189893437050285332}
+  - component: {fileID: 1057738773615743941}
+  - component: {fileID: 7902583409348422353}
   m_Layer: 7
   m_Name: Colliders
   m_TagString: Untagged
@@ -18,13 +18,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3725887889664556196
+--- !u!4 &189893437050285332
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 25307428155358528}
+  m_GameObject: {fileID: 6538971525432586821}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -33,13 +33,13 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2065049021235378066}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &5166644139537196083
+--- !u!65 &1057738773615743941
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 25307428155358528}
+  m_GameObject: {fileID: 6538971525432586821}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -54,13 +54,13 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 4, y: 1, z: 1}
   m_Center: {x: 2, y: 0.5, z: 0.5}
---- !u!65 &1351925539620329597
+--- !u!65 &7902583409348422353
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 25307428155358528}
+  m_GameObject: {fileID: 6538971525432586821}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -90,11 +90,11 @@ PrefabInstance:
     - target: {fileID: 3756465973217694157, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: pieceTypeSO
       value: 
-      objectReference: {fileID: 11400000, guid: a118f7d569340d64991dbb2e1f6d931c, type: 2}
+      objectReference: {fileID: 11400000, guid: c1cbd36cf540a1d4f807d386c84452cd, type: 2}
     - target: {fileID: 6358479990675083844, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Mesh
       value: 
-      objectReference: {fileID: -2323685576507560685, guid: a5741c18eabc98f458cefb7114846152, type: 3}
+      objectReference: {fileID: -7676148158019301813, guid: a5741c18eabc98f458cefb7114846152, type: 3}
     - target: {fileID: 6920300426415250255, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -137,7 +137,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7108696464137794126, guid: 9debc67860535b144876a36a92629140, type: 3}
       propertyPath: m_Name
-      value: POT_TilePall_3x3 T
+      value: POT_TilePall_4x2 T_Thick
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -145,7 +145,7 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6920300426415250255, guid: 9debc67860535b144876a36a92629140, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3725887889664556196}
+      addedObject: {fileID: 189893437050285332}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9debc67860535b144876a36a92629140, type: 3}
 --- !u!4 &2065049021235378066 stripped
