@@ -8,6 +8,7 @@ public class PiecePlacementData
     public string pieceTypeName; 
     public Vector2Int origin;
     public PlacedObjectTypeSO.Dir direction;
+    public string heldItemTypeName; // New field for held item
 }
 
 [Serializable]

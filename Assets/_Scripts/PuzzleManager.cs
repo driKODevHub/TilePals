@@ -190,7 +190,10 @@ public class PuzzleManager : MonoBehaviour
     {
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
         if (_isLevelComplete) return;
+        
+        // БЛОКУВАННЯ: Якщо йде взаємодія (petting або підготовка до pickup), не міняємо hover
         if (_potentialInteractionPiece != null) return;
+        if (_isPettingActive) return;
 
         Ray ray = Camera.main.ScreenPointToRay(inputReader.MousePosition);
         RaycastHit[] hits = Physics.RaycastAll(ray, 100f, pieceLayer);
@@ -198,44 +201,79 @@ public class PuzzleManager : MonoBehaviour
 
         if (hits.Length > 0)
         {
-            float bestScore = -1f;
-
+            // Сортуємо hits за відстанню (найближчі першими)
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            
+            // КРИТИЧНО: Спочатку шукаємо дочірні об'єкти (айтеми в роті)
+            // Якщо знайдено - обираємо їх ЗАВЖДИ, ігноруючи батьків
+            PuzzlePiece childPiece = null;
+            float childDistance = float.MaxValue;
+            
             foreach (var hit in hits)
             {
                 PuzzlePiece p = hit.collider.GetComponentInParent<PuzzlePiece>();
                 if (p == null) continue;
-
-                // Restrict to active board
                 if (p.OwnerBoard != GridBuildingSystem.Instance.ActiveBoard) continue;
 
-                float score = 0f;
-                var cat = p.PieceTypeSO.category;
-
-                if (p.transform.parent != null && p.transform.parent.GetComponentInParent<PuzzlePiece>() != null)
+                // Перевіряємо чи це дочірній об'єкт (айтем у роті або пасажир)
+                bool isChild = p.transform.parent != null && p.transform.parent.GetComponentInParent<PuzzlePiece>() != null;
+                
+                if (isChild)
                 {
-                    score = 100f;
+                    // ВАЖЛИВО: Дочірні об'єкти (айтеми в роті) завжди доступні, навіть з вимкненим collider
+                    if (hit.distance < childDistance)
+                    {
+                        childPiece = p;
+                        childDistance = hit.distance;
+                    }
                 }
-                else if (cat == PlacedObjectTypeSO.ItemCategory.Toy ||
-                         cat == PlacedObjectTypeSO.ItemCategory.Food ||
-                         cat == PlacedObjectTypeSO.ItemCategory.Tool)
-                {
-                    score = 50f;
-                }
-                else
-                {
-                    score = 10f;
-                }
+            }
 
-                score -= hit.distance * 0.1f;
+            // Якщо знайдено дочірній об'єкт - обираємо його і все, ігноруємо інші
+            if (childPiece != null)
+            {
+                bestCandidate = childPiece;
+            }
+            else
+            {
+                // Якщо немає дочірніх об'єктів - звичайна логіка пріоритетів
+                float bestScore = -1f;
 
-                if (score > bestScore)
+                foreach (var hit in hits)
                 {
-                    bestScore = score;
-                    bestCandidate = p;
+                    PuzzlePiece p = hit.collider.GetComponentInParent<PuzzlePiece>();
+                    if (p == null) continue;
+                    if (p.OwnerBoard != GridBuildingSystem.Instance.ActiveBoard) continue;
+                    
+                    // ВАЖЛИВО: Ігноруємо об'єкти з вимкненим collider (тільки для НЕ-дочірніх)
+                    if (p.PieceCollider != null && !p.PieceCollider.enabled) continue;
+
+                    float score = 0f;
+                    var cat = p.PieceTypeSO.category;
+
+                    if (cat == PlacedObjectTypeSO.ItemCategory.Toy ||
+                        cat == PlacedObjectTypeSO.ItemCategory.Food ||
+                        cat == PlacedObjectTypeSO.ItemCategory.Tool)
+                    {
+                        score = 50f;
+                    }
+                    else
+                    {
+                        score = 10f;
+                    }
+
+                    score -= hit.distance * 0.1f;
+
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestCandidate = p;
+                    }
                 }
             }
         }
 
+        // Оновлюємо виділення тільки якщо змінився кандидат
         if (bestCandidate != _hoveredPiece)
         {
             if (_hoveredPiece != null) _hoveredPiece.SetOutline(false);
@@ -460,11 +498,30 @@ public class PuzzleManager : MonoBehaviour
                         var itemType = _heldPiece.PieceTypeSO.category;
                         if (itemType == PlacedObjectTypeSO.ItemCategory.Toy || itemType == PlacedObjectTypeSO.ItemCategory.Food)
                         {
-                            if (personality.TryReceiveItem(_heldPiece))
+                            if (personality.CanReceiveItem(_heldPiece))
                             {
-                                _heldPiece.SetOutlineLocked(false);
-                                _heldPiece = null;
-                                return true;
+                                ICommand cmd = new GiveItemCommand(
+                                    targetPiece, 
+                                    _heldPiece, 
+                                    _initialPiecePosition, 
+                                    _initialPieceRotation,
+                                    _initialWasPlaced,
+                                    _initialWasOffGrid,
+                                    _initialOrigin,
+                                    _initialDirection
+                                );
+
+                                if (cmd.Execute())
+                                {
+                                    CommandHistory.AddCommand(cmd);
+                                    personality.OnItemReceived(_heldPiece);
+
+                                    _heldPiece.SetOutlineLocked(false);
+                                    OnPieceDropped?.Invoke(_heldPiece);
+                                    _heldPiece = null;
+                                    CheckForWin();
+                                    return true;
+                                }
                             }
                         }
                     }
@@ -624,6 +681,34 @@ public class PuzzleManager : MonoBehaviour
         if (_heldPiece == null || _heldPiece.IsRotating) return;
 
         _hoveredToolForDrop = null;
+        
+        // Перевірка чи можна дати айтем коту в рот (для Toy/Food)
+        bool canGiveToCat = false;
+        if (_heldPiece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Toy ||
+            _heldPiece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.Food)
+        {
+            Ray catCheckRay = Camera.main.ScreenPointToRay(inputReader.MousePosition);
+            RaycastHit[] catHits = Physics.RaycastAll(catCheckRay, 100f, pieceLayer);
+            
+            foreach (var hitInfo in catHits)
+            {
+                PuzzlePiece targetCat = hitInfo.collider.GetComponentInParent<PuzzlePiece>();
+                if (targetCat != null && targetCat != _heldPiece &&
+                    targetCat.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
+                {
+                    var personality = targetCat.GetComponent<PiecePersonality>();
+                    if (personality != null && !targetCat.HasItem) // Перевіряємо чи вільний рот
+                    {
+                        canGiveToCat = true;
+                        
+                        // Не снемпимо позицію при наведенні, просто позначаємо що можна дати
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Перевірка для PuzzleShape (котів) на інструментах
         if (_heldPiece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
         {
             Ray hoverRay = Camera.main.ScreenPointToRay(inputReader.MousePosition);
@@ -667,7 +752,7 @@ public class PuzzleManager : MonoBehaviour
             Vector2Int rotationOffset = _heldPiece.PieceTypeSO.GetRotationOffset(_heldPiece.CurrentDirection);
             Vector3 rotationVisualOffset = new Vector3(rotationOffset.x, 0, rotationOffset.y) * cellSize;
 
-            if (isMouseOverGrid || !smoothMovementOffGrid)
+            if ((isMouseOverGrid && !canGiveToCat) || !smoothMovementOffGrid)
             {
                 Vector3 snappedGridPos = grid.GetWorldPosition(logicalOrigin.x, logicalOrigin.y);
                 targetPosition = snappedGridPos + rotationVisualOffset;
@@ -698,7 +783,7 @@ public class PuzzleManager : MonoBehaviour
             }
 
             CanPlaceHeldPiece(logicalOrigin, out bool canOnGrid, out bool canOffGrid);
-            bool isValid = canOnGrid || canOffGrid;
+            bool isValid = canOnGrid || canOffGrid || canGiveToCat; // Додано canGiveToCat
             _heldPiece.SetInvalidPlacementVisual(!isValid);
 
             if (isMouseOverGrid)

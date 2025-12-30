@@ -304,7 +304,8 @@ public class LevelLoader : MonoBehaviour
                     { 
                         pieceTypeName = piece.PieceTypeSO.name, 
                         origin = placedObj.Origin, 
-                        direction = placedObj.Direction 
+                        direction = placedObj.Direction,
+                        heldItemTypeName = piece.HasItem ? piece.HeldItem.PieceTypeSO.name : ""
                     });
                 }
             }
@@ -480,6 +481,17 @@ public class LevelLoader : MonoBehaviour
             
             TeleportPieceAndResetPhysics(piece, targetWorldPos, Quaternion.Euler(0, piece.PieceTypeSO.GetRotationAngle(data.direction), 0));
             availablePieces.Remove(piece);
+
+            // Restore Held Item
+            if (!string.IsNullOrEmpty(data.heldItemTypeName))
+            {
+                PuzzlePiece heldItem = availablePieces.FirstOrDefault(p => p != null && p.PieceTypeSO.name == data.heldItemTypeName);
+                if (heldItem != null)
+                {
+                    piece.AttachItem(heldItem);
+                    availablePieces.Remove(heldItem);
+                }
+            }
         }
     }
 

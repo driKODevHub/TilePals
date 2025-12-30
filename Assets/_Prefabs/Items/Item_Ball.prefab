@@ -173,6 +173,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PuzzlePiece
   pieceTypeSO: {fileID: 11400000, guid: 0fd9ff360ab207140a06964822a0ccdc, type: 2}
   facialController: {fileID: 0}
+  attachmentPoint: {fileID: 0}
 --- !u!114 &8053963620773436644
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -186,6 +187,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PieceMovement
   followSpeed: 25
+  snapDistance: 0.01
   rotationSpeed: 400
   useInertia: 1
   minOvershootAngle: 10
@@ -254,7 +256,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.159
+  m_Radius: 0.2
   m_Center: {x: 0.5, y: 0.2, z: 0.5}
 --- !u!1001 &6423257335418343380
 PrefabInstance:

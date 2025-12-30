@@ -144,13 +144,7 @@ public class PlaceCommand : ICommand
             {
                 if (p == null) continue;
 
-                // Відновлюємо батьківство (воно могло збитися при Pickup, якщо ми робили detach)
-                // Але usually we kept them as children if we moved the tool.
-                if (p.transform.parent != piece.transform)
-                {
-                    p.transform.SetParent(piece.transform);
-                }
-                
+                // AddPassenger сам встановить батьківство зі збереженням scale
                 piece.AddPassenger(p); // Додаємо в список і фіксуємо батьківство
 
                 // Повертаємо на грід
@@ -217,10 +211,7 @@ public class PlaceCommand : ICommand
             {
                 if (p == null) continue;
                 
-                // Повертаємо як дитину
-                p.transform.SetParent(piece.transform);
-                p.DisablePhysics(); // Пасажири не мають фізики
-                
+                // AddPassenger сам встановить батьківство зі збереженням scale
                 piece.AddPassenger(p);
             }
             // Синхронізуємо їх позиції/ротації, оскільки батько стрибнув

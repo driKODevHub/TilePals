@@ -40,9 +40,11 @@ public class PuzzlePiece : MonoBehaviour
     // --- MOUTH ITEM (Single) ---
     public PuzzlePiece HeldItem { get; private set; }
     public bool HasItem => HeldItem != null;
+    private Vector3 _heldItemOriginalScale; // Зберігаємо оригінальний scale айтему
 
     // --- PASSENGERS (For Tools/Baskets) ---
     public List<PuzzlePiece> StoredPassengers { get; private set; } = new List<PuzzlePiece>();
+    private Dictionary<PuzzlePiece, Vector3> _passengerOriginalScales = new Dictionary<PuzzlePiece, Vector3>(); // Зберігаємо оригінальні scale пасажирів
 
     public Vector2Int ClickOffset { get; set; }
     public bool StartOnGrid { get; set; } = true;
@@ -153,12 +155,25 @@ public class PuzzlePiece : MonoBehaviour
         if (!StoredPassengers.Contains(passenger))
         {
             StoredPassengers.Add(passenger);
+
+            // Зберігаємо оригінальний world scale перед тим, як зробити дочірнім об'єктом
+            Vector3 originalWorldScale = passenger.transform.lossyScale;
+            _passengerOriginalScales[passenger] = originalWorldScale;
+
             passenger.transform.SetParent(transform);
 
-            // Р’РёРјРёРєР°С”РјРѕ С„С–Р·РёРєСѓ РїР°СЃР°Р¶РёСЂСѓ
+            // Відновлюємо оригінальний scale через localScale
+            Vector3 parentScale = transform.lossyScale;
+            passenger.transform.localScale = new Vector3(
+                originalWorldScale.x / parentScale.x,
+                originalWorldScale.y / parentScale.y,
+                originalWorldScale.z / parentScale.z
+            );
+
+            // Вимикаємо фізику пасажиру
             passenger.DisablePhysics();
             if (passenger.Movement) passenger.Movement.enabled = false;
-            if (passenger.PieceCollider) passenger.PieceCollider.enabled = false;
+            // if (passenger.PieceCollider) passenger.PieceCollider.enabled = false;
         }
     }
 
@@ -169,6 +184,14 @@ public class PuzzlePiece : MonoBehaviour
             if (p != null)
             {
                 p.transform.SetParent(newRoot);
+                
+                // Відновлюємо оригінальний world scale
+                if (_passengerOriginalScales.TryGetValue(p, out Vector3 originalScale))
+                {
+                    p.transform.localScale = originalScale;
+                    _passengerOriginalScales.Remove(p);
+                }
+                
                 if (p.Movement) p.Movement.enabled = true;
                 if (p.PieceCollider) p.PieceCollider.enabled = true;
 
@@ -187,11 +210,27 @@ public class PuzzlePiece : MonoBehaviour
 
         item.DisablePhysics();
         if (item.Movement != null) item.Movement.enabled = false;
-        if (item.PieceCollider) item.PieceCollider.enabled = false;
+        // ВАЖЛИВО: НЕ вимикаємо collider, щоб айтем залишався доступним для raycast hover selection
+        // if (item.PieceCollider) item.PieceCollider.enabled = false;
+
+        // Зберігаємо оригінальний world scale перед тим, як зробити дочірнім об'єктом
+        _heldItemOriginalScale = item.transform.lossyScale;
 
         item.transform.SetParent(attachmentPoint);
         item.transform.localPosition = Vector3.zero;
         item.transform.localRotation = Quaternion.identity;
+
+        // Відновлюємо оригінальний scale через localScale
+        // lossyScale = localScale * parent.lossyScale, тому localScale = lossyScale / parent.lossyScale
+        if (attachmentPoint != null)
+        {
+            Vector3 parentScale = attachmentPoint.lossyScale;
+            item.transform.localScale = new Vector3(
+                _heldItemOriginalScale.x / parentScale.x,
+                _heldItemOriginalScale.y / parentScale.y,
+                _heldItemOriginalScale.z / parentScale.z
+            );
+        }
 
         if (item.IsPlaced) GridBuildingSystem.Instance.RemovePieceFromGrid(item);
         if (item.IsOffGrid && GridBuildingSystem.Instance.ActiveBoard != null) GridBuildingSystem.Instance.ActiveBoard.OffGridTracker.RemovePiece(item);
@@ -207,6 +246,9 @@ public class PuzzlePiece : MonoBehaviour
         HeldItem = null;
 
         item.transform.SetParent(null);
+        
+        // Відновлюємо оригінальний world scale
+        item.transform.localScale = _heldItemOriginalScale;
 
         if (item.Movement != null) item.Movement.enabled = true;
         if (item.PieceCollider) item.PieceCollider.enabled = true;

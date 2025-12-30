@@ -193,13 +193,24 @@ public class PiecePersonality : MonoBehaviour
         ReturnToNeutralState();
     }
 
-    public bool TryReceiveItem(PuzzlePiece item)
+    public bool CanReceiveItem(PuzzlePiece item)
     {
         if (_isSleeping) return false;
         if (_puzzlePiece.HasItem) return false;
+        return true;
+    }
+
+    public void OnItemReceived(PuzzlePiece item)
+    {
+        SetEmotion(excitedEmotion != null ? excitedEmotion : curiousEmotion);
+    }
+
+    public bool TryReceiveItem(PuzzlePiece item)
+    {
+        if (!CanReceiveItem(item)) return false;
 
         _puzzlePiece.AttachItem(item);
-        SetEmotion(excitedEmotion != null ? excitedEmotion : curiousEmotion);
+        OnItemReceived(item);
         return true;
     }
 

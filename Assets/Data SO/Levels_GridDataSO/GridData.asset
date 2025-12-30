@@ -487,6 +487,12 @@ MonoBehaviour:
     isObstacle: 1
     isHidden: 0
     startOnGrid: 1
+  - pieceType: {fileID: 11400000, guid: 0fd9ff360ab207140a06964822a0ccdc, type: 2}
+    position: {x: 4, y: 3}
+    direction: 0
+    isObstacle: 1
+    isHidden: 0
+    startOnGrid: 1
   puzzlePieces:
   - {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
   - {fileID: 11400000, guid: 650e992d58e274e44b0bb69da2961424, type: 2}
@@ -515,7 +521,7 @@ MonoBehaviour:
   - pieceType: {fileID: 11400000, guid: e5aa6b56ef6a4ae48b7d6a1989d83ec7, type: 2}
     count: 1
   - pieceType: {fileID: 11400000, guid: 0fd9ff360ab207140a06964822a0ccdc, type: 2}
-    count: 1
+    count: 2
   puzzleSolution:
   - pieceType: {fileID: 11400000, guid: 588e2e3e496e5a1498eb4d2870ddde62, type: 2}
     position: {x: 1, y: 0}
