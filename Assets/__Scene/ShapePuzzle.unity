@@ -1384,6 +1384,8 @@ MonoBehaviour:
   viewBoundsMarginFactor: 0.1
   showDebugLogs: 0
   activeGridData: {fileID: 0}
+  cameraSwitcherPrefab: {fileID: 1293629786954675519, guid: d2a8e09c7735b0c4c8897fd15a50b837, type: 3}
+  switcherActivationDelay: 0.05
 --- !u!4 &1353730456
 Transform:
   m_ObjectHideFlags: 0

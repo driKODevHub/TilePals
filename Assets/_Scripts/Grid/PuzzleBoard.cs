@@ -122,6 +122,19 @@ public class PuzzleBoard : MonoBehaviour
         isCompleted = state;
     }
 
+    public Vector3 GetGridCenterWorldPosition()
+    {
+        if (levelData == null || Pivot == null) return transform.position;
+        
+        float centerX = (levelData.width * levelData.cellSize) * 0.5f;
+        float centerZ = (levelData.height * levelData.cellSize) * 0.5f;
+        
+        // Pivot is (0,0) cell corner. 
+        // We rotate the center offset by the pivot's rotation.
+        Vector3 centerOffset = Pivot.rotation * new Vector3(centerX, 0, centerZ);
+        return Pivot.position + centerOffset;
+    }
+
     public void Clear()
     {
         foreach (var piece in spawnedPieces)

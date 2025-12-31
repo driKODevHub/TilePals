@@ -24,15 +24,27 @@ public class LevelLoader : MonoBehaviour
         Instance = this;
     }
 
+    public List<PuzzleBoard> ActiveLocationBoards => _activeLocationBoards;
+
     #region Backward Compatibility for GameManager
 
-    public void ClearLevel() => ClearLocation();
+    public void ClearLevel()
+    {
+        // Destroy old boards
+        foreach (var board in _activeLocationBoards)
+        {
+            if (board != null) Destroy(board.gameObject);
+        }
+        _activeLocationBoards.Clear();
+        _allSpawnedPieces.Clear();
+        _currentBoard = null;
+    }
+
     public void SaveLevelState() => SaveCurrentLocationState();
 
     public void LoadLevel(GridDataSO levelData, bool loadFromSave)
     {
-        // For compatibility, we create a temporary LocationSO or just load this one level
-        // Better: create a dummy LocationSO so the rest of logic works.
+        // For compatibility, we create a temporary LocationSO
         LevelCollectionSO dummyLocation = ScriptableObject.CreateInstance<LevelCollectionSO>();
         dummyLocation.name = "SingleLevel_" + levelData.name;
         dummyLocation.levels = new List<GridDataSO> { levelData };
@@ -46,51 +58,87 @@ public class LevelLoader : MonoBehaviour
     public void LoadLocation(LevelCollectionSO location, bool loadFromSave, int forceIndex = -1)
     {
         _currentLocation = location;
-        ClearLocation();
+        ClearLevel();
 
         if (location == null || location.levels == null || location.levels.Count == 0) return;
 
-        // Find the first incomplete level index
-        int startLevelIndex = forceIndex;
-        if (startLevelIndex == -1)
+        // Determine which levels to spawn
+        // Logic: Spawn ALL completed levels + the first incomplete one (current)
+        // If forceIndex is provided, ensure that one is spawned and set as current.
+
+        int determinedCurrentIndex = -1;
+
+        for (int i = 0; i < location.levels.Count; i++)
         {
-            startLevelIndex = 0;
-            for (int i = 0; i < location.levels.Count; i++)
+            string boardId = $"{location.name}_{i}";
+            LevelSaveData saveData = SaveSystem.LoadLevelProgress(boardId);
+            bool isCompleted = saveData != null && saveData.isCompleted;
+            
+            // If we haven't found a current level yet, and this one is NOT completed, it's the current one.
+            bool isCurrent = false;
+
+            if (forceIndex != -1)
             {
-                string boardId = $"{location.name}_{i}";
-                LevelSaveData saveData = SaveSystem.LoadLevelProgress(boardId);
-                if (saveData == null || !saveData.isCompleted)
+                isCurrent = (i == forceIndex);
+            }
+            else if (determinedCurrentIndex == -1)
+            {
+                if (!isCompleted)
                 {
-                    startLevelIndex = i;
-                    break;
+                    determinedCurrentIndex = i;
+                    isCurrent = true;
+                }
+            }
+
+            // Spawn conditions:
+            // 1. Level is completed
+            // 2. Level is the determined "current" level
+            // 3. Level is effectively the "current" if we ran out of levels (all completed -> last one?) 
+            //    (Actually logic below handles determinedCurrentIndex fallback)
+
+            if (isCompleted || isCurrent)
+            {
+                // Instantiate Board
+                InstantiateBoardAtIndex(i, loadFromSave);
+                if (isCurrent) 
+                {
+                    _currentLevelIndex = i;
+                    // Will set _currentBoard inside InstantiateBoardAtIndex... 
+                    // But we iterate all. We need to set active board to the current one at the end?
+                    // Let's refine InstantiateBoardAtIndex to return board.
                 }
             }
         }
-        
-        _currentLevelIndex = startLevelIndex;
-        LoadLevelAtIndex(_currentLevelIndex, loadFromSave);
+
+        // If all levels are completed and no force index, maybe focus the last one?
+        if (determinedCurrentIndex == -1 && forceIndex == -1)
+        {
+            // All completed. Set last one as current/focus?
+            _currentLevelIndex = location.levels.Count - 1;
+            // Ensure last one is active
+            var lastBoard = _activeLocationBoards.LastOrDefault();
+            if (lastBoard != null) SetCurrentBoard(lastBoard);
+        }
+        else
+        {
+             // Find the board matching _currentLevelIndex and set it active
+             var currentBoard = _activeLocationBoards.FirstOrDefault(b => b.boardId == $"{location.name}_{_currentLevelIndex}");
+             if (currentBoard != null) SetCurrentBoard(currentBoard);
+        }
     }
     
-    public void LoadLevelAtIndex(int index, bool loadFromSave)
+    private PuzzleBoard InstantiateBoardAtIndex(int index, bool loadFromSave)
     {
-         if (_currentLocation == null || index < 0 || index >= _currentLocation.levels.Count) return;
+         if (_currentLocation == null || index < 0 || index >= _currentLocation.levels.Count) return null;
          
          GridDataSO levelData = _currentLocation.levels[index];
-         if (levelData == null) return;
+         if (levelData == null) return null;
          
-         // 1. Create Board
-         PuzzleBoard board = Instantiate(boardPrefab, transform.position, Quaternion.identity, transform);
-         // Use index in name/ID to ensure uniqueness
+         // 1. Create Board at World Position
+         PuzzleBoard board = Instantiate(boardPrefab, levelData.worldPosition, Quaternion.identity, transform);
          board.name = $"Board_{index}_{levelData.name}";
          board.boardId = $"{_currentLocation.name}_{index}"; 
          
-         // Custom positioning could go here (e.g. usage of GridAnchor from the Environment prefab?)
-         // For now, spawn at 0,0 or let the BoardSwitcher handle camera. 
-         // If we have multiple rooms, maybe we hide/show them?
-         // User requested: "Spawn next AFTER complete".
-         
-         _currentBoard = board;
-         _currentLevelIndex = index;
          _activeLocationBoards.Add(board);
          board.InitializeBoard(levelData);
 
@@ -102,25 +150,47 @@ public class LevelLoader : MonoBehaviour
          
          FinalizePlacement(board, saveData);
          
-         SetCurrentBoard(board);
+         return board;
+    }
+    
+    // Kept for direct calls, but creates a single board if not exists?
+    public void LoadLevelAtIndex(int index, bool loadFromSave)
+    {
+         // This method was previously clearing everything. Now it should probably just ensure the level is spawned?
+         // If we follow the rule "Spawn next", we can just call Instantiate.
+         
+         // Check if already exists
+         if (_activeLocationBoards.Any(b => b.boardId == $"{_currentLocation.name}_{index}")) return;
+         
+         var board = InstantiateBoardAtIndex(index, loadFromSave);
+         if (board != null)
+         {
+             SetCurrentBoard(board);
+             _currentLevelIndex = index;
+         }
     }
     
     public void RestartCurrentLevel()
     {
-        if (_currentLocation != null && _currentLevelIndex != -1)
-        {
-            LoadLocation(_currentLocation, false, _currentLevelIndex); 
-        }
+        // Reload location to reset everything? Or just reset current board?
+        // Simpler: Reload Location
+        if (_currentLocation != null) LoadLocation(_currentLocation, false, _currentLevelIndex);
     }
 
     public void LoadNextLevel()
     {
-        if (_currentLocation == null || _currentBoard == null) return;
+        if (_currentLocation == null) return;
         
         int nextIndex = _currentLevelIndex + 1;
         if (nextIndex < _currentLocation.levels.Count)
         {
-             LoadLevelAtIndex(nextIndex, true); 
+             // Instantiate next level
+             var board = InstantiateBoardAtIndex(nextIndex, true);
+             if (board != null)
+             {
+                 _currentLevelIndex = nextIndex;
+                 SetCurrentBoard(board);
+             }
         }
     }
 
@@ -129,6 +199,9 @@ public class LevelLoader : MonoBehaviour
         _currentBoard = board;
         GridBuildingSystem.Instance.SetActiveBoard(_currentBoard);
         if (GridVisualManager.Instance != null) GridVisualManager.Instance.ReinitializeVisuals();
+        
+        // Focus Camera
+        if (CameraController.Instance != null) CameraController.Instance.FocusOnBoard(board);
     }
 
     private void SpawnObstacles(PuzzleBoard board, GridDataSO data)

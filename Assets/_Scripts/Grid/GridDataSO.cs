@@ -57,6 +57,9 @@ public class GridDataSO : ScriptableObject
     public GameObject environmentPrefab;
     public Vector3 levelSpawnOffset;
 
+    [Header("World Settings")]
+    public Vector3 worldPosition;
+
     [Header("Grid Settings")]
     public int width = 10;
     public int height = 10;

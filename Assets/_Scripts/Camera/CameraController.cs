@@ -66,6 +66,16 @@ public class CameraController : MonoBehaviour
 
     private Plane _groundPlane = new Plane(Vector3.up, Vector3.zero);
 
+    [Header("Navigation Switcher")]
+    [SerializeField] private BoardSwitcher cameraSwitcherPrefab;
+    [SerializeField] private float switcherActivationDelay = 0.05f;
+    private BoardSwitcher _activeSwitcher;
+    private float _pushingEdgeTime;
+    private bool _isEdgeLatched;
+    private Vector3 _latchedDirection;
+    private Vector3 _currentDragDeltaWorld; // To pass drag info to EdgeNav
+    private PuzzleBoard _pendingTargetBoard;
+
     private PlayerInputActions playerInputActions;
 
     private void Awake()
@@ -143,6 +153,7 @@ public class CameraController : MonoBehaviour
             HandleMovement();
             HandleRotation();
             HandleZoom();
+            HandleEdgeNavigation();
         }
         else
         {
@@ -266,8 +277,8 @@ public class CameraController : MonoBehaviour
             Vector3 worldPosCurrent = rayCurrent.GetPoint(enterCurrent);
             Vector3 worldPosPrevious = rayPrevious.GetPoint(enterPrevious);
             Vector3 worldDelta = worldPosPrevious - worldPosCurrent;
-
-            _targetPosition += worldDelta * dragSensitivity;
+            _currentDragDeltaWorld = worldDelta * dragSensitivity; // Store for EdgeNav
+            _targetPosition += _currentDragDeltaWorld;
         }
     }
 
@@ -376,5 +387,228 @@ public class CameraController : MonoBehaviour
         if (Input.mouseScrollDelta.y < 0) zoomAmount = +1f;
         return zoomAmount;
 #endif
+    }
+
+    private void HandleEdgeNavigation()
+    {
+        if (!enableBounds) return;
+
+        // 1. Calculate Total Attempted Movement Vector (World Space)
+        Vector3 keyMove = (transform.forward * inputMoveDirection.z + transform.right * inputMoveDirection.x).normalized * moveSpeed * Time.deltaTime;
+        Vector3 totalMove = keyMove;
+        
+        if (isDragPanning)
+        {
+            totalMove += _currentDragDeltaWorld;
+            _currentDragDeltaWorld = Vector3.zero; // Consume it
+        }
+
+        // 2. Logic
+        if (_isEdgeLatched)
+        {
+            // We are latched. We only unlatch if the user intentionally moves AWAY from the edge.
+            // Check angle between 'totalMove' and '_latchedDirection'.
+            
+            bool isMovingAway = false;
+            if (totalMove.sqrMagnitude > 0.001f)
+            {
+                // Dot Product: Positive = Same dir, Negative = Opposite.
+                float dot = Vector3.Dot(totalMove.normalized, _latchedDirection);
+                // If dot is negative, we are moving generally away.
+                // Let's use a threshold to allow sliding along the edge? 
+                // User said "go in reverse direction".
+                if (dot < -0.1f) isMovingAway = true;
+            }
+
+            if (isMovingAway)
+            {
+                HideSwitcher(); // Unlatch
+            }
+            else
+            {
+                // Stay Latched. 
+                // Maybe snap camera to edge to prevent jitter?
+                // The main clamp handles visual constraints.
+            }
+        }
+        else
+        {
+            // We are NOT latched. Check if we SHOUL be.
+            if (totalMove == Vector3.zero) 
+            {
+                HideSwitcher();
+                return;
+            }
+
+            // Predict if this move hits the edge
+            // Logic: Clamp(Current + Move) != (Current + Move)
+            Vector3 rawTarget = _targetPosition + totalMove;
+            Vector3 clampedTarget = ClampPositionToOBB(rawTarget, _boundsCenter, _boundsSize, _boundsRotationY);
+
+            // If we are pushing (Raw is significantly different from Clamped)
+            if (Vector3.Distance(rawTarget, clampedTarget) > 0.01f)
+            {
+                _pushingEdgeTime += Time.deltaTime;
+
+                if (_pushingEdgeTime >= switcherActivationDelay)
+                {
+                    // LATCH!
+                    Vector3 pushDirection = (rawTarget - clampedTarget).normalized;
+                    PuzzleBoard nearestBoard = FindNearestBoardInDirection(pushDirection);
+
+                    if (nearestBoard != null)
+                    {
+                        ShowSwitcher(nearestBoard, clampedTarget, pushDirection);
+                    }
+                }
+            }
+            else
+            {
+                _pushingEdgeTime = 0f;
+            }
+        }
+    }
+
+    private PuzzleBoard FindNearestBoardInDirection(Vector3 dir)
+    {
+        if (LevelLoader.Instance == null) return null;
+        
+        var boards = LevelLoader.Instance.ActiveLocationBoards;
+        var currentBoard = GridBuildingSystem.Instance.ActiveBoard; 
+        
+        PuzzleBoard bestBoard = null;
+        float bestDist = float.MaxValue;
+        
+        // Use current bounds center as search origin. Flatten it.
+        Vector3 currentCenter = new Vector3(_boundsCenter.x, 0, _boundsCenter.y);
+
+        // Ensure direction is flat
+        Vector3 flatDir = new Vector3(dir.x, 0, dir.z).normalized;
+
+        foreach (var board in boards)
+        {
+            if (board == currentBoard) continue;
+            
+            // Use Grid Center instead of transform position
+            Vector3 boardCenter = board.GetGridCenterWorldPosition();
+            boardCenter.y = 0; // Flatten
+            
+            // Vector from current center to board
+            Vector3 toBoard = boardCenter - currentCenter;
+            toBoard.y = 0; // Ensure logic is purely 2D
+            
+            float dist = toBoard.magnitude;
+            float angle = Vector3.Angle(flatDir, toBoard);
+            
+            // Stricter angle: 45 degrees (total 90 cone).
+            if (angle < 45f) 
+            {
+                // Scoring: Favor proximity AND alignment.
+                // A board perfectly aligned (0 deg) is preferred over one at 45 deg even if slightly further.
+                float score = dist * (1.0f + (angle / 45.0f) * 0.5f); 
+
+                if (score < bestDist)
+                {
+                    bestDist = score;
+                    bestBoard = board;
+                }
+            }
+        }
+        return bestBoard;
+    }
+
+    private void ShowSwitcher(PuzzleBoard target, Vector3 position, Vector3 direction)
+    {
+        if (_activeSwitcher == null)
+        {
+            if (cameraSwitcherPrefab == null) return;
+            _activeSwitcher = Instantiate(cameraSwitcherPrefab);
+        }
+        
+        _activeSwitcher.gameObject.SetActive(true);
+        _activeSwitcher.Initialize(target);
+        
+        // --- Refined Positioning: Visual Screen Edge ---
+        // 1. Calculate Screen Direction regarding the camera center
+        // Transform the push direction (world) into viewport space relative to center
+        // Actually, simplest is to use the bounds center vs target logic or just the 'pushDirection' logic.
+        // 'direction' is the world push vector.
+        
+        // We want to place the button at the edge of the screen in 'direction'.
+        // Project world direction to screen space (2D).
+        // A simple approximation for Top-Down/Iso:
+        // Use camera.WorldToViewportPoint.
+        
+        Camera cam = Camera.main;
+        if (cam != null)
+        {
+            // Project the direction vector onto the screen plane
+            Vector3 camForward = cam.transform.forward;
+            Vector3 camRight = cam.transform.right;
+            Vector3 camUp = cam.transform.up;
+            
+            // Project 'direction' onto camera basis
+            float x = Vector3.Dot(direction, camRight);
+            float y = Vector3.Dot(direction, camUp); // For top-down, up is screen Y
+            
+            // Normalize 2D vector
+            Vector2 screenDir = new Vector2(x, y).normalized;
+            
+            // Calculate Viewport Position (0-1)
+            // Center is (0.5, 0.5). Edge is roughly at 0.5 distance? 
+            // Let's go 0.45 to be safe inside.
+            // But we need to handle aspect ratio if we want exact edge? 
+            // Simplified: 0.5 + dir * 0.4.
+            Vector2 viewportPos = new Vector2(0.5f, 0.5f) + screenDir * 0.4f;
+            
+            // Clamp to [0.1, 0.9] texturing safe area
+            viewportPos.x = Mathf.Clamp(viewportPos.x, 0.1f, 0.9f);
+            viewportPos.y = Mathf.Clamp(viewportPos.y, 0.1f, 0.9f);
+            
+            // Raycast to Ground (Y=0)
+            Ray ray = cam.ViewportPointToRay(new Vector3(viewportPos.x, viewportPos.y, 0));
+            float enter;
+            if (_groundPlane.Raycast(ray, out enter))
+            {
+                Vector3 screenEdgeWorldPos = ray.GetPoint(enter);
+                screenEdgeWorldPos.y = 0f; // Ensure floor
+                _activeSwitcher.transform.position = screenEdgeWorldPos;
+            }
+            else
+            {
+                // Fallback
+                Vector3 flatPosition = position;
+                flatPosition.y = 0f;
+                _activeSwitcher.transform.position = flatPosition + direction * 3.0f; 
+            }
+        }
+        else
+        {
+             // Fallback
+             Vector3 flatPosition = position;
+             flatPosition.y = 0f;
+             _activeSwitcher.transform.position = flatPosition + direction * 3.0f;
+        }
+
+        // Rotation: Point towards the target board center
+        Vector3 toTarget = target.transform.position - _activeSwitcher.transform.position;
+        toTarget.y = 0;
+        if (toTarget != Vector3.zero)
+        {
+            _activeSwitcher.transform.rotation = Quaternion.LookRotation(toTarget);
+        }
+
+        _isEdgeLatched = true;
+        _latchedDirection = direction;
+    }
+
+    private void HideSwitcher()
+    {
+        if (_activeSwitcher != null)
+        {
+            _activeSwitcher.gameObject.SetActive(false);
+        }
+        _pushingEdgeTime = 0f;
+        _isEdgeLatched = false;
     }
 }

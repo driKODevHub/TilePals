@@ -33,7 +33,14 @@ public class BoardSwitcher : MonoBehaviour
         if (targetBoard != null)
         {
             GridBuildingSystem.Instance.SetActiveBoard(targetBoard);
+            if (CameraController.Instance != null) CameraController.Instance.FocusOnBoard(targetBoard);
             Debug.Log($"Switched active board to {targetBoard.boardId}");
         }
+    }
+
+    public void Initialize(PuzzleBoard target)
+    {
+        targetBoard = target;
+        if (highlightVisual != null) highlightVisual.SetActive(false); // Reset visual
     }
 }

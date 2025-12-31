@@ -190,6 +190,14 @@ public class PuzzleManager : MonoBehaviour
     {
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
         if (_isLevelComplete) return;
+
+        var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+        if (activeBoard != null && activeBoard.isCompleted)
+        {
+            if (_hoveredPiece != null) _hoveredPiece.SetOutline(false);
+            _hoveredPiece = null;
+            return;
+        }
         
         // БЛОКУВАННЯ: Якщо йде взаємодія (petting або підготовка до pickup), не міняємо hover
         if (_potentialInteractionPiece != null) return;
@@ -287,6 +295,9 @@ public class PuzzleManager : MonoBehaviour
         if (PauseManager.Instance != null && PauseManager.Instance.IsPaused) return;
         if (_isLevelComplete) return;
         if (Keyboard.current != null && Keyboard.current.altKey.isPressed) return;
+
+        var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+        if (activeBoard != null && activeBoard.isCompleted) return;
 
         if (_heldPiece == null && _hoveredPiece != null)
         {
@@ -488,7 +499,9 @@ public class PuzzleManager : MonoBehaviour
         foreach (var hit in hits)
         {
             PuzzlePiece targetPiece = hit.collider.GetComponentInParent<PuzzlePiece>();
-            if (targetPiece != null && targetPiece != _heldPiece)
+            if (targetPiece != null && targetPiece != _heldPiece && 
+                targetPiece.OwnerBoard == GridBuildingSystem.Instance.ActiveBoard && 
+                !targetPiece.OwnerBoard.isCompleted)
             {
                 if (targetPiece.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
                 {
@@ -537,6 +550,8 @@ public class PuzzleManager : MonoBehaviour
         // removed IsStaticObstacle check
 
         var activeBoard = GridBuildingSystem.Instance.ActiveBoard;
+        if (activeBoard != null && activeBoard.isCompleted) return;
+        if (piece.OwnerBoard != activeBoard) return;
 
         if (piece.transform.parent != null)
         {
@@ -694,7 +709,8 @@ public class PuzzleManager : MonoBehaviour
             {
                 PuzzlePiece targetCat = hitInfo.collider.GetComponentInParent<PuzzlePiece>();
                 if (targetCat != null && targetCat != _heldPiece &&
-                    targetCat.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape)
+                    targetCat.PieceTypeSO.category == PlacedObjectTypeSO.ItemCategory.PuzzleShape &&
+                    targetCat.OwnerBoard == GridBuildingSystem.Instance.ActiveBoard)
                 {
                     var personality = targetCat.GetComponent<PiecePersonality>();
                     if (personality != null && !targetCat.HasItem) // Перевіряємо чи вільний рот
@@ -719,7 +735,8 @@ public class PuzzleManager : MonoBehaviour
 
                 if (tool != null && tool != _heldPiece &&
                     tool.PieceTypeSO.usageType == PlacedObjectTypeSO.UsageType.UnlockGrid &&
-                    tool.IsOffGrid)
+                    tool.IsOffGrid &&
+                    tool.OwnerBoard == GridBuildingSystem.Instance.ActiveBoard)
                 {
                     _hoveredToolForDrop = tool;
 
