@@ -162,28 +162,143 @@ public class GridDataSOEditor : Editor
     {
         serializedObject.Update();
 
-        int oldWidth = gridDataSO.width;
-        int oldHeight = gridDataSO.height;
+        // 1. EXCLUSIONS (Exclude everything we draw manually to avoid duplicates)
+        DrawPropertiesExcluding(serializedObject, 
+            "m_Script", 
+            // Lists & Complex Data
+            "puzzlePieces", "levelItems", "generatedPieceSummary", "puzzleSolution", "availablePieceTypesForGeneration", "generatorPieceConfig", "solutionVariantsCount", "allFoundSolutions", "currentSolutionIndex", "isComplete", "personalityData", "buildableCells", "lockedCells", "staticObstacles",
+            // Dimensions
+            "width", "height", 
+            // Environment & Camera
+            "environmentPrefab", "levelSpawnOffset", "cellSize", "cameraBoundsCenter", "cameraBoundsSize", "cameraBoundsYRotation", "worldPosition",
+            // Generator Settings
+            "boardToSpawnPadding", "pieceToPiecePadding", "maxSpawnRadius", "placementAttempts");
 
-        DrawPropertiesExcluding(serializedObject, "m_Script", "puzzlePieces", "levelItems", "generatedPieceSummary", "puzzleSolution", "availablePieceTypesForGeneration", "generatorPieceConfig", "solutionVariantsCount", "allFoundSolutions", "currentSolutionIndex", "isComplete", "personalityData", "width", "height", "buildableCells", "lockedCells", "generatedObstacles");
-
-        EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("Environment & Spawning", EditorStyles.boldLabel);
+        // --- SECTION 1: SCENE & PHYSICAL SETUP ---
+        EditorGUILayout.LabelField("1. Scene & Environment", EditorStyles.boldLabel);
+        EditorGUI.indentLevel++;
         EditorGUILayout.PropertyField(serializedObject.FindProperty("environmentPrefab"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("levelSpawnOffset"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("cellSize"));
-
-        EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("Camera Settings (Boundaries)", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("worldPosition"));
+        
+        EditorGUILayout.Space(5);
+        EditorGUILayout.LabelField("Camera Bounds", EditorStyles.miniBoldLabel);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("cameraBoundsCenter"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("cameraBoundsSize"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("cameraBoundsYRotation"));
+        EditorGUI.indentLevel--;
+        EditorGUILayout.Space(10);
 
-        if (obstaclePaintMode) Repaint();
+        // --- SECTION 2: GRID TOPOLOGY ---
+        EditorGUILayout.LabelField("2. Grid Topology", EditorStyles.boldLabel);
+        DrawGridDimensions(); 
+        
+        EditorGUILayout.Space(5);
+        EditorGUILayout.LabelField("Paint Topology (Buildable/Locked)", EditorStyles.miniBoldLabel);
+        DrawBuildableCellsEditor(); 
+        EditorGUILayout.Space(10);
+
+        // --- SECTION 3: PUZZLE RULES & CONTENT ---
+        EditorGUILayout.LabelField("3. Puzzle Rules & Content", EditorStyles.boldLabel);
+        
+        DrawPersonalityEditor();
+        EditorGUILayout.Space(5);
+
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("availablePieceTypesForGeneration"), true);
+        
+        if (GUILayout.Button(new GUIContent("Update Generator Piece Config"))) UpdateGeneratorPieceConfig();
+        
+        showRequiredPieces = EditorGUILayout.Foldout(showRequiredPieces, "Required Pieces (Generator Rules)", true);
+        if (showRequiredPieces) DrawGeneratorPieceConfigList(true);
+
+        EditorGUILayout.Space(5);
+        showLevelItems = EditorGUILayout.Foldout(showLevelItems, "Manual Overrides (Static/Required)", true);
+        if (showLevelItems) {
+            DrawManualItemsList("levelItems");
+            DrawManualItemsList("staticObstacles");
+        }
+        EditorGUILayout.Space(10);
+
+        // --- SECTION 4: GENERATION LOGIC ---
+        EditorGUILayout.LabelField("4. Generation Logic", EditorStyles.boldLabel);
+        
+        EditorGUI.indentLevel++;
+        EditorGUILayout.LabelField("Spawning Parameters", EditorStyles.miniBoldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("boardToSpawnPadding"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("pieceToPiecePadding"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("maxSpawnRadius"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("placementAttempts"));
+        EditorGUI.indentLevel--;
+        EditorGUILayout.Space(5);
+
+        generationIterations = EditorGUILayout.IntField(new GUIContent("Generation Iterations"), generationIterations);
+        if (generationIterations < 1) generationIterations = 1;
+        selectionCriterion = (SolutionSelectionCriterion)EditorGUILayout.EnumPopup(new GUIContent("Selection Criterion"), selectionCriterion);
+
+        generationTimeout = EditorGUILayout.FloatField(new GUIContent("Total Timeout (Sec)"), generationTimeout);
+        enableDebugLogs = EditorGUILayout.Toggle(new GUIContent("Enable Debug Logs"), enableDebugLogs);
+
+        EditorGUILayout.Space(5);
+        EditorGUILayout.LabelField("Filler Dist.", EditorStyles.miniBoldLabel);
+        smallPieceMaxCells = EditorGUILayout.IntField(new GUIContent("Small Piece Max"), smallPieceMaxCells);
+        mediumPieceMaxCells = EditorGUILayout.IntField(new GUIContent("Medium Piece Max"), mediumPieceMaxCells);
+        desiredSmallFillers = EditorGUILayout.IntSlider(new GUIContent("Small Fillers"), desiredSmallFillers, 0, 20);
+        desiredMediumFillers = EditorGUILayout.IntSlider(new GUIContent("Medium Fillers"), desiredMediumFillers, 0, 20);
+        desiredLargeFillers = EditorGUILayout.IntSlider(new GUIContent("Large Fillers"), desiredLargeFillers, 0, 20);
+
+        DrawMaxCountControls(); 
+
+        EditorGUILayout.Space(10);
+        DrawComplexityIndicator();
+        EditorGUILayout.Space(5);
+
+        // --- GENERATE BUTTON ---
+        GUI.backgroundColor = new Color(0.6f, 1f, 0.6f);
+        if (GUILayout.Button(new GUIContent("✨ GENERATE PUZZLE SOLUTION ✨", "Run the generator"), GUILayout.Height(30)))
+        {
+            var (complexity, _) = CalculateComplexity();
+            if (complexity >= 2)
+            {
+                if (EditorUtility.DisplayDialog("High Complexity Warning",
+                    "High complexity detected. Continue?",
+                    "Yes, Generate", "Cancel"))
+                {
+                    GeneratePuzzle();
+                }
+            }
+            else
+            {
+                GeneratePuzzle();
+            }
+        }
+        GUI.backgroundColor = Color.white;
+
+        EditorGUILayout.Space(5);
+        if (GUILayout.Button("Fill Empty Space (Complete Puzzle)"))
+        {
+            FillEmptySpace();
+        }
+        if (GUILayout.Button("Clear All Generated Pieces"))
+        {
+            if (EditorUtility.DisplayDialog("Clear All?", "Remove all pieces?", "Yes", "No")) ClearAllPieces();
+        }
 
         EditorGUILayout.Space(20);
+
+        // --- SECTION 5: PREVIEW & RESULTS ---
+        EditorGUILayout.LabelField("5. Preview & Results", EditorStyles.boldLabel);
+        
+        // --- LEVEL VALIDATION CHECK ---
+        ValidateLevelSolvability();
+
+        if (!gridDataSO.isComplete)
+        {
+            EditorGUILayout.HelpBox("Puzzle has empty space which may affect gameplay.", MessageType.Warning);
+        }
+
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField("1. Level Preview", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Visual Preview", EditorStyles.boldLabel);
         EditorGUI.BeginChangeCheck();
         bool newPaintMode = GUILayout.Toggle(obstaclePaintMode, " PAINT MODE", "Button", GUILayout.Width(100), GUILayout.Height(20));
         if (EditorGUI.EndChangeCheck()) {
@@ -199,122 +314,33 @@ public class GridDataSOEditor : Editor
         }
 
         EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("2. Piece Summary (Live Inventory)", EditorStyles.boldLabel);
-        serializedObject.Update();
-
-        // --- LEVEL VALIDATION CHECK ---
-        ValidateLevelSolvability();
-        
-        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("Piece Summary", EditorStyles.boldLabel);
         DrawPieceSummary();
 
-        EditorGUILayout.Space(10);
-        DrawGridDimensions();
-        EditorGUILayout.LabelField("3. Topology (Hold Click to Paint)", EditorStyles.boldLabel);
-        DrawBuildableCellsEditor();
+        EditorGUILayout.Space(15);
+        EditorGUILayout.LabelField("Solution Analysis & Variants", EditorStyles.boldLabel);
 
-        EditorGUILayout.Space(20);
-        EditorGUILayout.LabelField("4. Puzzle Content & Generation", EditorStyles.boldLabel);
-        
-        DrawPersonalityEditor();
+        string variantsLabel = $"Variants Found: {gridDataSO.solutionVariantsCount} (Stored: {gridDataSO.allFoundSolutions?.Count ?? 0})";
+        EditorGUILayout.LabelField(variantsLabel, EditorStyles.helpBox);
 
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("availablePieceTypesForGeneration"), true);
-        
-        if (GUILayout.Button(new GUIContent("Update Generator Piece Config"))) UpdateGeneratorPieceConfig();
-        
-        showRequiredPieces = EditorGUILayout.Foldout(showRequiredPieces, "Required Pieces (Generator)", true);
-        if (showRequiredPieces) DrawGeneratorPieceConfigList(true);
-
-        EditorGUILayout.Space(10);
-        showLevelItems = EditorGUILayout.Foldout(showLevelItems, "Manual Items (Spawn Always/Static)", true);
-        if (showLevelItems) {
-            DrawManualItemsList("levelItems");
-            DrawManualItemsList("staticObstacles");
-        }
-
-        EditorGUILayout.Space(20);
-        EditorGUILayout.LabelField("5. Generator Controls", EditorStyles.boldLabel);
-
-        generationIterations = EditorGUILayout.IntField(new GUIContent("Generation Iterations"), generationIterations);
-        if (generationIterations < 1) generationIterations = 1;
-        selectionCriterion = (SolutionSelectionCriterion)EditorGUILayout.EnumPopup(new GUIContent("Selection Criterion"), selectionCriterion);
-
-        generationTimeout = EditorGUILayout.FloatField(new GUIContent("Total Timeout (Sec)"), generationTimeout);
-        enableDebugLogs = EditorGUILayout.Toggle(new GUIContent("Enable Debug Logs"), enableDebugLogs);
-
-        EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("Filler Piece Distribution Control", EditorStyles.boldLabel);
-        smallPieceMaxCells = EditorGUILayout.IntField(new GUIContent("Small Piece Max Cells"), smallPieceMaxCells);
-        mediumPieceMaxCells = EditorGUILayout.IntField(new GUIContent("Medium Piece Max Cells"), mediumPieceMaxCells);
-        desiredSmallFillers = EditorGUILayout.IntSlider(new GUIContent("Desired Small Fillers"), desiredSmallFillers, 0, 20);
-        desiredMediumFillers = EditorGUILayout.IntSlider(new GUIContent("Desired Medium Fillers"), desiredMediumFillers, 0, 20);
-        desiredLargeFillers = EditorGUILayout.IntSlider(new GUIContent("Desired Large Fillers"), desiredLargeFillers, 0, 20);
-
-        EditorGUILayout.Space();
-        DrawComplexityIndicator();
-        EditorGUILayout.Space();
-
-        if (GUILayout.Button(new GUIContent("Generate Puzzle Solution", "᪠  ?     ᭮? 筨 㢠.")))
+        if (GUILayout.Button("Fix Spawning (Start On Grid -> False)"))
         {
-            var (complexity, _) = CalculateComplexity();
-            if (complexity >= 2)
-            {
-                if (EditorUtility.DisplayDialog("High Complexity Warning",
-                    "The current settings have high or extreme complexity. Generation may take a very long time or freeze the editor.\n\nAre you sure you want to continue?",
-                    "Yes, Generate", "Cancel"))
-                {
-                    GeneratePuzzle();
-                }
-            }
-            else
-            {
-                GeneratePuzzle();
-            }
-        }
-
-        if (!gridDataSO.isComplete)
-        {
-            EditorGUILayout.HelpBox("Puzzle is incomplete (geometry not filled)! You can fill the empty space manually or regenerate.", MessageType.Warning);
-            if (GUILayout.Button("Fill Empty Space")) FillEmptySpace();
-        }
-
-        if (GUILayout.Button("Clear All Generated Pieces"))
-        {
-            if (EditorUtility.DisplayDialog("Clear All Pieces?", "Remove all pieces from the current solution?", "Yes", "No")) ClearAllPieces();
+             if (EditorUtility.DisplayDialog("Fix Solution?", "Set 'Start On Grid' to false for all pieces?", "Fix", "Cancel")) FixSolutionSpawning();
         }
 
         EditorGUILayout.Space(5);
-        GUI.color = new Color(0.7f, 1f, 0.7f);
-        if (GUILayout.Button("Fix Solution: Move All to Tray ('G' off)"))
-        {
-            if (EditorUtility.DisplayDialog("Fix Solution?", "Set 'Start On Grid' to false for all pieces in the solution? This will move them to the tray in-game.", "Fix", "Cancel"))
-            {
-                FixSolutionSpawning();
-            }
-        }
-        GUI.color = Color.white;
-
-        EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("Solution Analysis", EditorStyles.boldLabel);
-
-        string variantsLabel = $"Found: {gridDataSO.solutionVariantsCount} (Stored: {gridDataSO.allFoundSolutions?.Count ?? 0})";
-        EditorGUILayout.LabelField(variantsLabel);
-
-        useCalculationTimeout = EditorGUILayout.Toggle("Use Timeout", useCalculationTimeout);
-        if (useCalculationTimeout)
-        {
-            calculationTimeout = EditorGUILayout.FloatField("Calculation Timeout (Sec)", calculationTimeout);
-        }
-
-        maxSolutionsToStore = EditorGUILayout.IntField("Max Solutions to Store", maxSolutionsToStore);
+        useCalculationTimeout = EditorGUILayout.Toggle("Use Calc Timeout", useCalculationTimeout);
+        if (useCalculationTimeout) calculationTimeout = EditorGUILayout.FloatField("Timeout (Sec)", calculationTimeout);
+        maxSolutionsToStore = EditorGUILayout.IntField("Max Solutions", maxSolutionsToStore);
         findAllPermutations = EditorGUILayout.Toggle("Find All Permutations", findAllPermutations);
 
-        if (GUILayout.Button("Calculate Solution Variants")) CalculateSolutions();
+        if (GUILayout.Button("Recalculate Variants (Based on Current Footprint)")) CalculateSolutions();
 
         if (gridDataSO.allFoundSolutions != null && gridDataSO.allFoundSolutions.Count > 1)
         {
             DrawSolutionNavigator();
         }
+
         serializedObject.ApplyModifiedProperties();
     }
 
@@ -687,12 +713,29 @@ public class GridDataSOEditor : Editor
             return;
         }
 
+        // FIX: Start with a blank grid.
         bool[,] initialGrid = new bool[gridDataSO.width, gridDataSO.height];
 
-        foreach (var cell in gridDataSO.buildableCells)
+        // FIX: Only mark cells as 'Available' (true) if they are currently occupied by the solution.
+        // This allows finding permutations even for partial solutions (incomplete fills).
+        // Manual items/obstacles remain 'false' (occupied/unavailable) so the solver won't try to use their space.
+        
+        var solutionPieces = gridDataSO.puzzleSolution;
+        if (solutionPieces != null)
         {
-            if (cell.x < gridDataSO.width && cell.y < gridDataSO.height)
-                initialGrid[cell.x, cell.y] = true;
+            foreach (var pieceData in solutionPieces)
+            {
+                if (pieceData.pieceType == null) continue;
+                // Note: We use the piece's current position to define the "Game Board" for this calculation.
+                var cells = pieceData.pieceType.GetGridPositionsList(pieceData.position, pieceData.direction);
+                foreach (var cell in cells)
+                {
+                    if (cell.x >= 0 && cell.x < gridDataSO.width && cell.y >= 0 && cell.y < gridDataSO.height)
+                    {
+                        initialGrid[cell.x, cell.y] = true; 
+                    }
+                }
+            }
         }
 
         var relevantPieces = gridDataSO.puzzlePieces.Where(p => p != null).ToList();
@@ -730,6 +773,7 @@ public class GridDataSOEditor : Editor
                 pieceData.FindPropertyRelative("pieceType").objectReferenceValue = solutionData[j].pieceType;
                 pieceData.FindPropertyRelative("position").vector2IntValue = solutionData[j].position;
                 pieceData.FindPropertyRelative("direction").enumValueIndex = (int)solutionData[j].direction;
+                // Maintain other flags as defaults or copy if needed (simplified for permutation search)
             }
         }
 
