@@ -2,8 +2,6 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.IO;
-using System.Linq;
 
 [CustomEditor(typeof(PlacedObjectTypeSO))]
 public class PlacedObjectTypeSOEditor : Editor
@@ -15,10 +13,12 @@ public class PlacedObjectTypeSOEditor : Editor
     private void OnEnable()
     {
         placedObjectTypeSO = (PlacedObjectTypeSO)target;
+
         editorShapeGrid = new bool[MAX_GRID_SIZE, MAX_GRID_SIZE];
+
         if (placedObjectTypeSO.relativeOccupiedCells != null)
         {
-            foreach (Vector2Int cell in placedObjectTypeSO.relativeOccupiedCells)
+            foreach (var cell in placedObjectTypeSO.relativeOccupiedCells)
             {
                 if (cell.x >= 0 && cell.x < MAX_GRID_SIZE && cell.y >= 0 && cell.y < MAX_GRID_SIZE)
                 {
@@ -30,28 +30,48 @@ public class PlacedObjectTypeSOEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
+        serializedObject.Update();
 
-        EditorGUILayout.Space(10);
+        DrawPropertiesExcluding(serializedObject, "m_Script", "relativeOccupiedCells");
+
+        EditorGUILayout.Space();
         EditorGUILayout.LabelField("Shape Editor", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("Click cells to toggle occupancy. The shape will be defined by the occupied cells starting from (0,0) as the bottom-left.", MessageType.Info);
 
-        EditorGUILayout.Space(5);
-        if (GUILayout.Button(new GUIContent("Clear Shape", "Повністю очищує сітку форми, видаляючи всі вибрані клітинки."))) ClearShape();
-        if (GUILayout.Button(new GUIContent("Generate Square Shape from Object Name (WxH)", "Намагається зчитати розміри (напр. '3x5') з імені асету і створює прямокутну форму відповідного розміру."))) GenerateShapeFromObjectName();
-        if (GUILayout.Button(new GUIContent("Auto-Fit Shape to Bounding Box", "Зміщує фігуру так, щоб її нижній лівий кут знаходився в координатах (0,0), видаляючи порожній простір."))) AutoFitShapeToBoundingBox();
-        if (GUILayout.Button(new GUIContent("Set Prefab/Visual from Shape Dimensions", "Автоматично знаходить у проєкті префаб, назва якого відповідає розмірам фігури (напр. 'PB_Shape_3x5'), і призначає його в поля Prefab та Visual."))) SetPrefabAndVisualFromShape();
-        if (GUILayout.Button(new GUIContent("Update Internal objectName String", "Оновлює внутрішнє поле 'objectName' на основі поточних розмірів фігури."))) UpdateInternalObjectNameString();
+        // --- BUTTONS ---
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("Generate from Name (WxH)"))
+        {
+            GenerateShapeFromObjectName();
+        }
+        if (GUILayout.Button("Clear Shape"))
+        {
+            ClearShape();
+        }
+        EditorGUILayout.EndHorizontal();
 
-        EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("Compound Collider Generator", EditorStyles.boldLabel);
-        if (GUILayout.Button(new GUIContent("Generate Compound Colliders on Prefab", "Аналізує форму та створює оптимальну кількість BoxColliders на префабі.")))
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("Auto-Fit to Bounds"))
+        {
+            AutoFitShapeToBoundingBox();
+        }
+        if (GUILayout.Button("Set Prefab/Visual from Name"))
+        {
+            SetPrefabAndVisualFromShape();
+        }
+        EditorGUILayout.EndHorizontal();
+
+        // --- GENERATE COLLIDER BUTTON ---
+        GUI.backgroundColor = new Color(0.7f, 1f, 0.7f);
+        if (GUILayout.Button("Generate Compound Colliders (Box)"))
         {
             GenerateCompoundColliders();
         }
+        GUI.backgroundColor = Color.white;
+        // -------------------------------
 
-        EditorGUILayout.Space(5);
+        EditorGUILayout.Space();
 
+        // --- GRID DRAWING ---
         GUILayout.BeginVertical("box");
         for (int y = MAX_GRID_SIZE - 1; y >= 0; y--)
         {
@@ -75,9 +95,10 @@ public class PlacedObjectTypeSOEditor : Editor
         {
             EditorUtility.SetDirty(placedObjectTypeSO);
         }
+
+        serializedObject.ApplyModifiedProperties();
     }
 
-    // --- МЕТОД ОНОВЛЕНО ---
     private void GenerateCompoundColliders()
     {
         if (placedObjectTypeSO.prefab == null)
@@ -98,9 +119,6 @@ public class PlacedObjectTypeSOEditor : Editor
         int prefabLayer = prefabRoot.layer;
         string containerName = "Colliders";
 
-        // --- ВИПРАВЛЕННЯ ---
-        // Надійно знаходимо та видаляємо ВСІ попередні контейнери з коллайдерами
-        // Ітеруємо у зворотному порядку, оскільки ми видаляємо елементи з колекції
         for (int i = prefabRoot.transform.childCount - 1; i >= 0; i--)
         {
             Transform child = prefabRoot.transform.GetChild(i);
@@ -110,7 +128,6 @@ public class PlacedObjectTypeSOEditor : Editor
             }
         }
 
-        // Створюємо один новий, чистий контейнер
         Transform colliderContainer = new GameObject(containerName).transform;
         colliderContainer.SetParent(prefabRoot.transform, false);
         colliderContainer.gameObject.layer = prefabLayer;
@@ -288,5 +305,120 @@ public class PlacedObjectTypeSOEditor : Editor
                 placedObjectTypeSO.visual = foundPrefab.transform;
             }
         }
+    }
+
+    // --- PREVIEW IMPLEMENTATION ---
+    public override bool HasPreviewGUI()
+    {
+        return true;
+    }
+
+    public override void OnPreviewGUI(Rect r, GUIStyle background)
+    {
+        if (placedObjectTypeSO == null || placedObjectTypeSO.relativeOccupiedCells == null) return;
+
+        // Draw shape in the preview window (bottom area of object picker)
+        Vector2Int dims = placedObjectTypeSO.GetMaxDimensions();
+        if (dims.x == 0 || dims.y == 0) return;
+
+        // Calculate cell size to best fit the rect
+        float padding = 10f;
+        float availableWidth = r.width - padding * 2;
+        float availableHeight = r.height - padding * 2;
+        
+        float cellW = availableWidth / dims.x;
+        float cellH = availableHeight / dims.y;
+        float cellSize = Mathf.Min(cellW, cellH, 40f); // Cap max size
+
+        float totalW = dims.x * cellSize;
+        float totalH = dims.y * cellSize;
+
+        // Center content
+        float startX = r.x + (r.width - totalW) / 2;
+        float startY = r.y + (r.height - totalH) / 2;
+
+        for (int x = 0; x < dims.x; x++)
+        {
+            for (int y = 0; y < dims.y; y++)
+            {
+                // Invert Y for drawing top-down
+                int gridY = dims.y - 1 - y;
+                // Check if this cell is occupied
+                if (placedObjectTypeSO.relativeOccupiedCells.Contains(new Vector2Int(x, gridY)))
+                {
+                    Rect cellRect = new Rect(startX + x * cellSize, startY + y * cellSize, cellSize - 1, cellSize - 1);
+                    EditorGUI.DrawRect(cellRect, Color.green);
+                }
+            }
+        }
+        
+        // Label
+        GUIStyle style = new GUIStyle(EditorStyles.label);
+        style.alignment = TextAnchor.LowerCenter;
+        style.normal.textColor = Color.white;
+        Rect labelRect = new Rect(r.x, r.yMax - 20, r.width, 20);
+        GUI.Label(labelRect, $"{dims.x}x{dims.y}", style);
+    }
+
+    public override Texture2D RenderStaticPreview(string assetPath, Object[] subAssets, int width, int height)
+    {
+        if (placedObjectTypeSO == null || placedObjectTypeSO.relativeOccupiedCells == null) return null;
+
+        Vector2Int dims = placedObjectTypeSO.GetMaxDimensions();
+        if (dims.x <= 0 || dims.y <= 0) return null;
+
+        Texture2D tex = new Texture2D(width, height);
+        EditorUtility.CopySerialized(EditorGUIUtility.whiteTexture, tex);
+
+        // Fill with transparent or dark background
+        Color[] fillPixels = new Color[width * height];
+        for (int i = 0; i < fillPixels.Length; i++) fillPixels[i] = new Color(0, 0, 0, 0); // Transparent
+        tex.SetPixels(fillPixels);
+
+        // Draw Logic
+        // Scale shape to fit in the icon (width x height)
+        // Add some padding
+        int padding = 4;
+        int safeW = width - padding * 2;
+        int safeH = height - padding * 2;
+
+        float cellW = (float)safeW / dims.x;
+        float cellH = (float)safeH / dims.y;
+        float cellSize = Mathf.Min(cellW, cellH);
+
+        int totalShapeW = Mathf.RoundToInt(dims.x * cellSize);
+        int totalShapeH = Mathf.RoundToInt(dims.y * cellSize);
+
+        int startX = padding + (safeW - totalShapeW) / 2;
+        int startY = padding + (safeH - totalShapeH) / 2;
+
+        Color shapeColor = new Color(0.2f, 0.8f, 0.2f, 1f); // Greenish
+
+        for (int x = 0; x < dims.x; x++)
+        {
+            for (int y = 0; y < dims.y; y++)
+            {
+                if (placedObjectTypeSO.relativeOccupiedCells.Contains(new Vector2Int(x, y)))
+                {
+                    // Draw cell pixels
+                    int pX = startX + Mathf.RoundToInt(x * cellSize);
+                    int pY = startY + Mathf.RoundToInt(y * cellSize);
+                    int size = Mathf.RoundToInt(cellSize) - 1;
+                    if (size < 1) size = 1;
+
+                    for (int px = pX; px < pX + size; px++)
+                    {
+                        for (int py = pY; py < pY + size; py++)
+                        {
+                            if (px >= 0 && px < width && py >= 0 && py < height)
+                                tex.SetPixel(px, py, shapeColor);
+                        }
+                    }
+                }
+            }
+        }
+
+        tex.Apply();
+        return tex;
     }
 }

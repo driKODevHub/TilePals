@@ -105,6 +105,20 @@ public class GridDataSOEditor : Editor
             fontStyle = FontStyle.BoldAndItalic,
             padding = new RectOffset(0, 2, 0, 2)
         };
+        EditorApplication.update += OnEditorUpdate;
+    }
+
+    private void OnDisable()
+    {
+        EditorApplication.update -= OnEditorUpdate;
+    }
+
+    private void OnEditorUpdate()
+    {
+        if (obstaclePaintMode)
+        {
+            Repaint();
+        }
     }
 
     private void OnSceneGUI()
